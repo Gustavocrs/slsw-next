@@ -6,7 +6,6 @@
 
 import {useCallback, useState} from "react";
 import APIService from "@/lib/api";
-import LocalStorageAPI from "@/lib/localStorageAPI";
 import {useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "./useAuth";
 
@@ -24,22 +23,14 @@ export function useCharacterAPI() {
       try {
         setLoading(true);
         setError(null);
-        let result;
-        
-        try {
-          result = await APIService.createCharacter({
-            userId: user.uid,
-            ...data,
-          });
-        } catch (apiError) {
-          console.warn("Backend indisponível. Usando localStorage...");
-          result = LocalStorageAPI.createCharacter({
-            userId: user.uid,
-            ...data,
-          });
+        const result = await APIService.createCharacter({
+          userId: user.uid,
+          ...data,
+        });
+
+        if (result.data) {
+          loadCharacter(result.data);
         }
-        
-        loadCharacter(result.data);
         return result;
       } catch (err) {
         setError(err.message);
@@ -58,13 +49,8 @@ export function useCharacterAPI() {
     try {
       setLoading(true);
       setError(null);
-      
-      try {
-        return await APIService.getCharacters(user.uid);
-      } catch (apiError) {
-        console.warn("Backend indisponível. Usando localStorage...");
-        return LocalStorageAPI.getCharacters(user.uid);
-      }
+
+      return await APIService.getCharacters(user.uid);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -76,19 +62,17 @@ export function useCharacterAPI() {
   // Obter um personagem
   const get = useCallback(
     async (id) => {
+      if (!id || id === "new") return;
+
       try {
         setLoading(true);
         setError(null);
-        
-        let result;
-        try {
-          result = await APIService.getCharacter(id);
-        } catch (apiError) {
-          console.warn("Backend indisponível. Usando localStorage...");
-          result = LocalStorageAPI.getCharacter(id);
+
+        const result = await APIService.getCharacter(id);
+
+        if (result.data) {
+          loadCharacter(result.data);
         }
-        
-        loadCharacter(result.data);
         return result;
       } catch (err) {
         setError(err.message);
@@ -106,16 +90,12 @@ export function useCharacterAPI() {
       try {
         setLoading(true);
         setError(null);
-        
-        let result;
-        try {
-          result = await APIService.updateCharacter(id, data);
-        } catch (apiError) {
-          console.warn("Backend indisponível. Usando localStorage...");
-          result = LocalStorageAPI.updateCharacter(id, data);
+
+        const result = await APIService.updateCharacter(id, data);
+
+        if (result.data) {
+          loadCharacter(result.data);
         }
-        
-        loadCharacter(result.data);
         return result;
       } catch (err) {
         setError(err.message);
@@ -132,13 +112,8 @@ export function useCharacterAPI() {
     try {
       setLoading(true);
       setError(null);
-      
-      try {
-        return await APIService.deleteCharacter(id);
-      } catch (apiError) {
-        console.warn("Backend indisponível. Usando localStorage...");
-        return LocalStorageAPI.deleteCharacter(id);
-      }
+
+      return await APIService.deleteCharacter(id);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -166,20 +141,6 @@ export function useCharacterAPI() {
     [user],
   );
 
-  // Obter stats
-  const getStats = useCallback(async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      return await APIService.getCharacterStats(id);
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   return {
     // Estado
     loading,
@@ -193,7 +154,6 @@ export function useCharacterAPI() {
     update,
     delete: delete_,
     duplicate,
-    getStats,
   };
 }
 

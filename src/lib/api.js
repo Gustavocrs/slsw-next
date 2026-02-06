@@ -1,40 +1,26 @@
 /**
- * API Service - Cliente para chamar Backend
- * Com fallback para localStorage quando backend não está disponível
+ * API Service - Cliente Firebase Firestore
+ * Substitui chamadas REST por chamadas diretas ao banco de dados
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import {db} from "./firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 
 class APIService {
-  static async request(endpoint, options = {}) {
-    const url = `${API_URL}${endpoint}`;
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-
-      // Se não for 2xx, tratar como erro
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(`API Error: ${endpoint}`, error);
-      // Se der erro de rede (CORS/NetworkError), usar localStorage como fallback
-      console.warn(
-        "⚠️ Backend indisponível. Usando localStorage como fallback.",
-      );
-      throw error;
-    }
+  // Helper para formatar documento do Firestore
+  static _mapDoc(docSnapshot) {
+    if (!docSnapshot.exists()) return null;
+    return {id: docSnapshot.id, ...docSnapshot.data()};
   }
 
   // ========== CHARACTER ENDPOINTS ==========
@@ -43,74 +29,66 @@ class APIService {
    * Criar novo personagem
    */
   static async createCharacter(characterData) {
-    return this.request("/api/characters", {
-      method: "POST",
-      body: JSON.stringify(characterData),
-    });
+    const docRef = await addDoc(collection(db, "characters"), characterData);
+    // Retorna no formato { data: ... } para manter compatibilidade
+    return {data: {id: docRef.id, ...characterData}};
   }
 
   /**
    * Listar todos os personagens do usuário
    */
   static async getCharacters(userId) {
-    return this.request(`/api/characters/user/${userId}`);
+    const q = query(
+      collection(db, "characters"),
+      where("userId", "==", userId),
+    );
+    const querySnapshot = await getDocs(q);
+    const list = querySnapshot.docs.map((d) => ({id: d.id, ...d.data()}));
+    return {data: list};
   }
 
   /**
    * Obter um personagem específico
    */
   static async getCharacter(id) {
-    return this.request(`/api/characters/${id}`);
+    const docRef = doc(db, "characters", id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) throw new Error("Personagem não encontrado");
+    return {data: {id: docSnap.id, ...docSnap.data()}};
   }
 
   /**
    * Atualizar personagem
    */
   static async updateCharacter(id, updates) {
-    return this.request(`/api/characters/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(updates),
-    });
+    const docRef = doc(db, "characters", id);
+    await updateDoc(docRef, updates);
+    // Retorna os dados atualizados (mesclando com o ID)
+    return {data: {id, ...updates}};
   }
 
   /**
    * Deletar personagem
    */
   static async deleteCharacter(id) {
-    return this.request(`/api/characters/${id}`, {
-      method: "DELETE",
-    });
+    await deleteDoc(doc(db, "characters", id));
+    return {data: {success: true}};
   }
 
   /**
    * Duplicar personagem
    */
   static async duplicateCharacter(id, userId) {
-    return this.request(`/api/characters/${id}/duplicate`, {
-      method: "POST",
-      body: JSON.stringify({userId}),
-    });
-  }
+    // 1. Ler original
+    const original = await this.getCharacter(id);
+    const data = original.data;
 
-  /**
-   * Obter stats calculados do personagem
-   */
-  static async getCharacterStats(id) {
-    return this.request(`/api/characters/${id}/stats`);
-  }
+    // 2. Limpar ID e ajustar nome
+    const {id: _, ...cleanData} = data;
+    const newData = {...cleanData, userId, nome: `${data.nome} (Cópia)`};
 
-  /**
-   * Health Check
-   */
-  static async healthCheck() {
-    return this.request("/health");
-  }
-
-  /**
-   * Obter documentação da API
-   */
-  static async getDocs() {
-    return this.request("/api/docs");
+    // 3. Criar novo
+    return this.createCharacter(newData);
   }
 }
 
