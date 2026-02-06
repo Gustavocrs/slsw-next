@@ -3,7 +3,7 @@
  * Com fallback para localStorage quando backend não está disponível
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 class APIService {
   static async request(endpoint, options = {}) {
@@ -30,7 +30,9 @@ class APIService {
     } catch (error) {
       console.error(`API Error: ${endpoint}`, error);
       // Se der erro de rede (CORS/NetworkError), usar localStorage como fallback
-      console.warn("⚠️ Backend indisponível. Usando localStorage como fallback.");
+      console.warn(
+        "⚠️ Backend indisponível. Usando localStorage como fallback.",
+      );
       throw error;
     }
   }

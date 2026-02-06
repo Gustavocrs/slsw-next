@@ -9,21 +9,13 @@ import React, {useState} from "react";
 import styled from "styled-components";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
-import {
-  AppBar,
-  Toolbar,
-  Button,
-  IconButton,
-  Box,
-  Menu,
-  MenuItem,
-} from "@mui/material";
+import {AppBar, Toolbar, Button, IconButton, Box} from "@mui/material";
 import {
   Assignment as AssignmentIcon,
   Save as SaveIcon,
   Logout as LogoutIcon,
   MenuBook as MenuBookIcon,
-  MoreVert as MoreVertIcon,
+  Google as GoogleIcon,
 } from "@mui/icons-material";
 
 const StyledAppBar = styled(AppBar)`
@@ -79,11 +71,7 @@ const HeaderButton = styled(Button)`
 function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
   const {user, isAuthenticated, loginWithGoogle, logoutUser} = useAuth();
   const {viewMode, toggleView} = useUIStore();
-  const [anchorEl, setAnchorEl] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
 
   const handleSave = async () => {
     if (!isAuthenticated) {
@@ -115,6 +103,9 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
               }}
             />
             <UserName>{user?.displayName?.split(" ")[0]}</UserName>
+            <IconButton onClick={logoutUser} sx={{color: "white"}} size="small">
+              <LogoutIcon />
+            </IconButton>
           </UserSection>
         )}
 
@@ -133,7 +124,8 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
                 onClick={() => {
                   // Prefer the PageLayout local handler when provided
                   if (onViewChange) {
-                    const next = (currentView || viewMode) === "book" ? "sheet" : "book";
+                    const next =
+                      (currentView || viewMode) === "book" ? "sheet" : "book";
                     onViewChange(next);
                   } else {
                     toggleView();
@@ -155,41 +147,11 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
             </>
           )}
 
-          {/* Menu */}
-          <IconButton
-            onClick={handleMenuOpen}
-            sx={{color: "white"}}
-            size="small"
-          >
-            <MoreVertIcon />
-          </IconButton>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            {!isAuthenticated ? (
-              <MenuItem
-                onClick={() => {
-                  loginWithGoogle();
-                  handleMenuClose();
-                }}
-              >
-                Login com Google
-              </MenuItem>
-            ) : (
-              <MenuItem
-                onClick={() => {
-                  logoutUser();
-                  handleMenuClose();
-                }}
-              >
-                <LogoutIcon sx={{mr: 1}} />
-                Logout
-              </MenuItem>
-            )}
-          </Menu>
+          {!isAuthenticated && (
+            <HeaderButton startIcon={<GoogleIcon />} onClick={loginWithGoogle}>
+              Login
+            </HeaderButton>
+          )}
         </ControlsSection>
       </HeaderContent>
     </StyledAppBar>
