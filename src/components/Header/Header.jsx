@@ -73,6 +73,15 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
   const {viewMode, toggleView} = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert(`Erro ao logar: ${error.message}`);
+    }
+  };
+
   const handleSave = async () => {
     if (!isAuthenticated) {
       alert("Você precisa estar logado para salvar!");
@@ -81,6 +90,11 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
     setIsSaving(true);
     try {
       await onSave?.();
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      alert(
+        `Erro ao salvar: ${error.message || "Verifique o console para detalhes."}`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -148,7 +162,7 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
           )}
 
           {!isAuthenticated && (
-            <HeaderButton startIcon={<GoogleIcon />} onClick={loginWithGoogle}>
+            <HeaderButton startIcon={<GoogleIcon />} onClick={handleLogin}>
               Login
             </HeaderButton>
           )}

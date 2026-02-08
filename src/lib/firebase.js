@@ -12,6 +12,12 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+if (!firebaseConfig.apiKey) {
+  console.warn(
+    "⚠️ Firebase: API Key não encontrada! Verifique seu arquivo .env.local",
+  );
+}
+
 // Inicializa o Firebase apenas se não houver uma instância ativa (Singleton pattern para Next.js)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 

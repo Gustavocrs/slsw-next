@@ -1,94 +1,96 @@
 /**
- * API Service - Cliente Firebase Firestore
- * Substitui chamadas REST por chamadas diretas ao banco de dados
+ * API Service - Cliente HTTP para o Backend Express (MongoDB)
+ * Conecta o frontend ao servidor rodando na porta 3001
  */
 
-import {db} from "./firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-} from "firebase/firestore";
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
+).replace(/\/$/, "");
 
 class APIService {
-  // Helper para formatar documento do Firestore
-  static _mapDoc(docSnapshot) {
-    if (!docSnapshot.exists()) return null;
-    return {id: docSnapshot.id, ...docSnapshot.data()};
-  }
-
   // ========== CHARACTER ENDPOINTS ==========
 
   /**
    * Criar novo personagem
    */
   static async createCharacter(characterData) {
-    const docRef = await addDoc(collection(db, "characters"), characterData);
-    // Retorna no formato { data: ... } para manter compatibilidade
-    return {data: {id: docRef.id, ...characterData}};
+    const response = await fetch(`${API_BASE_URL}/characters`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(characterData),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Erro ao criar personagem");
+    }
+
+    return await response.json(); // Espera { success: true, data: ... }
   }
 
   /**
    * Listar todos os personagens do usuário
    */
   static async getCharacters(userId) {
-    const q = query(
-      collection(db, "characters"),
-      where("userId", "==", userId),
-    );
-    const querySnapshot = await getDocs(q);
-    const list = querySnapshot.docs.map((d) => ({id: d.id, ...d.data()}));
-    return {data: list};
+    const response = await fetch(`${API_BASE_URL}/characters/user/${userId}`);
+
+    if (!response.ok) throw new Error("Erro ao buscar personagens");
+
+    return await response.json();
   }
 
   /**
    * Obter um personagem específico
    */
   static async getCharacter(id) {
-    const docRef = doc(db, "characters", id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) throw new Error("Personagem não encontrado");
-    return {data: {id: docSnap.id, ...docSnap.data()}};
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`);
+
+    if (!response.ok) throw new Error("Personagem não encontrado");
+
+    return await response.json();
   }
 
   /**
    * Atualizar personagem
    */
   static async updateCharacter(id, updates) {
-    const docRef = doc(db, "characters", id);
-    await updateDoc(docRef, updates);
-    // Retorna os dados atualizados (mesclando com o ID)
-    return {data: {id, ...updates}};
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) throw new Error("Erro ao atualizar personagem");
+
+    return await response.json();
   }
 
   /**
    * Deletar personagem
    */
   static async deleteCharacter(id) {
-    await deleteDoc(doc(db, "characters", id));
-    return {data: {success: true}};
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) throw new Error("Erro ao deletar personagem");
+
+    return await response.json();
   }
 
   /**
    * Duplicar personagem
    */
   static async duplicateCharacter(id, userId) {
-    // 1. Ler original
-    const original = await this.getCharacter(id);
-    const data = original.data;
+    const response = await fetch(`${API_BASE_URL}/characters/${id}/duplicate`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId}),
+    });
 
-    // 2. Limpar ID e ajustar nome
-    const {id: _, ...cleanData} = data;
-    const newData = {...cleanData, userId, nome: `${data.nome} (Cópia)`};
+    if (!response.ok) throw new Error("Erro ao duplicar personagem");
 
-    // 3. Criar novo
-    return this.createCharacter(newData);
+    return await response.json();
   }
 }
 
