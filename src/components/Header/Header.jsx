@@ -5,9 +5,10 @@
 
 "use client";
 
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import styled from "styled-components";
 import {useAuth} from "@/hooks";
+import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 import {AppBar, Toolbar, Button, IconButton, Box} from "@mui/material";
 import {
@@ -68,17 +69,49 @@ const HeaderButton = styled(Button)`
   }
 `;
 
-function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
-  const {user, isAuthenticated, loginWithGoogle, logoutUser} = useAuth();
+function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
+  // FIX: Ajustado para usar os nomes corretos do AuthContext (googleLogin, logout)
+  // e derivar isAuthenticated a partir da existência do user
+  const {user} = useAuth();
+  const isAuthenticated = !!user;
+
   const {viewMode, toggleView} = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // Reseta o erro se a URL da foto mudar
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.photoURL]);
+
+  // Carregar ficha automaticamente ao logar (se a função onLoad for fornecida)
+  useEffect(() => {
+    if (isAuthenticated && onLoad) {
+      onLoad();
+    }
+  }, [isAuthenticated]); // Removido onLoad da dependência para evitar loops se a função não for estável
+
+  const displayName = user?.displayName || "Caçador";
+  const avatarSrc =
+    user?.photoURL && !imgError
+      ? user.photoURL
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
 
   const handleLogin = async () => {
     try {
-      await loginWithGoogle();
+      await APIService.loginGoogle();
     } catch (error) {
       console.error("Erro no login:", error);
       alert(`Erro ao logar: ${error.message}`);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await APIService.logout();
+      window.location.reload(); // Força o recarregamento para limpar o estado visual
+    } catch (error) {
+      console.error("Erro ao sair:", error);
     }
   };
 
@@ -107,8 +140,10 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
         {isAuthenticated && (
           <UserSection>
             <img
-              src={user?.photoURL}
-              alt={user?.displayName}
+              src={avatarSrc}
+              alt={displayName}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
               style={{
                 width: 40,
                 height: 40,
@@ -116,8 +151,12 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
                 border: "2px solid white",
               }}
             />
-            <UserName>{user?.displayName?.split(" ")[0]}</UserName>
-            <IconButton onClick={logoutUser} sx={{color: "white"}} size="small">
+            <UserName>{displayName.split(" ")[0]}</UserName>
+            <IconButton
+              onClick={handleLogout}
+              sx={{color: "white"}}
+              size="small"
+            >
               <LogoutIcon />
             </IconButton>
           </UserSection>
@@ -136,10 +175,16 @@ function Header({onSave, onToggleSidebar, currentView, onViewChange}) {
                   )
                 }
                 onClick={() => {
+                  const next =
+                    (currentView || viewMode) === "book" ? "sheet" : "book";
+
+                  // Se for mudar para Ficha e estiver logado, carrega os dados
+                  if (next === "sheet" && isAuthenticated && onLoad) {
+                    onLoad();
+                  }
+
                   // Prefer the PageLayout local handler when provided
                   if (onViewChange) {
-                    const next =
-                      (currentView || viewMode) === "book" ? "sheet" : "book";
                     onViewChange(next);
                   } else {
                     toggleView();

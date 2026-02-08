@@ -50,7 +50,13 @@ export function useCharacterAPI() {
       setLoading(true);
       setError(null);
 
-      return await APIService.getCharacters(user.uid);
+      const result = await APIService.getCharacters(user.uid);
+
+      // FIX: Carrega automaticamente a primeira ficha encontrada no Store
+      if (result.success && result.data && result.data.length > 0) {
+        loadCharacter(result.data[0]);
+      }
+      return result;
     } catch (err) {
       setError(err.message);
       throw err;

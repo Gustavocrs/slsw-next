@@ -38,24 +38,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ============ DATABASE ============
-
-// MONGODB DESATIVADO - USANDO FIRESTORE NO FRONTEND
-// mongoose
-//   .connect(process.env.MONGODB_URI, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   })
-//   .then(() => {
-//     console.log("✅ Conectado ao MongoDB");
-//   })
-//   .catch((err) => {
-//     console.error("❌ Erro ao conectar MongoDB:", err.message);
-//     // process.exit(1);
-//   });
-
-// ============ ROUTES ============
-
 // Health Check
 app.get("/health", (req, res) => {
   res.json({
