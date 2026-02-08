@@ -145,6 +145,8 @@ class APIService {
     if (!userId)
       throw new Error("UserId é obrigatório para listar personagens.");
 
+    console.log(`[API] Buscando personagens para usuário: ${userId}`);
+
     const q = query(
       collection(db, "characters"),
       where("userId", "==", userId),
@@ -155,6 +157,8 @@ class APIService {
       id: doc.id,
       ...this._adaptToUI(doc.data()),
     }));
+
+    console.log(`[API] Encontrados: ${list.length} personagens.`);
 
     // Ordenar por data de atualização (mais recente primeiro)
     list.sort((a, b) => {

@@ -9,23 +9,31 @@ exports.createCharacter = async (req, res) => {
   try {
     const {userId, nome, ...rest} = req.body;
 
-    if (!userId || !nome) {
+    if (!userId) {
       return res.status(400).json({
-        error: "userId e nome são obrigatórios",
+        error: "userId é obrigatório",
       });
     }
 
-    const character = new Character({
-      userId,
-      nome,
-      ...rest,
-    });
+    // FIX: Verifica se já existe ficha para este usuário (Singleton)
+    let character = await Character.findOne({userId});
 
-    const saved = await character.save();
+    if (character) {
+      // Se existe, atualiza
+      character = await Character.findOneAndUpdate(
+        {userId},
+        {...rest, ...(nome && {nome})}, // Atualiza nome apenas se fornecido
+        {new: true, runValidators: true},
+      );
+    } else {
+      // Se não existe, cria nova
+      if (!nome) return res.status(400).json({error: "Nome é obrigatório"});
+      character = await Character.create({userId, nome, ...rest});
+    }
 
     res.status(201).json({
       success: true,
-      data: saved,
+      data: character,
       message: "Personagem criado com sucesso",
     });
   } catch (error) {
@@ -48,7 +56,7 @@ exports.getCharacters = async (req, res) => {
     }
 
     const characters = await Character.find({userId})
-      .sort({createdAt: -1})
+      .sort({updatedAt: -1}) // FIX: Ordenar por atualização para pegar a versão mais recente
       .select("-__v");
 
     res.json({

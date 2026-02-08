@@ -54,7 +54,15 @@ export function useCharacterAPI() {
 
       // FIX: Carrega automaticamente a primeira ficha encontrada no Store
       if (result.success && result.data && result.data.length > 0) {
+        console.log(
+          "[Hook] Carregando personagem na tela:",
+          result.data[0].nome,
+        );
         loadCharacter(result.data[0]);
+      } else {
+        console.log(
+          "[Hook] Nenhum personagem encontrado no Firestore para este usuário.",
+        );
       }
       return result;
     } catch (err) {

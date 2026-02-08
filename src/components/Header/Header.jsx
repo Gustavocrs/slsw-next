@@ -174,13 +174,20 @@ function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
                     <MenuBookIcon />
                   )
                 }
-                onClick={() => {
-                  const next =
-                    (currentView || viewMode) === "book" ? "sheet" : "book";
+                onClick={async () => {
+                  const isBook = (currentView || viewMode) === "book";
+                  const next = isBook ? "sheet" : "book";
 
                   // Se for mudar para Ficha e estiver logado, carrega os dados
-                  if (next === "sheet" && isAuthenticated && onLoad) {
-                    onLoad();
+                  if (isBook && isAuthenticated && onLoad) {
+                    console.log(
+                      "🔄 Botão Ficha clicado: Buscando dados no Firestore...",
+                    );
+                    try {
+                      await onLoad();
+                    } catch (error) {
+                      console.error("Erro ao carregar ficha:", error);
+                    }
                   }
 
                   // Prefer the PageLayout local handler when provided
