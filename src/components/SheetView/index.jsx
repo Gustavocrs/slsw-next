@@ -248,7 +248,7 @@ function SheetView({saveSuccess, onLoad}) {
                 duration: POWERS[p].duration || "",
               }));
             const defaultHindrances = HINDRANCES.slice(0, 2).map((h) => ({
-              name: h,
+              name: h.name,
             }));
 
             updateCharacter({
@@ -951,7 +951,6 @@ function SheetView({saveSuccess, onLoad}) {
           >
             <h3 style={{margin: "0", fontSize: "1.1rem"}}>🎯 Perícias</h3>
             <Tooltip title="Custo: 1 ponto por dado até o atributo chave. 2 pontos por dado acima.">
-              <PointsBadge>{skillPointsSpent}/15 pts</PointsBadge>
               <PointsBadge>{skillPointsSpent}/12 pts</PointsBadge>
             </Tooltip>
           </Box>
@@ -963,14 +962,11 @@ function SheetView({saveSuccess, onLoad}) {
 
           <Box sx={{maxWidth: "600px"}}>
             <SkillsList
-              items={character.pericias || []}
-              onAdd={(item) => addItemToList("pericias", item)}
-              items={(character.pericias || []).map((p) => {
-                const attr = character.atributos?.[p.atributo];
-                const attrDie =
-                  typeof attr === "string" ? attr : attr?.dado || "d4";
-                const pVal = parseInt((p.dado || "d4").replace("d", ""), 10);
-                const aVal = parseInt((attrDie || "d4").replace("d", ""), 10);
+              items={character?.pericias?.map((p) => {
+                const attrKey = getSkillAttribute(p.name);
+                const attrDie = character[attrKey] || "d4";
+                const pVal = parseInt((p.die || "d4").replace("d", ""), 10);
+                const aVal = parseInt(attrDie.replace("d", ""), 10);
                 return {
                   ...p,
                   style: pVal > aVal ? {backgroundColor: "#fff3e0"} : undefined,
@@ -978,7 +974,7 @@ function SheetView({saveSuccess, onLoad}) {
               })}
               onAdd={(item) => {
                 const idx = (character.pericias || []).findIndex(
-                  (p) => p.nome === item.nome,
+                  (p) => p.name === item.name,
                 );
                 if (idx >= 0) removeItemFromList("pericias", idx);
                 addItemToList("pericias", item);
@@ -1020,7 +1016,10 @@ function SheetView({saveSuccess, onLoad}) {
                 </Box>
 
                 <VantagesList
-                  items={character.vantagens || []}
+                  items={(character.vantagens || []).map((v) => {
+                    const edge = EDGES.find((e) => e.name === v.name);
+                    return edge ? {...edge, ...v} : v;
+                  })}
                   onAdd={(item) => addItemToList("vantagens", item)}
                   onRemove={(idx) => removeItemFromList("vantagens", idx)}
                   onUpdate={(idx, item) =>
@@ -1064,7 +1063,10 @@ function SheetView({saveSuccess, onLoad}) {
                 </Box>
 
                 <ComplicacoesList
-                  items={character.complicacoes || []}
+                  items={(character.complicacoes || []).map((c) => {
+                    const hind = HINDRANCES.find((h) => h.name === c.name);
+                    return hind ? {...hind, ...c} : c;
+                  })}
                   onAdd={(item) => addItemToList("complicacoes", item)}
                   onRemove={(idx) => removeItemFromList("complicacoes", idx)}
                   onUpdate={(idx, item) =>

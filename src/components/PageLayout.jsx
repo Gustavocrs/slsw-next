@@ -16,11 +16,20 @@ export default function PageLayout() {
   const [saveStatus, setSaveStatus] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const {user, isAuthenticated, loading} = useAuth();
-
+  const {user} = useAuth();
+  // Pegamos o create e update, mas NÃO vamos passar o list para o Header agora
   const {update, create, list} = useCharacterAPI();
-
   const character = useCharacterStore((s) => s.character);
+  const loadCharacter = useCharacterStore((s) => s.loadCharacter);
+
+  // EFEITO DE CARREGAMENTO ÚNICO
+  // Só carrega a ficha UMA vez quando o usuário loga, e não toda hora
+  useEffect(() => {
+    if (user?.uid) {
+      console.log("Usuário logado, tentando buscar ficha uma única vez...");
+      list().catch((err) => console.log("Erro silencioso ao listar:", err));
+    }
+  }, [user?.uid]); // Dependência apenas do ID do usuário
 
   const handleToggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -28,31 +37,18 @@ export default function PageLayout() {
 
   const handleSave = async () => {
     try {
-      if (!user?.uid) {
-        setSaveStatus("error");
-        setTimeout(() => setSaveStatus(null), 3000);
-        return;
-      }
-
-      setSaveStatus("saving");
+      if (!user?.uid) return;
 
       if (character?._id) {
         await update(character._id, character);
       } else {
-        const {_id, createdAt, updatedAt, ...dataToCreate} = character;
+        const {_id, ...dataToCreate} = character;
         await create(dataToCreate);
       }
-
-      setSaveStatus("success");
       setSaveSuccess(true);
-      setTimeout(() => {
-        setSaveStatus(null);
-        setSaveSuccess(false);
-      }, 2000);
+      setTimeout(() => setSaveSuccess(false), 2000);
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus(null), 3000);
     }
   };
 
@@ -63,7 +59,6 @@ export default function PageLayout() {
         currentView={currentView}
         onViewChange={setCurrentView}
         onSave={handleSave}
-        onLoad={list}
       />
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />

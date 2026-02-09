@@ -1,41 +1,48 @@
+/**
+ * UserMenu Component
+ * Exibe avatar do usuário e menu de logout
+ */
+
 "use client";
 
 import {useState, useEffect} from "react";
-import {useAuth} from "../contexts/AuthContext";
+// CORREÇÃO: Importando do lugar certo (hooks)
+import {useAuth} from "@/hooks";
+import {IconButton, Menu, MenuItem, Avatar, Typography} from "@mui/material";
+import {Logout} from "@mui/icons-material";
 
 export default function UserMenu() {
-  const {user, loginWithGoogle, logoutUser} = useAuth();
+  // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
+  const {user, googleLogin, logout} = useAuth();
   const [imgError, setImgError] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    handleClose();
+    await logout();
+  };
 
   // Tenta alterar levemente a URL (tamanho) para evitar cache de erro 429 do Google
-  // De s96-c (96px) para s100-c (100px)
   const photoURL = user?.photoURL;
   const safePhotoURL = photoURL?.includes("googleusercontent.com")
     ? photoURL.replace("=s96-c", "=s100-c")
     : photoURL;
 
-  // Reseta o estado de erro quando o usuário muda (login/logout)
-  // FIX: Monitora apenas a URL da foto para evitar loops infinitos se o objeto user for recriado
   useEffect(() => setImgError(false), [safePhotoURL]);
 
-  if (!user) {
-    return (
-      <button
-        onClick={loginWithGoogle}
-        className="btn-login"
-        style={{cursor: "pointer", padding: "8px 16px"}}
-      >
-        Login com Google
-      </button>
-    );
-  }
+  if (!user) return null;
 
-  // Lógica de Avatar com Fallback (Correção do problema "quebrou o avatar")
+  // Lógica de Avatar com Fallback
   const displayName = user.displayName || "Caçador";
-  const firstName = displayName.split(" ")[0];
 
-  // Se user.photoURL for null, usa o gerador de avatar com as iniciais
-  // Se der erro no carregamento (imgError), também usa o fallback
   const avatarSrc =
     safePhotoURL && !imgError
       ? safePhotoURL
@@ -44,38 +51,51 @@ export default function UserMenu() {
         )}&background=random`;
 
   return (
-    <div
-      className="user-menu"
-      style={{display: "flex", alignItems: "center", gap: "12px"}}
-    >
-      <div
-        className="user-identity"
-        style={{display: "flex", alignItems: "center", gap: "8px"}}
+    <div>
+      <IconButton
+        size="small"
+        aria-label="account of current user"
+        aria-controls="menu-appbar"
+        aria-haspopup="true"
+        onClick={handleMenu}
+        color="inherit"
+        sx={{p: 0}}
       >
-        <img
+        <Avatar
           src={avatarSrc}
-          alt="Avatar"
-          referrerPolicy="no-referrer"
-          onError={() => setImgError(true)}
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: "1px solid #ccc",
+          alt={displayName}
+          imgProps={{
+            onError: () => setImgError(true),
+            referrerPolicy: "no-referrer",
           }}
+          sx={{width: 32, height: 32, border: "1px solid white"}}
         />
-        <span className="user-name" style={{fontWeight: 500}}>
-          Olá, {firstName}
-        </span>
-      </div>
-      <button
-        onClick={logoutUser}
-        className="btn-logout"
-        style={{cursor: "pointer", fontSize: "0.9em"}}
+      </IconButton>
+      <Menu
+        id="menu-appbar"
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        keepMounted
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
       >
-        Sair
-      </button>
+        <MenuItem disabled>
+          <Typography variant="body2" color="text.secondary">
+            {displayName}
+          </Typography>
+        </MenuItem>
+        <MenuItem onClick={handleLogout}>
+          <Logout fontSize="small" sx={{mr: 1}} />
+          Sair
+        </MenuItem>
+      </Menu>
     </div>
   );
 }
