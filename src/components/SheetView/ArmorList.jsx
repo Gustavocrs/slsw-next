@@ -59,12 +59,7 @@ const Button = styled.button`
   }
 `;
 
-function ArmorList({
-  items = [],
-  onAdd,
-  onRemove,
-  addButtonLabel = "+ Adicionar",
-}) {
+function ArmorList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
   const [name, setName] = useState("");
   const [defense, setDefense] = useState("");
   const [ap, setAp] = useState("");

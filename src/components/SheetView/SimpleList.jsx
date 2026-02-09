@@ -48,7 +48,7 @@ function SimpleList({
   onAdd,
   onRemove,
   onUpdate,
-  addButtonLabel = "+ Adicionar",
+  addButtonLabel = "+ ",
 }) {
   const [editingIndex, setEditingIndex] = React.useState(null);
   const [editValue, setEditValue] = React.useState("");
@@ -74,7 +74,9 @@ function SimpleList({
   return (
     <Box sx={{mb: 2}}>
       {items.length === 0 ? (
-        <Box sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}>
+        <Box
+          sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}
+        >
           Nenhum item adicionado
         </Box>
       ) : (
@@ -114,10 +116,7 @@ function SimpleList({
                 </Box>
               </ItemRow>
             ) : (
-              <DisplayRow
-                key={index}
-                onClick={() => startEdit(index, item)}
-              >
+              <DisplayRow key={index} onClick={() => startEdit(index, item)}>
                 <Box sx={{fontWeight: 500}}>{item.name}</Box>
                 <IconButton
                   size="small"

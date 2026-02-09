@@ -59,12 +59,7 @@ const Button = styled.button`
   }
 `;
 
-function WeaponsList({
-  items = [],
-  onAdd,
-  onRemove,
-  addButtonLabel = "+ Adicionar",
-}) {
+function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
   const [name, setName] = useState("");
   const [damage, setDamage] = useState("");
   const [range, setRange] = useState("");

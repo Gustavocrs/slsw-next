@@ -99,7 +99,7 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
           ))}
         </Select>
 
-        <Button onClick={handleAdd}>+ Adicionar</Button>
+        <Button onClick={handleAdd}>+ </Button>
       </InputRow>
 
       {/* List */}

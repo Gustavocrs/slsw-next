@@ -8,7 +8,10 @@
 import React, {useState} from "react";
 import styled from "styled-components";
 import {Box, TextField, IconButton} from "@mui/material";
-import {Delete as DeleteIcon} from "@mui/icons-material";
+import {
+  Delete as DeleteIcon,
+  RemoveCircleOutline as ConsumeIcon,
+} from "@mui/icons-material";
 
 const InputRow = styled(Box)`
   display: grid;
@@ -59,7 +62,7 @@ const Button = styled.button`
   }
 `;
 
-function ItemsList({items = [], onAdd, onRemove}) {
+function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
 
@@ -68,6 +71,15 @@ function ItemsList({items = [], onAdd, onRemove}) {
       onAdd?.({name, quantity});
       setName("");
       setQuantity("1");
+    }
+  };
+
+  const handleConsume = (index, item) => {
+    const currentQty = parseInt(item.quantity || 1, 10);
+    if (currentQty > 1) {
+      onUpdate?.(index, {...item, quantity: (currentQty - 1).toString()});
+    } else {
+      onRemove?.(index);
     }
   };
 
@@ -89,7 +101,7 @@ function ItemsList({items = [], onAdd, onRemove}) {
           placeholder="Qtd"
           sx={{background: "#fff", borderRadius: "4px"}}
         />
-        <Button onClick={handleAdd}>+ Adicionar</Button>
+        <Button onClick={handleAdd}>+ </Button>
       </InputRow>
 
       {items.length === 0 ? (
@@ -111,14 +123,24 @@ function ItemsList({items = [], onAdd, onRemove}) {
                 </span>
               )}
             </Box>
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => onRemove?.(index)}
-              sx={{padding: "4px"}}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <Box sx={{display: "flex", gap: 0.5}}>
+              <IconButton
+                size="small"
+                title="Consumir/Usar (Reduzir Qtd)"
+                onClick={() => handleConsume(index, item)}
+                sx={{padding: "4px", color: "#667eea"}}
+              >
+                <ConsumeIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => onRemove?.(index)}
+                sx={{padding: "4px"}}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </ListItem>
         ))
       )}

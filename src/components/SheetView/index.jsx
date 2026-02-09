@@ -981,7 +981,7 @@ function SheetView({saveSuccess, onLoad}) {
                 addItemToList("pericias", item);
               }}
               onRemove={(idx) => removeItemFromList("pericias", idx)}
-              addButtonLabel="+ Adicionar Perícia"
+              addButtonLabel="+ "
             />
           </Box>
         </Box>
@@ -1121,7 +1121,7 @@ function SheetView({saveSuccess, onLoad}) {
                 onAdd={(item) => addItemToList("armaduras", item)}
                 onRemove={(idx) => removeItemFromList("armaduras", idx)}
                 onUpdate={(idx, item) => updateListItem("armaduras", idx, item)}
-                addButtonLabel="+ Adicionar"
+                addButtonLabel="+ "
               />
             </Grid>
 
@@ -1134,6 +1134,7 @@ function SheetView({saveSuccess, onLoad}) {
                 items={character.espolios || []}
                 onAdd={(item) => addItemToList("espolios", item)}
                 onRemove={(idx) => removeItemFromList("espolios", idx)}
+                onUpdate={(idx, item) => updateListItem("espolios", idx, item)}
               />
             </Grid>
           </Grid>
@@ -1200,7 +1201,7 @@ function SheetView({saveSuccess, onLoad}) {
                     }
                     updateListItem("magias", idx, updated);
                   }}
-                  addButtonLabel="+ Adicionar Magia"
+                  addButtonLabel="+  Magia"
                 />
               </Box>
             </Grid>

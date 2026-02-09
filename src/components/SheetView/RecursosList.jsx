@@ -55,12 +55,7 @@ const formatDisplay = (item) => {
   return parts.join(" • ");
 };
 
-function RecursosList({
-  items = [],
-  onAdd,
-  onRemove,
-  onUpdate,
-}) {
+function RecursosList({items = [], onAdd, onRemove, onUpdate}) {
   const [editingIndex, setEditingIndex] = React.useState(null);
   const [editName, setEditName] = React.useState("");
   const [editCusto, setEditCusto] = React.useState("");
@@ -93,7 +88,9 @@ function RecursosList({
   return (
     <Box sx={{mb: 2}}>
       {items.length === 0 ? (
-        <Box sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}>
+        <Box
+          sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}
+        >
           Nenhum recurso adicionado
         </Box>
       ) : (
@@ -147,10 +144,7 @@ function RecursosList({
                 </Box>
               </ItemRow>
             ) : (
-              <DisplayRow
-                key={index}
-                onClick={() => startEdit(index, item)}
-              >
+              <DisplayRow key={index} onClick={() => startEdit(index, item)}>
                 <Box sx={{fontWeight: 500}}>{formatDisplay(item)}</Box>
                 <IconButton
                   size="small"
@@ -182,7 +176,7 @@ function RecursosList({
             fontWeight: 600,
           }}
         >
-          + Adicionar Recurso
+          + Recurso
         </button>
       </Box>
     </Box>

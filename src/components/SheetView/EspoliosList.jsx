@@ -8,11 +8,14 @@
 import React, {useState} from "react";
 import styled from "styled-components";
 import {Box, TextField, IconButton} from "@mui/material";
-import {Delete as DeleteIcon} from "@mui/icons-material";
+import {
+  Delete as DeleteIcon,
+  RemoveCircleOutline as ConsumeIcon,
+} from "@mui/icons-material";
 
 const InputRow = styled(Box)`
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 80px auto;
   gap: 8px;
   align-items: center;
   padding: 12px;
@@ -59,13 +62,24 @@ const Button = styled.button`
   }
 `;
 
-function EspoliosList({items = [], onAdd, onRemove}) {
+function EspoliosList({items = [], onAdd, onRemove, onUpdate}) {
   const [name, setName] = useState("");
+  const [quantity, setQuantity] = useState("1");
 
   const handleAdd = () => {
     if (name) {
-      onAdd?.({name});
+      onAdd?.({name, quantity});
       setName("");
+      setQuantity("1");
+    }
+  };
+
+  const handleConsume = (index, item) => {
+    const currentQty = parseInt(item.quantity || 1, 10);
+    if (currentQty > 1) {
+      onUpdate?.(index, {...item, quantity: (currentQty - 1).toString()});
+    } else {
+      onRemove?.(index);
     }
   };
 
@@ -80,7 +94,14 @@ function EspoliosList({items = [], onAdd, onRemove}) {
           fullWidth
           sx={{background: "#fff", borderRadius: "4px"}}
         />
-        <Button onClick={handleAdd}>+ Adicionar</Button>
+        <TextField
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          size="small"
+          placeholder="Qtd"
+          sx={{background: "#fff", borderRadius: "4px"}}
+        />
+        <Button onClick={handleAdd}>+ </Button>
       </InputRow>
 
       {items.length === 0 ? (
@@ -92,15 +113,34 @@ function EspoliosList({items = [], onAdd, onRemove}) {
       ) : (
         items.map((item, index) => (
           <ListItem key={`${item.name}-${index}`}>
-            <Box sx={{fontWeight: 500}}>{item.name}</Box>
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => onRemove?.(index)}
-              sx={{padding: "4px"}}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <Box sx={{fontWeight: 500}}>
+              {item.name}
+              {item.quantity && item.quantity !== "1" && (
+                <span
+                  style={{color: "#666", fontSize: "0.9em", marginLeft: "8px"}}
+                >
+                  (x{item.quantity})
+                </span>
+              )}
+            </Box>
+            <Box sx={{display: "flex", gap: 0.5}}>
+              <IconButton
+                size="small"
+                title="Consumir/Usar (Reduzir Qtd)"
+                onClick={() => handleConsume(index, item)}
+                sx={{padding: "4px", color: "#667eea"}}
+              >
+                <ConsumeIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => onRemove?.(index)}
+                sx={{padding: "4px"}}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </ListItem>
         ))
       )}

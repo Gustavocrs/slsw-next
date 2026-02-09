@@ -80,7 +80,7 @@ function DynamicList({
   onRemove,
   onUpdate,
   icon: Icon,
-  addButtonLabel = "+ Adicionar",
+  addButtonLabel = "+ ",
 }) {
   const handleAdd = () => {
     const emptyItem = {};

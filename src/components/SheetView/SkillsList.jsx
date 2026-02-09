@@ -66,7 +66,7 @@ const Button = styled.button`
   }
 `;
 
-function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ Adicionar Perícia"}) {
+function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
   const [inputSkill, setInputSkill] = useState("");
   const [inputDice, setInputDice] = useState("d4");
 
@@ -85,7 +85,7 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ Adicionar 
 
   const handleRemove = (index) => {
     const originalIndex = items.findIndex(
-      (item) => item === sortedItems[index]
+      (item) => item === sortedItems[index],
     );
     onRemove?.(originalIndex);
   };
@@ -135,7 +135,9 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ Adicionar 
       {/* Skills List */}
       <ListContainer>
         {sortedItems.length === 0 ? (
-          <Box sx={{textAlign: "center", py: 3, color: "#999", fontSize: "0.9rem"}}>
+          <Box
+            sx={{textAlign: "center", py: 3, color: "#999", fontSize: "0.9rem"}}
+          >
             Nenhuma perícia adicionada
           </Box>
         ) : (
