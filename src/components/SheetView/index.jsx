@@ -24,6 +24,7 @@ import {
 import styled from "styled-components";
 import DynamicList from "./DynamicList";
 import SkillsList from "./SkillsList";
+import MagiasList from "./MagiasList";
 import ArmorList from "./ArmorList";
 import WeaponsList from "./WeaponsList";
 import ItemsList from "./ItemsList";
@@ -523,17 +524,49 @@ function SheetView({saveSuccess, onLoad}) {
                       overflowY: "auto",
                     }}
                   >
-                    <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                      💥 Recursos Despertar
+                    <h4
+                      style={{
+                        margin: "0 0 18px 0",
+                        fontSize: "0.9rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Recursos Despertar
                     </h4>
                     <Box
                       sx={{display: "flex", flexDirection: "column", gap: 0.5}}
                     >
                       {character.recursos_despertar.map((res, idx) => (
-                        <Box key={idx} sx={{fontSize: "0.8rem"}}>
-                          <strong>{res.name}</strong>
-                          <div style={{fontSize: "0.75rem", color: "#666"}}>
-                            PP: {res.pp} | Nível {res.nivel}
+                        <Box
+                          key={idx}
+                          sx={{
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          <div className="w-full flex flex-col justify-start items-center gap-2">
+                            <div className="w-full flex justify-between items-center">
+                              <p className="w-full">
+                                <i>{res.name}</i>
+                              </p>
+                              <div
+                                className="w-full"
+                                style={{fontSize: "0.75rem", color: "#666"}}
+                              >
+                                PP: {res.custo} | Nível {res.nivel}
+                              </div>
+                            </div>
+                            <div className="w-full font-bold text-xs">
+                              <span>Descrição: </span>
+                              <span className="font-normal text-xs ">
+                                {res.descricao || "N/A"}
+                              </span>
+                            </div>
+                            <div className="w-full font-bold  text-xs">
+                              <span>Limitação: </span>
+                              <span className="font-normal">
+                                {res.limitacao || "N/A"}
+                              </span>
+                            </div>
                           </div>
                         </Box>
                       ))}
@@ -554,8 +587,14 @@ function SheetView({saveSuccess, onLoad}) {
                     flexDirection: "column",
                   }}
                 >
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    ✨ Vantagens
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Vantagens
                   </h4>
                   <Box
                     sx={{
@@ -570,7 +609,7 @@ function SheetView({saveSuccess, onLoad}) {
                         EDGES.find((e) => e.name === edge.name)?.source ||
                         "SWADE";
                       return (
-                        <div key={idx} style={{fontSize: "0.85rem"}}>
+                        <div key={idx} style={{fontSize: "0.7rem"}}>
                           • {edge.name}
                           <span
                             style={{
@@ -599,14 +638,20 @@ function SheetView({saveSuccess, onLoad}) {
                     borderLeft: "3px solid #ff9800",
                   }}
                 >
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    ⚠️ Complicações
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Complicações
                   </h4>
                   <Box
                     sx={{display: "flex", flexDirection: "column", gap: 0.5}}
                   >
                     {character.complicacoes.map((hind, idx) => (
-                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                      <div key={idx} style={{fontSize: "0.7rem"}}>
                         • {hind.name}
                       </div>
                     ))}
@@ -625,8 +670,14 @@ function SheetView({saveSuccess, onLoad}) {
                     borderLeft: "3px solid #667eea",
                   }}
                 >
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    🔮 Magias Conhecidas
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Magias Conhecidas
                   </h4>
                   <Box
                     sx={{
@@ -639,14 +690,14 @@ function SheetView({saveSuccess, onLoad}) {
                       <Box
                         key={idx}
                         sx={{
-                          fontSize: "0.85rem",
+                          fontSize: "0.7rem",
                           background: "rgba(255,255,255,0.6)",
                           p: 1,
                           borderRadius: "4px",
                         }}
                       >
-                        <strong>{spell.name}</strong>
-                        <div style={{fontSize: "0.75rem", color: "#666"}}>
+                        <span className="font-semibold">{spell.name}</span>
+                        <div style={{fontSize: "0.6rem", color: "#666"}}>
                           PP: {spell.pp} | {spell.range} | {spell.duration}
                         </div>
                       </Box>
@@ -668,8 +719,14 @@ function SheetView({saveSuccess, onLoad}) {
                     overflowY: "auto",
                   }}
                 >
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    ⚔️ Armas
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armas
                   </h4>
                   <Box
                     sx={{display: "flex", flexDirection: "column", gap: 0.5}}
@@ -696,8 +753,14 @@ function SheetView({saveSuccess, onLoad}) {
                     overflowY: "auto",
                   }}
                 >
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    🛡️ Armaduras
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armaduras
                   </h4>
                   <Box
                     sx={{display: "flex", flexDirection: "column", gap: 0.5}}
@@ -723,8 +786,14 @@ function SheetView({saveSuccess, onLoad}) {
             {character.itens && character.itens.length > 0 && (
               <Grid item xs={12}>
                 <Box sx={{background: "#f5f5f5", p: 1.5, borderRadius: 1}}>
-                  <h4 style={{margin: "0 0 8px 0", fontSize: "0.9rem"}}>
-                    🎒 Itens ({character.itens.length})
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Itens ({character.itens.length})
                   </h4>
                   <Box
                     sx={{
@@ -1113,8 +1182,14 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* ARMADURAS - Inferior esquerdo */}
             <Grid item xs={12} md={6}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
-                🛡️ Armaduras & Escudos
+              <h3
+                style={{
+                  margin: "0 0 16px 0",
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                }}
+              >
+                Armaduras & Escudos
               </h3>
               <ArmorList
                 items={character.armaduras || []}
@@ -1150,60 +1225,11 @@ function SheetView({saveSuccess, onLoad}) {
               <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
                 🔮 Magias
               </h3>
-              <Box sx={{background: "#f9f9f9", p: 1.5, borderRadius: 1}}>
-                <DynamicList
-                  title=""
-                  items={character.magias || []}
-                  fields={[
-                    {
-                      name: "name",
-                      label: "Magia",
-                      type: "select",
-                      options: Object.entries(availablePowers).map(
-                        ([name, data]) => ({
-                          value: name,
-                          label: `${name} (${data.rank})`,
-                        }),
-                      ),
-                      flex: 1,
-                    },
-                    {
-                      name: "pp",
-                      label: "Custo",
-                      disabled: true,
-                      flex: 0.5,
-                      width: "80px",
-                    },
-                    {
-                      name: "range",
-                      label: "Alcance",
-                      disabled: true,
-                      flex: 0.6,
-                      width: "100px",
-                    },
-                    {
-                      name: "duration",
-                      label: "Duração",
-                      disabled: true,
-                      flex: 0.6,
-                      width: "100px",
-                    },
-                  ]}
-                  onAdd={(item) => addItemToList("magias", item)}
-                  onRemove={(idx) => removeItemFromList("magias", idx)}
-                  onUpdate={(idx, item) => {
-                    const updated = {...item};
-                    const data = availablePowers[item.name];
-                    if (data) {
-                      updated.pp = data.pp || "";
-                      updated.range = data.range || "";
-                      updated.duration = data.duration || "";
-                    }
-                    updateListItem("magias", idx, updated);
-                  }}
-                  addButtonLabel="+  Magia"
-                />
-              </Box>
+              <MagiasList
+                items={character.magias || []}
+                onAdd={(item) => addItemToList("magias", item)}
+                onRemove={(idx) => removeItemFromList("magias", idx)}
+              />
             </Grid>
 
             {/* RECURSOS DESPERTAR - Coluna direita */}

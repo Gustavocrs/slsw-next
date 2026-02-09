@@ -5,81 +5,102 @@
 
 "use client";
 
-import React from "react";
+import React, {useState} from "react";
 import styled from "styled-components";
-import {Box, TextField, IconButton} from "@mui/material";
+import {Box, Select, MenuItem, IconButton} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
+import {POWERS} from "@/lib/rpgEngine";
 
-const ItemRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 1fr 100px auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  margin-bottom: 8px;
-  border: 1px solid #e0e0e0;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr 80px;
-  }
-
-  &:hover {
-    background: #f5f5f5;
-  }
-`;
-
-const DisplayRow = styled(Box)`
+const InputRow = styled(Box)`
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   padding: 12px;
-  border-radius: 8px;
   background: #f9f9f9;
-  margin-bottom: 8px;
+  border-radius: 8px;
   border: 1px solid #e0e0e0;
-  cursor: pointer;
+  margin-bottom: 16px;
+`;
+
+const ListItem = styled(Box)`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
 
   &:hover {
     background: #f5f5f5;
   }
 `;
 
-const formatDisplay = (item) => {
-  const parts = [];
-  if (item.name) parts.push(item.name);
-  if (item.custo) parts.push(`${item.custo} pts`);
-  return parts.join(" • ");
-};
+const Button = styled.button`
+  padding: 10px 16px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
 
-function MagiasList({items = [], onAdd, onRemove, onUpdate}) {
-  const [editingIndex, setEditingIndex] = React.useState(null);
-  const [editName, setEditName] = React.useState("");
-  const [editCusto, setEditCusto] = React.useState("");
+  &:hover {
+    background: #5568d3;
+  }
+
+  &:active {
+    background: #445cb9;
+  }
+`;
+
+function MagiasList({items = [], onAdd, onRemove}) {
+  const [powerName, setPowerName] = useState("");
 
   const handleAdd = () => {
-    onAdd?.({name: "", custo: ""});
-  };
-
-  const handleRemove = (index) => {
-    onRemove?.(index);
-  };
-
-  const startEdit = (index, item) => {
-    setEditingIndex(index);
-    setEditName(item.name || "");
-    setEditCusto(item.custo || "");
-  };
-
-  const saveEdit = (index) => {
-    onUpdate?.(index, {name: editName, custo: editCusto});
-    setEditingIndex(null);
+    if (powerName) {
+      const powerData = POWERS[powerName];
+      onAdd?.({
+        name: powerName,
+        pp: powerData?.pp || "",
+        range: powerData?.range || "",
+        duration: powerData?.duration || "",
+        rank: powerData?.rank || "",
+      });
+      setPowerName("");
+    }
   };
 
   return (
     <Box sx={{mb: 2}}>
+      <InputRow>
+        <Select
+          value={powerName}
+          onChange={(e) => setPowerName(e.target.value)}
+          displayEmpty
+          size="small"
+          fullWidth
+          sx={{background: "#fff", borderRadius: "6px"}}
+          MenuProps={{PaperProps: {style: {maxHeight: 300}}}}
+        >
+          <MenuItem value="">Selecione uma magia</MenuItem>
+          {Object.keys(POWERS)
+            .sort()
+            .map((key) => (
+              <MenuItem key={key} value={key}>
+                {key} ({POWERS[key].rank})
+              </MenuItem>
+            ))}
+        </Select>
+        <Button onClick={handleAdd}>+ Adicionar</Button>
+      </InputRow>
+
       {items.length === 0 ? (
         <Box
           sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}
@@ -87,84 +108,25 @@ function MagiasList({items = [], onAdd, onRemove, onUpdate}) {
           Nenhuma magia adicionada
         </Box>
       ) : (
-        <>
-          {items.map((item, index) =>
-            editingIndex === index ? (
-              <ItemRow key={index}>
-                <TextField
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  size="small"
-                  placeholder="Magia"
-                  fullWidth
-                />
-                <TextField
-                  value={editCusto}
-                  onChange={(e) => setEditCusto(e.target.value)}
-                  size="small"
-                  placeholder="Custo"
-                  type="number"
-                />
-                <Box sx={{display: "flex", gap: 0.5}}>
-                  <button
-                    onClick={() => saveEdit(index)}
-                    style={{
-                      padding: "4px 12px",
-                      background: "#4caf50",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    ✓
-                  </button>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setEditingIndex(null)}
-                  >
-                    ✕
-                  </IconButton>
-                </Box>
-              </ItemRow>
-            ) : (
-              <DisplayRow key={index} onClick={() => startEdit(index, item)}>
-                <Box sx={{fontWeight: 500}}>{formatDisplay(item)}</Box>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemove(index);
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </DisplayRow>
-            ),
-          )}
-        </>
+        items.map((item, index) => (
+          <ListItem key={`${item.name}-${index}`}>
+            <Box sx={{fontWeight: 500}}>
+              {item.name}
+              <div style={{fontSize: "0.75rem", color: "#666"}}>
+                PP: {item.pp} | Alcance: {item.range} | Duração: {item.duration}
+              </div>
+            </Box>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => onRemove?.(index)}
+              sx={{padding: "4px"}}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </ListItem>
+        ))
       )}
-
-      <Box sx={{mt: 2}}>
-        <button
-          onClick={handleAdd}
-          style={{
-            padding: "8px 16px",
-            background: "#667eea",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            fontWeight: 600,
-          }}
-        >
-          + Magia
-        </button>
-      </Box>
     </Box>
   );
 }
