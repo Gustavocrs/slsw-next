@@ -12,12 +12,14 @@ import {useCharacterAPI} from "@/hooks";
 
 export default function PageLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentView, setCurrentView] = useState("book"); // "book" ou "sheet"
+  const [currentView, setCurrentView] = useState("book");
   const [saveStatus, setSaveStatus] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const {user, isAuthenticated, loading} = useAuth();
-  const {update, create} = useCharacterAPI();
+
+  const {update, create, list} = useCharacterAPI();
+
   const character = useCharacterStore((s) => s.character);
 
   const handleToggleSidebar = () => {
@@ -61,6 +63,7 @@ export default function PageLayout() {
         currentView={currentView}
         onViewChange={setCurrentView}
         onSave={handleSave}
+        onLoad={list}
       />
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />

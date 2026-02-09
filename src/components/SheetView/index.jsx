@@ -99,7 +99,7 @@ const PointsBadge = styled.span`
   margin-left: 8px;
 `;
 
-function SheetView({saveSuccess}) {
+function SheetView({saveSuccess, onLoad}) {
   const [tabValue, setTabValue] = React.useState(0);
   const character = useCharacterStore((state) => state.character);
   const updateAttribute = useCharacterStore((state) => state.updateAttribute);
@@ -116,6 +116,13 @@ function SheetView({saveSuccess}) {
       setTabValue(0);
     }
   }, [saveSuccess]);
+
+  // Carregar dados ao montar o componente para garantir sincronia com Firestore
+  React.useEffect(() => {
+    if (onLoad) {
+      onLoad();
+    }
+  }, [onLoad]);
 
   // Calcular pontos gastos
   const skillPointsSpent = useMemo(

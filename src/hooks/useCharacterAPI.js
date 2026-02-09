@@ -1,7 +1,7 @@
 /**
  * Hook - useCharacterAPI
  * Hook React para gerenciar interações com a API de personagens
- * Com fallback para localStorage quando backend não está disponível
+ * Conecta o front-end (Zustand) com o serviço do Firebase (api.js)
  */
 
 import {useCallback, useState} from "react";
@@ -15,7 +15,7 @@ export function useCharacterAPI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Criar novo personagem
+  // Criar novo personagem (Usa saveCharacter que gerencia create/update)
   const create = useCallback(
     async (data) => {
       if (!user?.uid) throw new Error("Usuário não autenticado");
@@ -23,16 +23,16 @@ export function useCharacterAPI() {
       try {
         setLoading(true);
         setError(null);
-        const result = await APIService.createCharacter({
-          userId: user.uid,
-          ...data,
-        });
 
-        if (result.data) {
-          loadCharacter(result.data);
+        // CORREÇÃO: Usa saveCharacter em vez de createCharacter
+        const result = await APIService.saveCharacter(user.uid, data);
+
+        if (result) {
+          loadCharacter(result);
         }
         return result;
       } catch (err) {
+        console.error("Erro ao criar:", err);
         setError(err.message);
         throw err;
       } finally {
@@ -42,83 +42,57 @@ export function useCharacterAPI() {
     [user, loadCharacter],
   );
 
-  // Listar personagens
+  // Listar personagens (Busca a ficha única do usuário)
   const list = useCallback(async () => {
-    if (!user?.uid) throw new Error("Usuário não autenticado");
+    if (!user?.uid) return; // Não lança erro, apenas retorna se não logado
 
     try {
       setLoading(true);
       setError(null);
 
-      const result = await APIService.getCharacters(user.uid);
+      // CORREÇÃO: Chama getCharacter (singular) e não getCharacters
+      const result = await APIService.getCharacter(user.uid);
 
-      // FIX: Carrega automaticamente a primeira ficha encontrada no Store
-      if (result.success && result.data && result.data.length > 0) {
-        console.log(
-          "[Hook] Carregando personagem na tela:",
-          result.data[0].nome,
-        );
-        loadCharacter(result.data[0]);
+      if (result) {
+        loadCharacter(result);
       } else {
-        console.log(
-          "[Hook] Nenhum personagem encontrado no Firestore para este usuário.",
-        );
+        console.log("Nenhum personagem encontrado para este usuário.");
       }
       return result;
     } catch (err) {
+      console.error("Erro ao listar:", err);
       setError(err.message);
-      throw err;
+      // Não relança erro no list para não quebrar a UI inicial
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  // Obter um personagem
-  const get = useCallback(
-    async (id) => {
-      if (!id || id === "new") return;
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const result = await APIService.getCharacter(id);
-
-        if (result.data) {
-          loadCharacter(result.data);
-        }
-        return result;
-      } catch (err) {
-        setError(err.message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loadCharacter],
-  );
+  }, [user, loadCharacter]);
 
   // Atualizar personagem
   const update = useCallback(
     async (id, data) => {
+      if (!user?.uid) throw new Error("Usuário não autenticado");
+
       try {
         setLoading(true);
         setError(null);
 
-        const result = await APIService.updateCharacter(id, data);
+        // CORREÇÃO: Usa saveCharacter para garantir consistência
+        const result = await APIService.saveCharacter(user.uid, data);
 
-        if (result.data) {
-          loadCharacter(result.data);
+        if (result) {
+          loadCharacter(result);
         }
         return result;
       } catch (err) {
+        console.error("Erro ao atualizar:", err);
         setError(err.message);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [loadCharacter],
+    [user, loadCharacter],
   );
 
   // Deletar personagem
@@ -126,7 +100,6 @@ export function useCharacterAPI() {
     try {
       setLoading(true);
       setError(null);
-
       return await APIService.deleteCharacter(id);
     } catch (err) {
       setError(err.message);
@@ -156,19 +129,12 @@ export function useCharacterAPI() {
   );
 
   return {
-    // Estado
-    loading,
-    error,
-    character,
-
-    // Métodos
     create,
     list,
-    get,
     update,
     delete: delete_,
     duplicate,
+    loading,
+    error,
   };
 }
-
-export default useCharacterAPI;

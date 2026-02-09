@@ -6,9 +6,8 @@
 "use client";
 
 import React, {useState, useEffect} from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {useAuth} from "@/hooks";
-import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 import {AppBar, Toolbar, Button, IconButton, Box} from "@mui/material";
 import {
@@ -47,7 +46,7 @@ const ControlsSection = styled(Box)`
   gap: 8px;
 `;
 
-const UserName = styled.span`
+const UserName = styled("span")`
   font-weight: 600;
   color: white;
   font-size: 0.9rem;
@@ -72,7 +71,7 @@ const HeaderButton = styled(Button)`
 function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
   // FIX: Ajustado para usar os nomes corretos do AuthContext (googleLogin, logout)
   // e derivar isAuthenticated a partir da existência do user
-  const {user} = useAuth();
+  const {user, loginWithGoogle, logoutUser} = useAuth();
   const isAuthenticated = !!user;
 
   const {viewMode, toggleView} = useUIStore();
@@ -99,7 +98,7 @@ function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
 
   const handleLogin = async () => {
     try {
-      await APIService.loginGoogle();
+      await loginWithGoogle();
     } catch (error) {
       console.error("Erro no login:", error);
       alert(`Erro ao logar: ${error.message}`);
@@ -108,7 +107,7 @@ function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
 
   const handleLogout = async () => {
     try {
-      await APIService.logout();
+      await logoutUser();
       window.location.reload(); // Força o recarregamento para limpar o estado visual
     } catch (error) {
       console.error("Erro ao sair:", error);
@@ -178,10 +177,10 @@ function Header({onSave, onLoad, onToggleSidebar, currentView, onViewChange}) {
                   const isBook = (currentView || viewMode) === "book";
                   const next = isBook ? "sheet" : "book";
 
-                  // Se for mudar para Ficha e estiver logado, carrega os dados
-                  if (isBook && isAuthenticated && onLoad) {
+                  // FIX: Carregar dados sempre que alternar a visualização (se logado)
+                  if (isAuthenticated && onLoad) {
                     console.log(
-                      "🔄 Botão Ficha clicado: Buscando dados no Firestore...",
+                      "🔄 Alternando visualização: Buscando dados no Firestore...",
                     );
                     try {
                       await onLoad();

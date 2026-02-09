@@ -4,7 +4,7 @@ import {useState, useEffect} from "react";
 import {useAuth} from "../contexts/AuthContext";
 
 export default function UserMenu() {
-  const {user, googleLogin, logout} = useAuth();
+  const {user, loginWithGoogle, logoutUser} = useAuth();
   const [imgError, setImgError] = useState(false);
 
   // Tenta alterar levemente a URL (tamanho) para evitar cache de erro 429 do Google
@@ -21,7 +21,7 @@ export default function UserMenu() {
   if (!user) {
     return (
       <button
-        onClick={googleLogin}
+        onClick={loginWithGoogle}
         className="btn-login"
         style={{cursor: "pointer", padding: "8px 16px"}}
       >
@@ -70,7 +70,7 @@ export default function UserMenu() {
         </span>
       </div>
       <button
-        onClick={logout}
+        onClick={logoutUser}
         className="btn-logout"
         style={{cursor: "pointer", fontSize: "0.9em"}}
       >
