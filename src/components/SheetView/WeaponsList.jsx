@@ -5,41 +5,57 @@
 
 "use client";
 
-import React from "react";
+import React, {useState} from "react";
 import styled from "styled-components";
 import {Box, TextField, IconButton} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 
-const ItemRow = styled(Box)`
+const InputRow = styled(Box)`
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   padding: 12px;
-  border-radius: 8px;
   background: #f9f9f9;
-  margin-bottom: 8px;
+  border-radius: 8px;
   border: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+`;
+
+const ListItem = styled(Box)`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
 
   &:hover {
     background: #f5f5f5;
   }
 `;
 
-const DisplayRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 2fr 3fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  margin-bottom: 8px;
-  border: 1px solid #e0e0e0;
+const Button = styled.button`
+  padding: 10px 16px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
 
   &:hover {
-    background: #f5f5f5;
+    background: #5568d3;
+  }
+
+  &:active {
+    background: #445cb9;
   }
 `;
 
@@ -47,43 +63,49 @@ function WeaponsList({
   items = [],
   onAdd,
   onRemove,
-  onUpdate,
-  addButtonLabel = "+ Adicionar Arma",
+  addButtonLabel = "+ Adicionar",
 }) {
-  const [editingIndex, setEditingIndex] = React.useState(null);
-  const [editValues, setEditValues] = React.useState({});
+  const [name, setName] = useState("");
+  const [damage, setDamage] = useState("");
+  const [range, setRange] = useState("");
 
   const handleAdd = () => {
-    onAdd?.({name: "", damage: "", range: ""});
-  };
-
-  const handleRemove = (index) => {
-    onRemove?.(index);
-  };
-
-  const startEdit = (index, item) => {
-    setEditingIndex(index);
-    setEditValues({...item});
-  };
-
-  const saveEdit = (index) => {
-    onUpdate?.(index, editValues);
-    setEditingIndex(null);
-  };
-
-  const handleInputChange = (field, value) => {
-    setEditValues((prev) => ({...prev, [field]: value}));
-  };
-
-  const formatDisplay = (weapon) => {
-    const parts = [weapon.name];
-    if (weapon.damage) parts.push(`Dano ${weapon.damage}`);
-    if (weapon.range) parts.push(`${weapon.range}`);
-    return parts.filter(Boolean).join(" • ");
+    if (name) {
+      onAdd?.({name, damage, range});
+      setName("");
+      setDamage("");
+      setRange("");
+    }
   };
 
   return (
     <Box sx={{mb: 2}}>
+      <InputRow>
+        <TextField
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          size="small"
+          placeholder="Nome da Arma"
+          fullWidth
+          sx={{background: "#fff", borderRadius: "4px"}}
+        />
+        <TextField
+          value={damage}
+          onChange={(e) => setDamage(e.target.value)}
+          size="small"
+          placeholder="Dano"
+          sx={{background: "#fff", borderRadius: "4px"}}
+        />
+        <TextField
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+          size="small"
+          placeholder="Alcance"
+          sx={{background: "#fff", borderRadius: "4px"}}
+        />
+        <Button onClick={handleAdd}>{addButtonLabel}</Button>
+      </InputRow>
+
       {items.length === 0 ? (
         <Box
           sx={{textAlign: "center", py: 2, color: "#999", fontSize: "0.9rem"}}
@@ -91,90 +113,39 @@ function WeaponsList({
           Nenhuma arma adicionada
         </Box>
       ) : (
-        <>
-          {items.map((item, index) =>
-            editingIndex === index ? (
-              <ItemRow key={index}>
-                <TextField
-                  value={editValues.name || ""}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  size="small"
-                  placeholder="Nome"
-                  fullWidth
-                />
-                <TextField
-                  value={editValues.damage || ""}
-                  onChange={(e) => handleInputChange("damage", e.target.value)}
-                  size="small"
-                  placeholder="Dano"
-                />
-                <TextField
-                  value={editValues.range || ""}
-                  onChange={(e) => handleInputChange("range", e.target.value)}
-                  size="small"
-                  placeholder="Alcance"
-                />
-                <Box sx={{display: "flex", gap: 0.5}}>
-                  <button
-                    onClick={() => saveEdit(index)}
-                    style={{
-                      padding: "4px 12px",
-                      background: "#4caf50",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    ✓
-                  </button>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setEditingIndex(null)}
-                  >
-                    ✕
-                  </IconButton>
-                </Box>
-              </ItemRow>
-            ) : (
-              <DisplayRow key={index} onClick={() => startEdit(index, item)}>
-                <Box sx={{fontWeight: 500}}>{formatDisplay(item)}</Box>
-                <Box></Box>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemove(index);
+        items.map((item, index) => (
+          <ListItem key={`${item.name}-${index}`}>
+            <Box sx={{fontWeight: 500}}>
+              {item.name}
+              {(item.damage || item.range) && (
+                <span
+                  style={{
+                    fontWeight: 400,
+                    color: "#666",
+                    fontSize: "0.85rem",
+                    marginLeft: "8px",
                   }}
                 >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </DisplayRow>
-            ),
-          )}
-        </>
+                  {[
+                    item.damage && `Dano: ${item.damage}`,
+                    item.range && `Alcance: ${item.range}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" • ")}
+                </span>
+              )}
+            </Box>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => onRemove?.(index)}
+              sx={{padding: "4px"}}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </ListItem>
+        ))
       )}
-
-      <Box sx={{mt: 2}}>
-        <button
-          onClick={handleAdd}
-          style={{
-            padding: "8px 16px",
-            background: "#667eea",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            fontWeight: 600,
-          }}
-        >
-          {addButtonLabel}
-        </button>
-      </Box>
     </Box>
   );
 }

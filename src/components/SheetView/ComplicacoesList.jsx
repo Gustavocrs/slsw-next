@@ -93,7 +93,8 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
           <MenuItem value="">Selecione uma complicação</MenuItem>
           {HINDRANCES.map((hind) => (
             <MenuItem key={hind.name} value={hind.name}>
-              {hind.name} ({hind.type})
+              {hind.name}{" "}
+              {hind.name.includes(`(${hind.type})`) ? "" : `(${hind.type})`}
             </MenuItem>
           ))}
         </Select>
@@ -113,7 +114,8 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
           <ListItem key={`${item.name}-${index}`}>
             <Box sx={{fontWeight: 500}}>
               <p style={{margin: 0}}>
-                {item.name} - {item.type}
+                {item.name}{" "}
+                {item.name.includes(`(${item.type})`) ? "" : `- ${item.type}`}
               </p>
               <span style={{fontSize: "0.75rem", color: "#666"}}>
                 {item.description}

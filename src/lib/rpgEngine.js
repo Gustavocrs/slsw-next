@@ -1089,9 +1089,14 @@ export const HINDRANCES = [
     description: "Não consegue guardar segredos.",
   },
   {
-    name: "Cabeça-Quente",
-    type: "Menor/Maior",
-    description: "-1/-2 em testes de Provocar; irrita-se fácil.",
+    name: "Cabeça-Quente (Menor)",
+    type: "Menor",
+    description: "-1 em testes de Provocar; irrita-se fácil.",
+  },
+  {
+    name: "Cabeça-Quente (Maior)",
+    type: "Maior",
+    description: "-2 em testes de Provocar; irrita-se fácil.",
   },
   {
     name: "Cauteloso",
@@ -1120,9 +1125,14 @@ export const HINDRANCES = [
     description: "Tem que investigar mistérios.",
   },
   {
-    name: "Delirante",
-    type: "Menor/Maior",
+    name: "Delirante (Menor)",
+    type: "Menor",
     description: "Acredita em algo que não é verdade.",
+  },
+  {
+    name: "Delirante (Maior)",
+    type: "Maior",
+    description: "Acredita em algo que não é verdade (Grave).",
   },
   {name: "Desagradável", type: "Menor", description: "-2 em Persuadir."},
   {
@@ -1146,14 +1156,24 @@ export const HINDRANCES = [
     description: "Trai o grupo se for vantajoso.",
   },
   {
-    name: "Determinado",
-    type: "Menor/Maior",
+    name: "Determinado (Menor)",
+    type: "Menor",
     description: "Não desiste de seus objetivos.",
   },
   {
-    name: "Duro de Ouvido",
-    type: "Menor/Maior",
-    description: "-4 em Perceber auditivo; surdo se Maior.",
+    name: "Determinado (Maior)",
+    type: "Maior",
+    description: "Não desiste de seus objetivos (Obsessão).",
+  },
+  {
+    name: "Duro de Ouvido (Menor)",
+    type: "Menor",
+    description: "-4 em Perceber auditivo.",
+  },
+  {
+    name: "Duro de Ouvido (Maior)",
+    type: "Maior",
+    description: "Surdo.",
   },
   {
     name: "Feio",
@@ -1166,9 +1186,14 @@ export const HINDRANCES = [
     description: "-2 em Persuadir; não conhece costumes locais.",
   },
   {
-    name: "Frágil",
-    type: "Menor/Maior",
-    description: "-1 Resistência (Menor) ou -2 (Maior).",
+    name: "Frágil (Menor)",
+    type: "Menor",
+    description: "-1 Resistência.",
+  },
+  {
+    name: "Frágil (Maior)",
+    type: "Maior",
+    description: "-2 Resistência.",
   },
   {
     name: "Fúria Incontrolável",
@@ -1176,14 +1201,24 @@ export const HINDRANCES = [
     description: "Entra em frenesi ao sofrer dano ou falhar.",
   },
   {
-    name: "Ganancioso",
-    type: "Menor/Maior",
+    name: "Ganancioso (Menor)",
+    type: "Menor",
     description: "Obcecado por riqueza.",
   },
   {
-    name: "Hábito",
-    type: "Menor/Maior",
+    name: "Ganancioso (Maior)",
+    type: "Maior",
+    description: "Faz qualquer coisa por riqueza.",
+  },
+  {
+    name: "Hábito (Menor)",
+    type: "Menor",
     description: "Vício ou mania que atrapalha.",
+  },
+  {
+    name: "Hábito (Maior)",
+    type: "Maior",
+    description: "Vício ou mania que atrapalha (Grave).",
   },
   {name: "Heroico", type: "Maior", description: "Sempre ajuda quem precisa."},
   {
@@ -1197,11 +1232,25 @@ export const HINDRANCES = [
     description: "-1 Força/Vigor, +5 pontos de perícia.",
   },
   {name: "Impulsivo", type: "Maior", description: "Age sem pensar."},
-  {name: "Inimigo", type: "Menor/Maior", description: "Alguém quer te matar."},
   {
-    name: "Invejoso",
-    type: "Menor/Maior",
+    name: "Inimigo (Menor)",
+    type: "Menor",
+    description: "Alguém quer te atrapalhar.",
+  },
+  {
+    name: "Inimigo (Maior)",
+    type: "Maior",
+    description: "Alguém quer te matar.",
+  },
+  {
+    name: "Invejoso (Menor)",
+    type: "Menor",
     description: "Cobiça o que os outros têm.",
+  },
+  {
+    name: "Invejoso (Maior)",
+    type: "Maior",
+    description: "Cobiça e age contra quem tem.",
   },
   {name: "Leal", type: "Menor", description: "Nunca abandona um amigo."},
   {
@@ -1222,9 +1271,14 @@ export const HINDRANCES = [
   },
   {name: "Não Nada", type: "Menor", description: "-2 em Atletismo para nadar."},
   {
-    name: "Obcecado",
-    type: "Menor/Maior",
+    name: "Obcecado (Menor)",
+    type: "Menor",
     description: "Focado em um objetivo único.",
+  },
+  {
+    name: "Obcecado (Maior)",
+    type: "Maior",
+    description: "Focado em um objetivo único (Total).",
   },
   {
     name: "Obeso",
@@ -1232,19 +1286,34 @@ export const HINDRANCES = [
     description: "+1 Resistência, -1 Movimentação.",
   },
   {
-    name: "Olhos Ruins",
-    type: "Menor/Maior",
-    description: "-2 em testes visuais.",
+    name: "Olhos Ruins (Menor)",
+    type: "Menor",
+    description: "-2 em testes visuais (corrigível).",
   },
   {
-    name: "Obrigação",
-    type: "Menor/Maior",
-    description: "Dever para com um grupo ou pessoa.",
+    name: "Olhos Ruins (Maior)",
+    type: "Maior",
+    description: "-2 em testes visuais (não corrigível).",
   },
   {
-    name: "Pacifista",
-    type: "Menor/Maior",
-    description: "Não luta (Menor) ou não fere (Maior).",
+    name: "Obrigação (Menor)",
+    type: "Menor",
+    description: "Dever para com um grupo ou pessoa (Curta).",
+  },
+  {
+    name: "Obrigação (Maior)",
+    type: "Maior",
+    description: "Dever para com um grupo ou pessoa (Longa).",
+  },
+  {
+    name: "Pacifista (Menor)",
+    type: "Menor",
+    description: "Não luta contra seres vivos.",
+  },
+  {
+    name: "Pacifista (Maior)",
+    type: "Maior",
+    description: "Não fere ninguém.",
   },
   {
     name: "Peculiaridade",
@@ -1267,15 +1336,25 @@ export const HINDRANCES = [
     description: "Começa com metade da riqueza.",
   },
   {
-    name: "Procurado",
-    type: "Menor/Maior",
-    description: "Autoridades buscam você.",
+    name: "Procurado (Menor)",
+    type: "Menor",
+    description: "Autoridades buscam você (Local).",
+  },
+  {
+    name: "Procurado (Maior)",
+    type: "Maior",
+    description: "Autoridades buscam você (Global).",
   },
   {name: "Reservado", type: "Menor", description: "Não fala sobre si mesmo."},
   {name: "Sanguinário", type: "Maior", description: "Nunca faz prisioneiros."},
   {
-    name: "Segredo",
-    type: "Menor/Maior",
+    name: "Segredo (Menor)",
+    type: "Menor",
+    description: "Informação que causa embaraço.",
+  },
+  {
+    name: "Segredo (Maior)",
+    type: "Maior",
     description: "Informação que pode te destruir.",
   },
   {name: "Sem Noção", type: "Menor", description: "-2 em Conhecimento Comum."},
@@ -1287,9 +1366,14 @@ export const HINDRANCES = [
   {name: "Solitário", type: "Menor", description: "Prefere trabalhar sozinho."},
   {name: "Teimoso", type: "Menor", description: "Sempre quer ter razão."},
   {
-    name: "Vingativo",
-    type: "Menor/Maior",
+    name: "Vingativo (Menor)",
+    type: "Menor",
     description: "Procura retribuição por insultos.",
+  },
+  {
+    name: "Vingativo (Maior)",
+    type: "Maior",
+    description: "Procura retribuição violenta.",
   },
 ].sort((a, b) => a.name.localeCompare(b.name));
 

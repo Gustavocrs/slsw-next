@@ -27,6 +27,7 @@ import SkillsList from "./SkillsList";
 import ArmorList from "./ArmorList";
 import WeaponsList from "./WeaponsList";
 import ItemsList from "./ItemsList";
+import EspoliosList from "./EspoliosList";
 import VantagesList from "./VantagesList";
 import ComplicacoesList from "./ComplicacoesList";
 import RecursosDespertarList from "./RecursosDespertarList";
@@ -388,8 +389,8 @@ function SheetView({saveSuccess, onLoad}) {
               {character.nome || "Sem Nome"}
             </h2>
             <p style={{margin: "0", fontSize: "0.9rem", color: "#666"}}>
-              {character.jogador ? `Jogado por ${character.jogador} • ` : ""}
-              {character.rank} • {character.arquetipo || "—"}
+              {character.rank} • {character.arquetipo || "—"} (
+              {character.conceito || "—"})
               {character.guilda ? ` • ${character.guilda}` : ""}
             </p>
           </Box>
@@ -1058,6 +1059,7 @@ function SheetView({saveSuccess, onLoad}) {
                     >
                       {hindrancePointsGained < 0 ? "" : "+"}
                       {hindrancePointsGained}
+                      <span> pts</span>
                     </PointsBadge>
                   </Tooltip>
                 </Box>
@@ -1119,7 +1121,7 @@ function SheetView({saveSuccess, onLoad}) {
                 onAdd={(item) => addItemToList("armaduras", item)}
                 onRemove={(idx) => removeItemFromList("armaduras", idx)}
                 onUpdate={(idx, item) => updateListItem("armaduras", idx, item)}
-                addButtonLabel="+ Adicionar Armadura/Escudo"
+                addButtonLabel="+ Adicionar"
               />
             </Grid>
 
@@ -1128,19 +1130,11 @@ function SheetView({saveSuccess, onLoad}) {
               <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
                 💎 Espólios
               </h3>
-              <Box sx={{background: "#f9f9f9", p: 1.5, borderRadius: 1}}>
-                <DynamicList
-                  title=""
-                  items={character.espolios || []}
-                  fields={[{name: "name", label: "Espólio"}]}
-                  onAdd={(item) => addItemToList("espolios", item)}
-                  onRemove={(idx) => removeItemFromList("espolios", idx)}
-                  onUpdate={(idx, item) =>
-                    updateListItem("espolios", idx, item)
-                  }
-                  addButtonLabel="+ Adicionar Espólio"
-                />
-              </Box>
+              <EspoliosList
+                items={character.espolios || []}
+                onAdd={(item) => addItemToList("espolios", item)}
+                onRemove={(idx) => removeItemFromList("espolios", idx)}
+              />
             </Grid>
           </Grid>
         </Box>
