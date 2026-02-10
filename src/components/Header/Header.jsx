@@ -50,6 +50,7 @@ const ControlsSection = styled(Box)`
   display: flex;
   align-items: center;
   gap: 12px;
+  height: 30px;
 `;
 
 const HeaderButton = styled(Button)`
@@ -74,13 +75,13 @@ const HeaderButton = styled(Button)`
 `;
 
 function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
-  const {user, loading, googleLogin} = useAuth();
+  const {user, loading, loginWithGoogle} = useAuth();
   const {viewMode, toggleView} = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleLogin = async () => {
     try {
-      await googleLogin();
+      await loginWithGoogle();
     } catch (error) {
       console.error("Login falhou", error);
     }
@@ -115,16 +116,6 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     <StyledAppBar position="fixed" color="primary">
       <HeaderContent>
         <UserSection>
-          {/* <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={onToggleSidebar}
-            sx={{ mr: 1 }}
-          >
-            <MenuIcon />
-          </IconButton> */}
-
           <UserMenu />
         </UserSection>
 

@@ -13,7 +13,7 @@ import {Logout} from "@mui/icons-material";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
-  const {user, googleLogin, logout} = useAuth();
+  const {user, logoutUser} = useAuth();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -27,7 +27,8 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     handleClose();
-    await logout();
+    await logoutUser();
+    window.location.reload();
   };
 
   // Tenta alterar levemente a URL (tamanho) para evitar cache de erro 429 do Google

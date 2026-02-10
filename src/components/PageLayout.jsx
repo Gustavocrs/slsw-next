@@ -53,7 +53,7 @@ export default function PageLayout() {
   };
 
   return (
-    <Box>
+    <Box id="DIVV" sx={{padding: "0", width: "100%", height: "100%"}}>
       <Header
         onToggleSidebar={handleToggleSidebar}
         currentView={currentView}
@@ -63,7 +63,7 @@ export default function PageLayout() {
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <Box sx={{p: 2, pb: 12}}>
+      <Box>
         {currentView === "book" ? (
           <BookView onOpenSidebar={handleToggleSidebar} />
         ) : (
