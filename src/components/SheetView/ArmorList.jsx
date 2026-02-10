@@ -20,6 +20,10 @@ const InputRow = styled(Box)`
   border-radius: 8px;
   border: 1px solid #e0e0e0;
   margin-bottom: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const ListItem = styled(Box)`

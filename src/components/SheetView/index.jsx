@@ -811,7 +811,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 1: IDENTIFICAÇÃO */}
       {tabValue === 1 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <StyledTextField
@@ -993,7 +993,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 2: PERÍCIAS */}
       {tabValue === 2 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Box
             sx={{
               display: "flex",
@@ -1041,7 +1041,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 3: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
       {tabValue === 3 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* VANTAGENS - Coluna esquerda */}
             <Grid item xs={12} md={6}>
@@ -1135,7 +1135,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 4: EQUIPAMENTOS (2x2 Grid) */}
       {tabValue === 4 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* ARMAS - Superior esquerdo */}
             <Grid item xs={12} md={6}>
@@ -1201,7 +1201,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 5: PODERES (Magias + Recursos Despertar) */}
       {tabValue === 5 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
             <Grid item xs={12} md={6}>
@@ -1234,7 +1234,14 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 6: NOTAS */}
       {tabValue === 6 && (
-        <Box sx={{padding: "16px", background: "#fff", borderRadius: "12px"}}>
+        <Box
+          sx={{
+            padding: "16px",
+            paddingBottom: "80px",
+            background: "#fff",
+            borderRadius: "12px",
+          }}
+        >
           <h3 style={{margin: "0 0 12px 0"}}>📝 Notas</h3>
           <textarea
             style={{
