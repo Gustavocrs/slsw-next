@@ -13,7 +13,7 @@ import {POWERS} from "@/lib/rpgEngine";
 
 const InputRow = styled(Box)`
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
   padding: 12px;
@@ -21,6 +21,10 @@ const InputRow = styled(Box)`
   border-radius: 8px;
   border: 1px solid #e0e0e0;
   margin-bottom: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `;
 
 const ListItem = styled(Box)`
@@ -86,7 +90,7 @@ function MagiasList({items = [], onAdd, onRemove}) {
           displayEmpty
           size="small"
           fullWidth
-          sx={{background: "#fff", borderRadius: "6px"}}
+          sx={{background: "#fff", borderRadius: "6px", maxWidth: "100%"}}
           MenuProps={{PaperProps: {style: {maxHeight: 300}}}}
         >
           <MenuItem value="">Selecione uma magia</MenuItem>
