@@ -229,42 +229,6 @@ function SheetView({saveSuccess, onLoad}) {
 
   return (
     <Box>
-      <Box sx={{display: "flex", justifyContent: "flex-end", mb: 1}}>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            const defaultSkills = Object.keys(SKILLS)
-              .slice(0, 6)
-              .map((k) => ({
-                name: k,
-                die: "d6",
-              }));
-            const defaultEdges = EDGES.slice(0, 6).map((e) => ({name: e.name}));
-            const defaultSpells = Object.keys(POWERS)
-              .slice(0, 3)
-              .map((p) => ({
-                name: p,
-                pp: POWERS[p].pp || "",
-                range: POWERS[p].range || "",
-                duration: POWERS[p].duration || "",
-              }));
-            const defaultHindrances = HINDRANCES.slice(0, 2).map((h) => ({
-              name: h.name,
-            }));
-
-            updateCharacter({
-              pericias: defaultSkills,
-              vantagens: defaultEdges,
-              magias: defaultSpells,
-              complicacoes: defaultHindrances,
-            });
-          }}
-        >
-          Preencher Padrões
-        </Button>
-      </Box>
-
       {/* Tabs - Nova ordem */}
       <TabsPaper>
         <Tabs
@@ -384,7 +348,7 @@ function SheetView({saveSuccess, onLoad}) {
 
       {/* TAB 0: VISUALIZAR */}
       {tabValue === 0 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Box sx={{mb: 2, pb: 1.5, borderBottom: "2px solid #667eea"}}>
             <h2 style={{margin: "0 0 4px 0", fontSize: "1.4rem"}}>
               {character.nome || "Sem Nome"}
