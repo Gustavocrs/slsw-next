@@ -23,7 +23,7 @@ const InputRow = styled(Box)`
   margin-bottom: 16px;
 
   @media (max-width: 600px) {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(2, 1fr);
   }
 `;
 
