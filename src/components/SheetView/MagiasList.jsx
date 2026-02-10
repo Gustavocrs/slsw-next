@@ -98,7 +98,7 @@ function MagiasList({items = [], onAdd, onRemove}) {
               </MenuItem>
             ))}
         </Select>
-        <Button onClick={handleAdd}>+ Adicionar</Button>
+        <Button onClick={handleAdd}>+</Button>
       </InputRow>
 
       {items.length === 0 ? (

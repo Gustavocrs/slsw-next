@@ -371,7 +371,14 @@ function SheetView({saveSuccess, onLoad}) {
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <Box sx={{background: "#f9f9f9", p: 1.5, borderRadius: 1}}>
+              <Box
+                sx={{
+                  background: "#e3f2fd",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #2196f3",
+                }}
+              >
                 <h4 style={{margin: "0 0 12px 0", fontSize: "0.9rem"}}>
                   Atributos
                 </h4>
@@ -417,7 +424,14 @@ function SheetView({saveSuccess, onLoad}) {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Box sx={{background: "#f9f9f9", p: 1.5, borderRadius: 1}}>
+              <Box
+                sx={{
+                  background: "#fff8e1",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #ffc107",
+                }}
+              >
                 <h4 style={{margin: "0 0 10px 0", fontSize: "0.9rem"}}>
                   Progresso
                 </h4>
@@ -448,10 +462,11 @@ function SheetView({saveSuccess, onLoad}) {
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
-                  background: "#f9f9f9",
+                  background: "#e8eaf6",
                   p: 1.5,
                   borderRadius: 1,
                   maxHeight: "100%",
+                  borderLeft: "3px solid #3f51b5",
                   overflowY: "auto",
                 }}
               >
@@ -916,10 +931,10 @@ function SheetView({saveSuccess, onLoad}) {
             <Grid item xs={12}>
               <Box
                 sx={{
-                  background: "#f0f0f0",
+                  background: "#e3f2fd",
                   p: 1.5,
                   borderRadius: 1,
-                  borderLeft: "4px solid #667eea",
+                  borderLeft: "4px solid #2196f3",
                 }}
               >
                 <Box

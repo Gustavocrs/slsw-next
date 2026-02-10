@@ -91,7 +91,15 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        mb: 2,
+        background: "#e8eaf6",
+        p: 2,
+        borderRadius: 1,
+        borderLeft: "4px solid #3f51b5",
+      }}
+    >
       {/* Input Row */}
       <InputRow>
         <Select

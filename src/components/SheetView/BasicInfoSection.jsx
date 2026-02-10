@@ -23,10 +23,10 @@ const SectionContainer = styled(Paper)`
   && {
     padding: 24px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    background: #e0f7fa;
     margin-bottom: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #00bcd4;
   }
 `;
 
