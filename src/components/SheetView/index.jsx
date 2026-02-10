@@ -20,9 +20,9 @@ import {
   Grid,
   Tooltip,
   Alert,
+  Checkbox,
 } from "@mui/material";
 import styled from "styled-components";
-import DynamicList from "./DynamicList";
 import SkillsList from "./SkillsList";
 import MagiasList from "./MagiasList";
 import ArmorList from "./ArmorList";
@@ -234,6 +234,15 @@ function SheetView({saveSuccess, onLoad}) {
     {name: "limitacao", label: "Limitação"},
   ];
 
+  // Cálculos de Combate
+  const fightingSkill = character.pericias?.find((p) => p.name === "Lutar");
+  const fightingDieVal = fightingSkill
+    ? parseInt((fightingSkill.die || "d4").replace("d", ""), 10)
+    : 0;
+  const parryBase = fightingSkill ? 2 + fightingDieVal / 2 : 2;
+  const vigorDieVal = parseInt((character.vigor || "d4").replace("d", ""), 10);
+  const toughnessBase = 2 + vigorDieVal / 2;
+
   return (
     <Box>
       {/* Tabs - Nova ordem */}
@@ -291,6 +300,19 @@ function SheetView({saveSuccess, onLoad}) {
             label={
               <Box>
                 🎯
+                <Box
+                  component="span"
+                  sx={{display: {xs: "none", sm: "inline"}}}
+                >
+                  Combate
+                </Box>
+              </Box>
+            }
+          />
+          <TabStyled
+            label={
+              <Box>
+                ⚔️
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -379,7 +401,13 @@ function SheetView({saveSuccess, onLoad}) {
                   borderLeft: "3px solid #2196f3",
                 }}
               >
-                <h4 style={{margin: "0 0 12px 0", fontSize: "0.9rem"}}>
+                <h4
+                  style={{
+                    margin: "0 0 12px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
                   Atributos
                 </h4>
                 <Box
@@ -432,7 +460,13 @@ function SheetView({saveSuccess, onLoad}) {
                   borderLeft: "3px solid #ffc107",
                 }}
               >
-                <h4 style={{margin: "0 0 10px 0", fontSize: "0.9rem"}}>
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
                   Progresso
                 </h4>
                 <Box
@@ -459,6 +493,99 @@ function SheetView({saveSuccess, onLoad}) {
               </Box>
             </Grid>
 
+            {/* CARD DE COMBATE */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  background: "#ffebee",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #ef5350",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Combate
+                </h4>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 1,
+                    textAlign: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Aparar
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {parryBase + (character.aparar_bonus || 0)}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Resistência
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {toughnessBase + (character.armadura_bonus || 0)}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Movimento
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {character.movimento || 6}
+                    </div>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.8rem",
+                    borderTop: "1px solid #ffcdd2",
+                    pt: 1,
+                  }}
+                >
+                  <span>
+                    Bênçãos: <strong>{character.bencaos ?? 3}</strong>
+                  </span>
+                  <span>
+                    Penalidade:{" "}
+                    <strong>
+                      -{(character.ferimentos || 0) + (character.fadiga || 0)}
+                    </strong>
+                  </span>
+                </Box>
+              </Box>
+            </Grid>
+
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
@@ -470,7 +597,13 @@ function SheetView({saveSuccess, onLoad}) {
                   overflowY: "auto",
                 }}
               >
-                <h4 style={{margin: "0 0 10px 0", fontSize: "0.9rem"}}>
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
                   Perícias
                 </h4>
                 {character.pericias && character.pericias.length > 0 ? (
@@ -751,13 +884,23 @@ function SheetView({saveSuccess, onLoad}) {
                     {character.armaduras.map((armor, idx) => {
                       const isShield =
                         armor.name?.toLowerCase().includes("escudo") ||
-                        (parseInt(armor.defense) === 0 &&
-                          parseInt(armor.ap) > 0);
+                        (parseInt(armor.defense || 0) === 0 &&
+                          parseInt(armor.ap || 0) > 0);
+
+                      const def =
+                        armor.defense && parseInt(armor.defense) !== 0
+                          ? armor.defense
+                          : null;
+                      const ap =
+                        armor.ap && parseInt(armor.ap) !== 0 ? armor.ap : null;
+                      const stats = [def && `Def +${def}`, ap && `Ap +${ap}`]
+                        .filter(Boolean)
+                        .join(", ");
+
                       return (
                         <div key={idx} style={{fontSize: "0.85rem"}}>
-                          {isShield
-                            ? `${armor.name}: Aparar +${armor.ap || "—"}`
-                            : `${armor.name}: Def +${armor.defense || "—"}`}
+                          {armor.name}
+                          {stats ? `: ${stats}` : ""}
                         </div>
                       );
                     })}
@@ -766,8 +909,43 @@ function SheetView({saveSuccess, onLoad}) {
               </Grid>
             )}
 
+            {character.espolios && character.espolios.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#e0f2f1",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #009688",
+                    maxHeight: "140px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Espólios
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.espolios.map((item, idx) => (
+                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                        {item.name}{" "}
+                        {item.quantity > 1 ? `(x${item.quantity})` : ""}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
             {character.itens && character.itens.length > 0 && (
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <Box sx={{background: "#f5f5f5", p: 1.5, borderRadius: 1}}>
                   <h4
                     style={{
@@ -781,10 +959,7 @@ function SheetView({saveSuccess, onLoad}) {
                   <Box
                     sx={{
                       display: "grid",
-                      gridTemplateColumns: {
-                        xs: "repeat(2, 1fr)",
-                        md: "repeat(3, 1fr)",
-                      },
+                      gridTemplateColumns: "repeat(2, 1fr)",
                       gap: 1,
                     }}
                   >
@@ -991,8 +1166,534 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 2: PERÍCIAS */}
+      {/* TAB 2: COMBATE */}
       {tabValue === 2 && (
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+          {/* SEÇÃO 1: STATUS DE SAÚDE */}
+          <Box
+            sx={{
+              background: "#fff5f5",
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #e53e3e",
+              mb: 3,
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "1.1rem",
+                color: "#c53030",
+              }}
+            >
+              Condição Atual
+            </h3>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 3,
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+            >
+              {/* Ferimentos & Abalado */}
+
+              <Box sx={{flex: 1, minWidth: "200px", textAlign: "center"}}>
+                <label
+                  style={{
+                    color: "#991b1b",
+                    fontWeight: "bold",
+                    fontSize: "0.85rem",
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  SAÚDE
+                </label>
+                <Box
+                  sx={{
+                    background: "white",
+                    border: "1px solid #fecaca",
+                    borderRadius: 2,
+                    p: 1.5,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  {/* Abalado */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      pr: 2,
+                      borderRight: "1px solid #fee2e2",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        fontWeight: 900,
+                        color: "#d97706",
+                        marginRight: "4px",
+                      }}
+                    >
+                      ABALADO
+                    </span>
+                    <Checkbox
+                      checked={character.abalado || false}
+                      onChange={(e) =>
+                        updateAttribute("abalado", e.target.checked)
+                      }
+                      size="small"
+                      sx={{
+                        p: 0,
+                        color: "#d97706",
+                        "&.Mui-checked": {color: "#d97706"},
+                      }}
+                    />
+                  </Box>
+                  {/* Ferimentos */}
+                  <Box sx={{display: "flex", alignItems: "center"}}>
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        fontWeight: 900,
+                        color: "#d97706",
+                        marginRight: "4px",
+                      }}
+                    >
+                      FERIMENTOS
+                    </span>
+                    <Box sx={{display: "flex"}}>
+                      {[1, 2, 3].map((level) => (
+                        <Checkbox
+                          key={level}
+                          checked={(character.ferimentos || 0) >= level}
+                          onChange={() => {
+                            const current = character.ferimentos || 0;
+                            const newVal =
+                              current === level ? level - 1 : level;
+
+                            if (newVal > current && !character.abalado) {
+                              updateAttribute("abalado", true);
+                            }
+                            updateAttribute("ferimentos", newVal);
+                          }}
+                          size="small"
+                          sx={{
+                            p: 0.5,
+                            color: "#ef4444",
+                            "&.Mui-checked": {color: "#dc2626"},
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#7f1d1d",
+                    marginTop: "6px",
+                    display: "block",
+                  }}
+                >
+                  {(character.ferimentos || 0) === 0
+                    ? "Saudável"
+                    : `-${character.ferimentos} em testes`}
+                </span>
+              </Box>
+
+              {/* Fadiga */}
+              <Box sx={{flex: 1, minWidth: "150px", textAlign: "center"}}>
+                <label
+                  style={{
+                    color: "#991b1b",
+                    fontWeight: "bold",
+                    fontSize: "0.85rem",
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  FADIGA
+                </label>
+                <Box
+                  sx={{
+                    background: "white",
+                    border: "1px solid #fecaca",
+                    borderRadius: 2,
+                    p: 1.5,
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Box sx={{display: "flex", gap: 1}}>
+                    {[1, 2].map((level) => (
+                      <Checkbox
+                        key={level}
+                        checked={(character.fadiga || 0) >= level}
+                        onChange={() => {
+                          const current = character.fadiga || 0;
+                          const newVal = current === level ? level - 1 : level;
+                          updateAttribute("fadiga", newVal);
+                        }}
+                        size="small"
+                        sx={{
+                          p: 0.5,
+                          color: "#ef4444",
+                          "&.Mui-checked": {color: "#dc2626"},
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#7f1d1d",
+                    marginTop: "6px",
+                    display: "block",
+                  }}
+                >
+                  {(character.fadiga || 0) === 0
+                    ? "Vigoroso"
+                    : `-${character.fadiga} em testes`}
+                </span>
+              </Box>
+
+              {/* Penalidade Total */}
+              <Box sx={{flex: "0 0 100px", textAlign: "center"}}>
+                <label
+                  style={{
+                    color: "#991b1b",
+                    fontWeight: "bold",
+                    fontSize: "0.85rem",
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  PENALIDADE
+                </label>
+                <Box
+                  sx={{
+                    height: "50px",
+                    fontSize: "1.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 800,
+                    border: "2px solid #fecaca",
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    borderRadius: 2,
+                  }}
+                >
+                  -{(character.ferimentos || 0) + (character.fadiga || 0)}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* SEÇÃO 2: ESTATÍSTICAS DE COMBATE */}
+          <Grid container spacing={3}>
+            {/* Defesas */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  background: "#e3f2fd",
+                  p: 2,
+                  borderRadius: 2,
+                  borderLeft: "4px solid #2196f3",
+                  height: "100%",
+                }}
+              >
+                <h3
+                  style={{
+                    margin: "0 0 16px 0",
+                    fontSize: "1.1rem",
+                    color: "#1e3a8a",
+                  }}
+                >
+                  Defesas
+                </h3>
+                <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
+                  {/* Aparar */}
+                  <Box>
+                    <label
+                      style={{
+                        color: "#1e40af",
+                        fontWeight: "bold",
+                        fontSize: "0.8rem",
+                        marginBottom: "4px",
+                        display: "block",
+                      }}
+                    >
+                      APARAR
+                    </label>
+                    <Box sx={{display: "flex", gap: 1}}>
+                      <TextField
+                        value={parryBase + (character.aparar_bonus || 0)}
+                        size="small"
+                        inputProps={{
+                          readOnly: true,
+                          style: {
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            background: "#eff6ff",
+                            color: "#1e3a8a",
+                          },
+                        }}
+                        sx={{flex: 1}}
+                      />
+                      <TextField
+                        type="number"
+                        placeholder="+Mod"
+                        value={character.aparar_bonus || ""}
+                        onChange={(e) =>
+                          updateAttribute(
+                            "aparar_bonus",
+                            parseInt(e.target.value) || 0,
+                          )
+                        }
+                        size="small"
+                        sx={{width: "80px", background: "#fff"}}
+                      />
+                    </Box>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#60a5fa",
+                        marginTop: "2px",
+                        display: "block",
+                      }}
+                    >
+                      Base: {parryBase} (2 + Lutar/2)
+                    </span>
+                  </Box>
+
+                  {/* Resistência */}
+                  <Box>
+                    <label
+                      style={{
+                        color: "#1e40af",
+                        fontWeight: "bold",
+                        fontSize: "0.8rem",
+                        marginBottom: "4px",
+                        display: "block",
+                      }}
+                    >
+                      RESISTÊNCIA (TOUGHNESS)
+                    </label>
+                    <Box sx={{display: "flex", gap: 1}}>
+                      <TextField
+                        value={toughnessBase + (character.armadura_bonus || 0)}
+                        size="small"
+                        inputProps={{
+                          readOnly: true,
+                          style: {
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            background: "#eff6ff",
+                            color: "#1e3a8a",
+                          },
+                        }}
+                        sx={{flex: 1}}
+                      />
+                      <TextField
+                        type="number"
+                        placeholder="+Arm"
+                        value={character.armadura_bonus || ""}
+                        onChange={(e) =>
+                          updateAttribute(
+                            "armadura_bonus",
+                            parseInt(e.target.value) || 0,
+                          )
+                        }
+                        size="small"
+                        sx={{width: "80px", background: "#fff"}}
+                      />
+                    </Box>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#60a5fa",
+                        marginTop: "2px",
+                        display: "block",
+                      }}
+                    >
+                      Base: {toughnessBase} (2 + Vigor/2)
+                    </span>
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Recursos e Movimento */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  height: "100%",
+                }}
+              >
+                {/* Bênçãos */}
+                <Box
+                  sx={{
+                    background: "#fffbeb",
+                    p: 2,
+                    borderRadius: 2,
+                    borderLeft: "4px solid #ffc107",
+                    flex: 1,
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: "0 0 16px 0",
+                      fontSize: "1.1rem",
+                      color: "#b45309",
+                    }}
+                  >
+                    Bênçãos (Bennies)
+                  </h3>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <TextField
+                      type="number"
+                      value={character.bencaos ?? 3}
+                      onChange={(e) =>
+                        updateAttribute(
+                          "bencaos",
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      inputProps={{
+                        style: {
+                          fontSize: "2rem",
+                          textAlign: "center",
+                          fontWeight: 800,
+                          color: "#d97706",
+                          padding: "10px",
+                        },
+                      }}
+                      sx={{
+                        width: "100px",
+                        background: "#fff",
+                        borderRadius: 2,
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": {
+                            borderColor: "#fcd34d",
+                            borderWidth: 2,
+                          },
+                          "&:hover fieldset": {borderColor: "#f59e0b"},
+                          "&.Mui-focused fieldset": {borderColor: "#d97706"},
+                        },
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Movimentação */}
+                <Box
+                  sx={{
+                    background: "#f3f4f6",
+                    p: 2,
+                    borderRadius: 2,
+                    borderLeft: "4px solid #9ca3af",
+                    flex: 1,
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: "0 0 16px 0",
+                      fontSize: "1.1rem",
+                      color: "#374151",
+                    }}
+                  >
+                    Movimentação
+                  </h3>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <TextField
+                      type="number"
+                      value={character.movimento ?? 6}
+                      onChange={(e) =>
+                        updateAttribute(
+                          "movimento",
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      size="small"
+                      inputProps={{
+                        style: {textAlign: "center", fontWeight: "bold"},
+                      }}
+                      sx={{width: "80px", background: "#fff"}}
+                    />
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        color: "#4b5563",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      quadrados
+                    </span>
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* SEÇÃO 3: LESÕES */}
+          <Box sx={{mt: 3}}>
+            <Box
+              sx={{
+                background: "#f9fafb",
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <h3
+                style={{
+                  margin: "0 0 12px 0",
+                  fontSize: "1.1rem",
+                  color: "#374151",
+                }}
+              >
+                Lesões Permanentes
+              </h3>
+              <TextField
+                multiline
+                rows={3}
+                fullWidth
+                placeholder="Descreva cicatrizes, membros perdidos ou sequelas..."
+                value={character.lesoes || ""}
+                onChange={(e) => updateAttribute("lesoes", e.target.value)}
+                sx={{background: "#fff"}}
+              />
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+      {/* TAB 3: PERÍCIAS */}
+      {tabValue === 3 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Box
             sx={{
@@ -1039,8 +1740,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 3: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
-      {tabValue === 3 && (
+      {/* TAB 4: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
+      {tabValue === 4 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* VANTAGENS - Coluna esquerda */}
@@ -1133,8 +1834,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 4: EQUIPAMENTOS (2x2 Grid) */}
-      {tabValue === 4 && (
+      {/* TAB 5: EQUIPAMENTOS (2x2 Grid) */}
+      {tabValue === 5 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* ARMAS - Superior esquerdo */}
@@ -1199,8 +1900,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 5: PODERES (Magias + Recursos Despertar) */}
-      {tabValue === 5 && (
+      {/* TAB 6: PODERES (Magias + Recursos Despertar) */}
+      {tabValue === 6 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
@@ -1232,8 +1933,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 6: NOTAS */}
-      {tabValue === 6 && (
+      {/* TAB 7: NOTAS */}
+      {tabValue === 7 && (
         <Box
           sx={{
             padding: "16px",
