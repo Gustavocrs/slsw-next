@@ -14,11 +14,20 @@ import manualSections from "@/data/manualSections";
 const BookContainer = styled(Paper)`
   && {
     padding: 40px;
+    padding-bottom: 100px;
     max-width: 900px;
     margin: 0 auto;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    @media (max-width: 900px) {
+      padding: 20px;
+      padding-bottom: 100px;
+      width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
   }
 `;
 
@@ -73,7 +82,8 @@ const SectionContent = styled.div`
     margin-bottom: 10px;
   }
 
-  ul, ol {
+  ul,
+  ol {
     margin-bottom: 15px;
     margin-left: 20px;
   }
@@ -86,9 +96,12 @@ const SectionContent = styled.div`
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
+    display: block;
+    overflow-x: auto;
   }
 
-  table th, table td {
+  table th,
+  table td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
@@ -119,6 +132,11 @@ const SectionContent = styled.div`
     color: #999;
     font-style: italic;
   }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 `;
 
 function BookView({onOpenSidebar}) {
@@ -133,7 +151,9 @@ function BookView({onOpenSidebar}) {
         {manualSections.map((section) => (
           <section key={section.id} id={section.id}>
             <SectionTitle>{section.title}</SectionTitle>
-            <SectionContent dangerouslySetInnerHTML={{__html: section.content}} />
+            <SectionContent
+              dangerouslySetInnerHTML={{__html: section.content}}
+            />
           </section>
         ))}
       </BookContainer>

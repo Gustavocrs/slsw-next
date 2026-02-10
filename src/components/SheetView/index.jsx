@@ -63,6 +63,13 @@ const TabStyled = styled(Tab)`
     font-size: 0.95rem;
     color: #666;
     padding: 10px 16px;
+    min-width: auto;
+
+    @media (max-width: 600px) {
+      padding: 12px 4px;
+      flex: 1;
+      max-width: none;
+    }
 
     &.Mui-selected {
       color: #667eea;
@@ -242,11 +249,13 @@ function SheetView({saveSuccess, onLoad}) {
             },
             "& .MuiTabs-scroller": {
               display: {xs: "flex", sm: "block"},
+              width: "100%",
             },
             "& .MuiTabs-flexContainer": {
               display: {xs: "flex", sm: "flex"},
-              justifyContent: {xs: "space-around", sm: "flex-start"},
-              gap: {xs: 0, sm: 1},
+              justifyContent: {xs: "space-between", sm: "flex-start"},
+              gap: 2,
+              width: "100%",
             },
           }}
           variant="scrollable"
@@ -255,7 +264,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                👁️{" "}
+                👁️
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -268,7 +277,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                🆔{" "}
+                🆔
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -281,7 +290,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                🎯{" "}
+                🎯
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -294,7 +303,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                ✨{" "}
+                ✨
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -307,7 +316,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                ⚙️{" "}
+                ⚙️
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -320,7 +329,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                ✨{" "}
+                ✨
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -333,7 +342,7 @@ function SheetView({saveSuccess, onLoad}) {
           <TabStyled
             label={
               <Box>
-                📝{" "}
+                📝
                 <Box
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
@@ -509,23 +518,18 @@ function SheetView({saveSuccess, onLoad}) {
                         >
                           <div className="w-full flex flex-col justify-start items-center gap-2">
                             <div className="w-full flex justify-between items-center">
-                              <p className="w-full">
-                                <i>{res.name}</i>
-                              </p>
-                              <div
-                                className="w-full"
-                                style={{fontSize: "0.75rem", color: "#666"}}
-                              >
+                              <i>{res.name}</i>
+                              <div style={{fontSize: "0.75rem", color: "#666"}}>
                                 PP: {res.custo} | Nível {res.nivel}
                               </div>
                             </div>
-                            <div className="w-full font-bold text-xs">
+                            <div className="w-full font-bold text-[10px]">
                               <span>Descrição: </span>
-                              <span className="font-normal text-xs ">
+                              <span className="font-normal text-[10px] ">
                                 {res.descricao || "N/A"}
                               </span>
                             </div>
-                            <div className="w-full font-bold  text-xs">
+                            <div className="w-full font-bold  text-[10px]">
                               <span>Limitação: </span>
                               <span className="font-normal">
                                 {res.limitacao || "N/A"}
