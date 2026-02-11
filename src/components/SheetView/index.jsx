@@ -425,7 +425,7 @@ function SheetView({saveSuccess, onLoad}) {
                     background: "#fff",
                     borderRadius: 1,
                     border: "1px solid #eee",
-                    height: "20vh",
+                    height: "40vh",
                     overflow: "hidden",
                   }}
                 >
@@ -598,58 +598,75 @@ function SheetView({saveSuccess, onLoad}) {
                     </Box>
                   ))}
                 </Box>
-              </Box>
 
-              {/* 2. PROGRESSO */}
-              <Box
-                sx={{
-                  background: "#fff8e1",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "3px solid #ffc107",
-                  height: "20vh",
-                  overflowY: "auto",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: "0 0 10px 0",
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Progresso
-                </h4>
+                {/* PROGRESSO (Integrado) */}
                 <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    fontSize: "0.75rem",
-                  }}
+                  sx={{mt: 2, pt: 1, borderTop: "1px solid rgba(0,0,0,0.1)"}}
                 >
-                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
-                    <span>XP:</span>
-                    <strong style={{color: "#667eea"}}>
-                      {character.xp || 0}
-                    </strong>
-                  </Box>
-                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
-                    <span>Riqueza ($):</span>
-                    <strong style={{color: "#667eea"}}>
-                      ${character.riqueza || 0}
-                    </strong>
-                  </Box>
-                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
-                    <span>Bênçãos:</span>
-                    <strong style={{color: "#667eea"}}>
-                      {character.bencaos ?? 3}
-                    </strong>
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Progresso
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-around",
+                      fontSize: "0.75rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Box>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "#666",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        XP
+                      </div>
+                      <strong style={{color: "#667eea"}}>
+                        {character.xp || 0}
+                      </strong>
+                    </Box>
+                    <Box>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "#666",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        Riqueza ($)
+                      </div>
+                      <strong style={{color: "#667eea"}}>
+                        ${character.riqueza || 0}
+                      </strong>
+                    </Box>
+                    <Box>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "#666",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        Bênçãos
+                      </div>
+                      <strong style={{color: "#667eea"}}>
+                        {character.bencaos ?? 3}
+                      </strong>
+                    </Box>
                   </Box>
                 </Box>
               </Box>
 
-              {/* 3. ARMAS */}
+              {/* 2. ARMAS */}
               {character.armas && character.armas.length > 0 && (
                 <Box
                   sx={{
@@ -657,7 +674,7 @@ function SheetView({saveSuccess, onLoad}) {
                     p: 1.5,
                     borderRadius: 1,
                     borderLeft: "3px solid #e53e3e",
-                    height: "20vh",
+                    height: "10vh",
                     overflowY: "auto",
                   }}
                 >
@@ -682,7 +699,7 @@ function SheetView({saveSuccess, onLoad}) {
                 </Box>
               )}
 
-              {/* 4. ARMADURAS */}
+              {/* 3. ARMADURAS */}
               {character.armaduras && character.armaduras.length > 0 && (
                 <Box
                   sx={{
@@ -690,7 +707,7 @@ function SheetView({saveSuccess, onLoad}) {
                     p: 1.5,
                     borderRadius: 1,
                     borderLeft: "3px solid #48bb78",
-                    height: "20vh",
+                    height: "10vh",
                     overflowY: "auto",
                   }}
                 >
@@ -1093,7 +1110,7 @@ function SheetView({saveSuccess, onLoad}) {
                     p: 1.5,
                     borderRadius: 1,
                     borderLeft: "3px solid #009688",
-                    height: "20vh",
+                    height: "10vh",
                     overflowY: "auto",
                   }}
                 >
@@ -1223,7 +1240,7 @@ function SheetView({saveSuccess, onLoad}) {
                     background: "#f5f5f5",
                     p: 1.5,
                     borderRadius: 1,
-                    height: "20vh",
+                    height: "10vh",
                     overflowY: "auto",
                   }}
                 >
