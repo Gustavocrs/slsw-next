@@ -406,212 +406,52 @@ function SheetView({saveSuccess, onLoad}) {
             </p>
           </Box>
 
-          <Grid container spacing={2}>
-            {/* 1. ATRIBUTOS */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "#e3f2fd",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "3px solid #2196f3",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: "0 0 12px 0",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Atributos
-                </h4>
+          <Grid container spacing={3}>
+            {/* --- COLUNA 1 --- */}
+            <Grid
+              item
+              xs={12}
+              md={3}
+              sx={{display: "flex", flexDirection: "column", gap: 3}}
+            >
+              {/* 1. FOTO */}
+              {character.imagem_url && (
                 <Box
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(5, 1fr)",
-                    gap: 0.5,
-                    textAlign: "center",
-                  }}
-                >
-                  {[
-                    {label: "AGI", key: "agilidade"},
-                    {label: "INT", key: "intelecto"},
-                    {label: "ESP", key: "espirito"},
-                    {label: "FOR", key: "forca"},
-                    {label: "VIG", key: "vigor"},
-                  ].map((attr) => (
-                    <Box key={attr.key}>
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          fontWeight: "600",
-                          color: "#666",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        {attr.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.9rem",
-                          fontWeight: "700",
-                          color: "#667eea",
-                        }}
-                      >
-                        {character[attr.key] || "d4"}
-                      </div>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            </Grid>
-
-            {/* 2. PERÍCIAS */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "#e8eaf6",
-                  p: 1.5,
-                  borderRadius: 1,
-                  maxHeight: "100%",
-                  borderLeft: "3px solid #3f51b5",
-                  overflowY: "auto",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: "0 0 10px 0",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Perícias
-                </h4>
-                {character.pericias && character.pericias.length > 0 ? (
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.pericias.map((skill, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        <span>{skill.name}</span>
-                        <strong style={{color: "#667eea"}}>{skill.die}</strong>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <p style={{margin: 0, fontSize: "0.85rem", color: "#999"}}>
-                    Nenhuma perícia
-                  </p>
-                )}
-              </Box>
-            </Grid>
-
-            {/* 3. VANTAGENS */}
-            {character.vantagens && character.vantagens.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#f0fff4",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #667eea",
                     display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Vantagens
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.5,
-                      flex: 1,
-                    }}
-                  >
-                    {character.vantagens.map((edge, idx) => {
-                      const source =
-                        EDGES.find((e) => e.name === edge.name)?.source ||
-                        "SWADE";
-                      return (
-                        <div key={idx} style={{fontSize: "0.7rem"}}>
-                          • {edge.name}
-                          <span
-                            style={{
-                              fontSize: "0.7rem",
-                              color: "#999",
-                              marginLeft: "4px",
-                            }}
-                          >
-                            ({source})
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 4. COMPLICAÇÕES */}
-            {character.complicacoes && character.complicacoes.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#fffbf0",
-                    p: 1.5,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    p: 1,
+                    background: "#fff",
                     borderRadius: 1,
-                    borderLeft: "3px solid #ff9800",
+                    border: "1px solid #eee",
+                    height: "40vh",
+                    overflow: "hidden",
                   }}
                 >
-                  <h4
+                  <img
+                    src={character.imagem_url}
+                    alt="Personagem"
                     style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      borderRadius: "4px",
+                      objectFit: "contain",
                     }}
-                  >
-                    Complicações
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.complicacoes.map((hind, idx) => (
-                      <div key={idx} style={{fontSize: "0.7rem"}}>
-                        • {hind.name}
-                      </div>
-                    ))}
-                  </Box>
+                  />
                 </Box>
-              </Grid>
-            )}
+              )}
 
-            {/* 5. RECURSOS DO DESPERTAR */}
-            {character.recursos_despertar &&
-              character.recursos_despertar.length > 0 && (
-                <Grid item xs={12} md={6}>
+              {/* 2. RECURSOS DO DESPERTAR */}
+              {character.recursos_despertar &&
+                character.recursos_despertar.length > 0 && (
                   <Box
                     sx={{
                       background: "#fff0f5",
                       p: 1.5,
                       borderRadius: 1,
                       borderLeft: "3px solid #e53e3e",
-                      maxHeight: "200px",
+                      height: "40vh",
                       overflowY: "auto",
                     }}
                   >
@@ -628,12 +468,7 @@ function SheetView({saveSuccess, onLoad}) {
                       sx={{display: "flex", flexDirection: "column", gap: 0.5}}
                     >
                       {character.recursos_despertar.map((res, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            fontSize: "0.8rem",
-                          }}
-                        >
+                        <Box key={idx} sx={{fontSize: "0.8rem"}}>
                           <div className="w-full flex flex-col justify-start items-center gap-2">
                             <div className="w-full flex justify-between items-center">
                               <i>{res.name}</i>
@@ -658,350 +493,17 @@ function SheetView({saveSuccess, onLoad}) {
                       ))}
                     </Box>
                   </Box>
-                </Grid>
-              )}
+                )}
 
-            {/* 6. MAGIAS */}
-            {character.magias && character.magias.length > 0 && (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    background: "#f0e6ff",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #667eea",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Magias Conhecidas
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {xs: "1fr", md: "1fr 1fr"},
-                      gap: 1,
-                    }}
-                  >
-                    {character.magias.map((spell, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          fontSize: "0.7rem",
-                          background: "rgba(255,255,255,0.6)",
-                          p: 1,
-                          borderRadius: "4px",
-                        }}
-                      >
-                        <span className="font-semibold">{spell.name}</span>
-                        <div style={{fontSize: "0.6rem", color: "#666"}}>
-                          PP: {spell.pp} | {spell.range} | {spell.duration}
-                        </div>
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 13. COMBATE */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "#ffebee",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "3px solid #ef5350",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: "0 0 10px 0",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Combate
-                </h4>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: 1,
-                    textAlign: "center",
-                    mb: 1,
-                  }}
-                >
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Aparar
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {parryBase +
-                        (character.aparar_bonus || 0) +
-                        armorParryBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Resistência
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {toughnessBase +
-                        (character.armadura_bonus || 0) +
-                        armorDefenseBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Movimento
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {character.movimento || 6}
-                    </div>
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "0.8rem",
-                    borderTop: "1px solid #ffcdd2",
-                    pt: 1,
-                  }}
-                >
-                  <span>
-                    Bênçãos: <strong>{character.bencaos ?? 3}</strong>
-                  </span>
-                </Box>
-              </Box>
-            </Grid>
-
-            {/* 7. ARMAS */}
-            {character.armas && character.armas.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#fff5f5",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #e53e3e",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Armas
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.armas.map((weapon, idx) => (
-                      <div key={idx} style={{fontSize: "0.85rem"}}>
-                        {weapon.name} - {weapon.damage || "—"}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 8. ARMADURAS */}
-            {character.armaduras && character.armaduras.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#f5f9e6",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #48bb78",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Armaduras
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.armaduras.map((armor, idx) => {
-                      const isShield =
-                        armor.name?.toLowerCase().includes("escudo") ||
-                        (parseInt(armor.defense || 0) === 0 &&
-                          parseInt(armor.ap || 0) > 0);
-
-                      const def =
-                        armor.defense && parseInt(armor.defense) !== 0
-                          ? armor.defense
-                          : null;
-                      const ap =
-                        armor.ap && parseInt(armor.ap) !== 0 ? armor.ap : null;
-                      const stats = [def && `Def +${def}`, ap && `Ap +${ap}`]
-                        .filter(Boolean)
-                        .join(", ");
-
-                      return (
-                        <div key={idx} style={{fontSize: "0.85rem"}}>
-                          {armor.name}
-                          {stats ? `: ${stats}` : ""}
-                        </div>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 9. ITENS */}
-            {character.itens && character.itens.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box sx={{background: "#f5f5f5", p: 1.5, borderRadius: 1}}>
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Itens ({character.itens.length})
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: 1,
-                    }}
-                  >
-                    {character.itens.map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          fontSize: "0.8rem",
-                          padding: "4px 8px",
-                          background: "#fff",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {item.name}
-                        {item.quantity && item.quantity != 1
-                          ? ` (x${item.quantity})`
-                          : ""}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 10. ESPÓLIOS */}
-            {character.espolios && character.espolios.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#e0f2f1",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #009688",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Espólios
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.espolios.map((item, idx) => (
-                      <div key={idx} style={{fontSize: "0.85rem"}}>
-                        {item.name}{" "}
-                        {item.quantity && item.quantity != 1
-                          ? `(x${item.quantity})`
-                          : ""}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {/* 11. IMAGEM DO PERSONAGEM */}
-            {character.imagem_url && (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    p: 1,
-                    background: "#fff",
-                    borderRadius: 1,
-                    border: "1px solid #eee",
-                  }}
-                >
-                  <img
-                    src={character.imagem_url}
-                    alt="Personagem"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "400px",
-                      borderRadius: "4px",
-                      objectFit: "contain",
-                    }}
-                  />
-                </Box>
-              </Grid>
-            )}
-
-            {/* 12. SAÚDE (CONDIÇÕES E SAÚDE) */}
-            <Grid item xs={12}>
+              {/* 3. CONDIÇÕES E SAÚDE */}
               <Box
                 sx={{
                   background: "#fff5f5",
                   p: 1.5,
                   borderRadius: 1,
                   borderLeft: "3px solid #e53e3e",
+                  height: "40vh",
+                  overflowY: "auto",
                 }}
               >
                 <h4
@@ -1167,14 +669,82 @@ function SheetView({saveSuccess, onLoad}) {
               </Box>
             </Grid>
 
-            {/* 14. PROGRESSO */}
-            <Grid item xs={12} md={6}>
+            {/* --- COLUNA 2 --- */}
+            <Grid
+              item
+              xs={12}
+              md={3}
+              sx={{display: "flex", flexDirection: "column", gap: 3}}
+            >
+              {/* 1. ATRIBUTOS */}
+              <Box
+                sx={{
+                  background: "#e3f2fd",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #2196f3",
+                  height: "40vh",
+                  overflowY: "auto",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 12px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Atributos
+                </h4>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: 0.5,
+                    textAlign: "center",
+                  }}
+                >
+                  {[
+                    {label: "AGI", key: "agilidade"},
+                    {label: "INT", key: "intelecto"},
+                    {label: "ESP", key: "espirito"},
+                    {label: "FOR", key: "forca"},
+                    {label: "VIG", key: "vigor"},
+                  ].map((attr) => (
+                    <Box key={attr.key}>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                          color: "#666",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {attr.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.9rem",
+                          fontWeight: "700",
+                          color: "#667eea",
+                        }}
+                      >
+                        {character[attr.key] || "d4"}
+                      </div>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+
+              {/* 2. PROGRESSO */}
               <Box
                 sx={{
                   background: "#fff8e1",
                   p: 1.5,
                   borderRadius: 1,
                   borderLeft: "3px solid #ffc107",
+                  height: "40vh",
+                  overflowY: "auto",
                 }}
               >
                 <h4
@@ -1207,6 +777,497 @@ function SheetView({saveSuccess, onLoad}) {
                     </strong>
                   </Box>
                 </Box>
+              </Box>
+
+              {/* 3. ARMAS */}
+              {character.armas && character.armas.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#fff5f5",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #e53e3e",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armas
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.armas.map((weapon, idx) => (
+                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                        {weapon.name} - {weapon.damage || "—"}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* 4. ARMADURAS */}
+              {character.armaduras && character.armaduras.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#f5f9e6",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #48bb78",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armaduras
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.armaduras.map((armor, idx) => {
+                      const isShield =
+                        armor.name?.toLowerCase().includes("escudo") ||
+                        (parseInt(armor.defense || 0) === 0 &&
+                          parseInt(armor.ap || 0) > 0);
+
+                      const def =
+                        armor.defense && parseInt(armor.defense) !== 0
+                          ? armor.defense
+                          : null;
+                      const ap =
+                        armor.ap && parseInt(armor.ap) !== 0 ? armor.ap : null;
+                      const stats = [def && `Def +${def}`, ap && `Ap +${ap}`]
+                        .filter(Boolean)
+                        .join(", ");
+
+                      return (
+                        <div key={idx} style={{fontSize: "0.85rem"}}>
+                          {armor.name}
+                          {stats ? `: ${stats}` : ""}
+                        </div>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
+            </Grid>
+
+            {/* --- COLUNA 3 --- */}
+            <Grid
+              item
+              xs={12}
+              md={3}
+              sx={{display: "flex", flexDirection: "column", gap: 3}}
+            >
+              {/* 1. PERÍCIAS */}
+              <Box
+                sx={{
+                  background: "#e8eaf6",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #3f51b5",
+                  height: "40vh",
+                  overflowY: "auto",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Perícias
+                </h4>
+                {character.pericias && character.pericias.length > 0 ? (
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.pericias.map((skill, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <span>{skill.name}</span>
+                        <strong style={{color: "#667eea"}}>{skill.die}</strong>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <p style={{margin: 0, fontSize: "0.85rem", color: "#999"}}>
+                    Nenhuma perícia
+                  </p>
+                )}
+              </Box>
+
+              {/* 2. COMBATE */}
+              <Box
+                sx={{
+                  background: "#ffebee",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #ef5350",
+                  height: "40vh",
+                  overflowY: "auto",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Combate
+                </h4>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 1,
+                    textAlign: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Aparar
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {parryBase +
+                        (character.aparar_bonus || 0) +
+                        armorParryBonus}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Resistência
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {toughnessBase +
+                        (character.armadura_bonus || 0) +
+                        armorDefenseBonus}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Movimento
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {character.movimento || 6}
+                    </div>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.8rem",
+                    borderTop: "1px solid #ffcdd2",
+                    pt: 1,
+                  }}
+                >
+                  <span>
+                    Bênçãos: <strong>{character.bencaos ?? 3}</strong>
+                  </span>
+                </Box>
+              </Box>
+
+              {/* 3. MAGIAS */}
+              {character.magias && character.magias.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#f0e6ff",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #667eea",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Magias Conhecidas
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {xs: "1fr", md: "1fr 1fr"},
+                      gap: 1,
+                    }}
+                  >
+                    {character.magias.map((spell, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          fontSize: "0.7rem",
+                          background: "rgba(255,255,255,0.6)",
+                          p: 1,
+                          borderRadius: "4px",
+                        }}
+                      >
+                        <span className="font-semibold">{spell.name}</span>
+                        <div style={{fontSize: "0.6rem", color: "#666"}}>
+                          PP: {spell.pp} | {spell.range} | {spell.duration}
+                        </div>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* 4. ESPÓLIOS */}
+              {character.espolios && character.espolios.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#e0f2f1",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #009688",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Espólios
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.espolios.map((item, idx) => (
+                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                        {item.name}{" "}
+                        {item.quantity && item.quantity != 1
+                          ? `(x${item.quantity})`
+                          : ""}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Grid>
+
+            {/* --- COLUNA 4 --- */}
+            <Grid
+              item
+              xs={12}
+              md={3}
+              sx={{display: "flex", flexDirection: "column", gap: 3}}
+            >
+              {/* 1. VANTAGENS */}
+              {character.vantagens && character.vantagens.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#f0fff4",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #667eea",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Vantagens
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.5,
+                      flex: 1,
+                    }}
+                  >
+                    {character.vantagens.map((edge, idx) => {
+                      const source =
+                        EDGES.find((e) => e.name === edge.name)?.source ||
+                        "SWADE";
+                      return (
+                        <div key={idx} style={{fontSize: "0.7rem"}}>
+                          • {edge.name}
+                          <span
+                            style={{
+                              fontSize: "0.7rem",
+                              color: "#999",
+                              marginLeft: "4px",
+                            }}
+                          >
+                            ({source})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
+
+              {/* 2. COMPLICAÇÕES */}
+              {character.complicacoes && character.complicacoes.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#fffbf0",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #ff9800",
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Complicações
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.complicacoes.map((hind, idx) => (
+                      <div key={idx} style={{fontSize: "0.7rem"}}>
+                        • {hind.name}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* 3. ITENS */}
+              {character.itens && character.itens.length > 0 && (
+                <Box
+                  sx={{
+                    background: "#f5f5f5",
+                    p: 1.5,
+                    borderRadius: 1,
+                    height: "40vh",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Itens ({character.itens.length})
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 1,
+                    }}
+                  >
+                    {character.itens.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          fontSize: "0.8rem",
+                          padding: "4px 8px",
+                          background: "#fff",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {item.name}
+                        {item.quantity && item.quantity != 1
+                          ? ` (x${item.quantity})`
+                          : ""}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* 4. NOTAS */}
+              <Box
+                sx={{
+                  background: "#fff",
+                  p: 1.5,
+                  borderRadius: 1,
+                  border: "1px solid #e0e0e0",
+                  height: "40vh",
+                  overflowY: "auto",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Notas
+                </h4>
+                <textarea
+                  style={{
+                    width: "100%",
+                    height: "calc(100% - 30px)",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #eee",
+                    fontFamily: "monospace",
+                    fontSize: "0.85rem",
+                    resize: "none",
+                  }}
+                  value={character.notas || ""}
+                  onChange={(e) => updateAttribute("notas", e.target.value)}
+                  placeholder="Anotações rápidas..."
+                />
               </Box>
             </Grid>
           </Grid>
