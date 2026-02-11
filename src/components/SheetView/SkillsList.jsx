@@ -154,9 +154,11 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
           </Box>
         ) : (
           sortedItems.map((item, index) => (
-            <ListItem key={`${item.name}-${index}`}>
+            <ListItem key={`${item.name}-${index}`} sx={item.style}>
               <Box sx={{fontWeight: 500}}>{item.name}</Box>
-              <Box sx={{fontWeight: 600, color: "#667eea"}}>{item.die}</Box>
+              <Box sx={{fontWeight: 600, color: item.dieColor || "#667eea"}}>
+                {item.die}
+              </Box>
               <IconButton
                 size="small"
                 color="error"

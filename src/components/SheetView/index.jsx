@@ -132,6 +132,14 @@ function SheetView({saveSuccess, onLoad}) {
     if (onLoad) {
       onLoad();
     }
+
+    // Sincronizar dados ao focar na janela (corrige diferenças entre Mobile/Desktop)
+    const onFocus = () => {
+      if (onLoad) onLoad();
+    };
+
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [onLoad]);
 
   // Calcular pontos gastos
@@ -1421,9 +1429,11 @@ function SheetView({saveSuccess, onLoad}) {
                 const attrDie = character[attrKey] || "d4";
                 const pVal = parseInt((p.die || "d4").replace("d", ""), 10);
                 const aVal = parseInt(attrDie.replace("d", ""), 10);
+                const isHigher = pVal > aVal;
                 return {
                   ...p,
-                  style: pVal > aVal ? {backgroundColor: "#fff3e0"} : undefined,
+                  style: isHigher ? {backgroundColor: "#fff3e0"} : undefined,
+                  dieColor: isHigher ? "#d32f2f" : "#667eea",
                 };
               })}
               onAdd={(item) => {
