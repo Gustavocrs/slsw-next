@@ -701,6 +701,97 @@ function SheetView({saveSuccess, onLoad}) {
               </Grid>
             )}
 
+            {/* 13. COMBATE */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  background: "#ffebee",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #ef5350",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Combate
+                </h4>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 1,
+                    textAlign: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Aparar
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {parryBase +
+                        (character.aparar_bonus || 0) +
+                        armorParryBonus}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Resistência
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {toughnessBase +
+                        (character.armadura_bonus || 0) +
+                        armorDefenseBonus}
+                    </div>
+                  </Box>
+                  <Box>
+                    <div style={{fontSize: "0.7rem", color: "#666"}}>
+                      Movimento
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        color: "#d32f2f",
+                      }}
+                    >
+                      {character.movimento || 6}
+                    </div>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.8rem",
+                    borderTop: "1px solid #ffcdd2",
+                    pt: 1,
+                  }}
+                >
+                  <span>
+                    Bênçãos: <strong>{character.bencaos ?? 3}</strong>
+                  </span>
+                </Box>
+              </Box>
+            </Grid>
+
             {/* 7. ARMAS */}
             {character.armas && character.armas.length > 0 && (
               <Grid item xs={12} md={6}>
@@ -1064,97 +1155,6 @@ function SheetView({saveSuccess, onLoad}) {
                       ))}
                     </Box>
                   </Box>
-                </Box>
-              </Box>
-            </Grid>
-
-            {/* 13. COMBATE */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "#ffebee",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "3px solid #ef5350",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: "0 0 10px 0",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  Combate
-                </h4>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: 1,
-                    textAlign: "center",
-                    mb: 1,
-                  }}
-                >
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Aparar
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {parryBase +
-                        (character.aparar_bonus || 0) +
-                        armorParryBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Resistência
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {toughnessBase +
-                        (character.armadura_bonus || 0) +
-                        armorDefenseBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.7rem", color: "#666"}}>
-                      Movimento
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        color: "#d32f2f",
-                      }}
-                    >
-                      {character.movimento || 6}
-                    </div>
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "0.8rem",
-                    borderTop: "1px solid #ffcdd2",
-                    pt: 1,
-                  }}
-                >
-                  <span>
-                    Bênçãos: <strong>{character.bencaos ?? 3}</strong>
-                  </span>
                 </Box>
               </Box>
             </Grid>
