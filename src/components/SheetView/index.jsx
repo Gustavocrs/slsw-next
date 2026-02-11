@@ -399,164 +399,7 @@ function SheetView({saveSuccess, onLoad}) {
           </Box>
 
           <Grid container spacing={2}>
-            {/* CONDIÇÃO ATUAL (SAÚDE & FADIGA) */}
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  background: "#fff5f5",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "3px solid #e53e3e",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 2,
-                }}
-              >
-                {/* Controles de Status (Esquerda) */}
-                <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                  {/* Abalado */}
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 900,
-                        color: "#d97706",
-                      }}
-                    >
-                      ABALADO
-                    </span>
-                    <Checkbox
-                      checked={character.abalado || false}
-                      onChange={(e) =>
-                        updateAttribute("abalado", e.target.checked)
-                      }
-                      size="small"
-                      sx={{
-                        p: 0,
-                        color: "#d97706",
-                        "&.Mui-checked": {color: "#d97706"},
-                      }}
-                    />
-                  </Box>
-
-                  {/* Divisor */}
-                  <Box
-                    sx={{width: "1px", height: "24px", background: "#fecaca"}}
-                  />
-
-                  {/* Ferimentos */}
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 900,
-                        color: "#dc2626",
-                      }}
-                    >
-                      FERIMENTOS
-                    </span>
-                    <Box sx={{display: "flex"}}>
-                      {[1, 2, 3].map((level) => (
-                        <Checkbox
-                          key={level}
-                          checked={(character.ferimentos || 0) >= level}
-                          onChange={() => {
-                            const current = character.ferimentos || 0;
-                            const newVal =
-                              current === level ? level - 1 : level;
-                            if (newVal > current && !character.abalado) {
-                              updateAttribute("abalado", true);
-                            }
-                            updateAttribute("ferimentos", newVal);
-                          }}
-                          size="small"
-                          sx={{
-                            p: 0.5,
-                            color: "#ef4444",
-                            "&.Mui-checked": {color: "#dc2626"},
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-
-                  {/* Divisor */}
-                  <Box
-                    sx={{width: "1px", height: "24px", background: "#fecaca"}}
-                  />
-
-                  {/* Fadiga */}
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 900,
-                        color: "#991b1b",
-                      }}
-                    >
-                      FADIGA
-                    </span>
-                    <Box sx={{display: "flex"}}>
-                      {[1, 2].map((level) => (
-                        <Checkbox
-                          key={level}
-                          checked={(character.fadiga || 0) >= level}
-                          onChange={() => {
-                            const current = character.fadiga || 0;
-                            const newVal =
-                              current === level ? level - 1 : level;
-                            updateAttribute("fadiga", newVal);
-                          }}
-                          size="small"
-                          sx={{
-                            p: 0.5,
-                            color: "#ef4444",
-                            "&.Mui-checked": {color: "#dc2626"},
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Penalidade (Direita) */}
-                <Box
-                  sx={{
-                    background: "white",
-                    border: "1px solid #fecaca",
-                    borderRadius: 1,
-                    px: 2,
-                    py: 0.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "0.7rem",
-                      fontWeight: "bold",
-                      color: "#7f1d1d",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Penalidade
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "1.1rem",
-                      fontWeight: 800,
-                      color: "#dc2626",
-                    }}
-                  >
-                    -{(character.ferimentos || 0) + (character.fadiga || 0)}
-                  </span>
-                </Box>
-              </Box>
-            </Grid>
-
+            {/* 1. ATRIBUTOS */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
@@ -616,13 +459,16 @@ function SheetView({saveSuccess, onLoad}) {
               </Box>
             </Grid>
 
+            {/* 2. PERÍCIAS */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
-                  background: "#fff8e1",
+                  background: "#e8eaf6",
                   p: 1.5,
                   borderRadius: 1,
-                  borderLeft: "3px solid #ffc107",
+                  maxHeight: "100%",
+                  borderLeft: "3px solid #3f51b5",
+                  overflowY: "auto",
                 }}
               >
                 <h4
@@ -632,33 +478,597 @@ function SheetView({saveSuccess, onLoad}) {
                     fontWeight: 600,
                   }}
                 >
-                  Progresso
+                  Perícias
                 </h4>
+                {character.pericias && character.pericias.length > 0 ? (
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.pericias.map((skill, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <span>{skill.name}</span>
+                        <strong style={{color: "#667eea"}}>{skill.die}</strong>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <p style={{margin: 0, fontSize: "0.85rem", color: "#999"}}>
+                    Nenhuma perícia
+                  </p>
+                )}
+              </Box>
+            </Grid>
+
+            {/* 3. VANTAGENS */}
+            {character.vantagens && character.vantagens.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#f0fff4",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #667eea",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Vantagens
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.5,
+                      flex: 1,
+                    }}
+                  >
+                    {character.vantagens.map((edge, idx) => {
+                      const source =
+                        EDGES.find((e) => e.name === edge.name)?.source ||
+                        "SWADE";
+                      return (
+                        <div key={idx} style={{fontSize: "0.7rem"}}>
+                          • {edge.name}
+                          <span
+                            style={{
+                              fontSize: "0.7rem",
+                              color: "#999",
+                              marginLeft: "4px",
+                            }}
+                          >
+                            ({source})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 4. COMPLICAÇÕES */}
+            {character.complicacoes && character.complicacoes.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#fffbf0",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #ff9800",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Complicações
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.complicacoes.map((hind, idx) => (
+                      <div key={idx} style={{fontSize: "0.7rem"}}>
+                        • {hind.name}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 5. RECURSOS DO DESPERTAR */}
+            {character.recursos_despertar &&
+              character.recursos_despertar.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <Box
+                    sx={{
+                      background: "#fff0f5",
+                      p: 1.5,
+                      borderRadius: 1,
+                      borderLeft: "3px solid #e53e3e",
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 18px 0",
+                        fontSize: "0.9rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Recursos Despertar
+                    </h4>
+                    <Box
+                      sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                    >
+                      {character.recursos_despertar.map((res, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          <div className="w-full flex flex-col justify-start items-center gap-2">
+                            <div className="w-full flex justify-between items-center">
+                              <i>{res.name}</i>
+                              <div style={{fontSize: "0.75rem", color: "#666"}}>
+                                PP: {res.custo} | Nível {res.nivel}
+                              </div>
+                            </div>
+                            <div className="w-full font-bold text-[10px]">
+                              <span>Descrição: </span>
+                              <span className="font-normal text-[10px] ">
+                                {res.descricao || "N/A"}
+                              </span>
+                            </div>
+                            <div className="w-full font-bold  text-[10px]">
+                              <span>Limitação: </span>
+                              <span className="font-normal">
+                                {res.limitacao || "N/A"}
+                              </span>
+                            </div>
+                          </div>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Grid>
+              )}
+
+            {/* 6. MAGIAS */}
+            {character.magias && character.magias.length > 0 && (
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    background: "#f0e6ff",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #667eea",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Magias Conhecidas
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {xs: "1fr", md: "1fr 1fr"},
+                      gap: 1,
+                    }}
+                  >
+                    {character.magias.map((spell, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          fontSize: "0.7rem",
+                          background: "rgba(255,255,255,0.6)",
+                          p: 1,
+                          borderRadius: "4px",
+                        }}
+                      >
+                        <span className="font-semibold">{spell.name}</span>
+                        <div style={{fontSize: "0.6rem", color: "#666"}}>
+                          PP: {spell.pp} | {spell.range} | {spell.duration}
+                        </div>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 7. ARMAS */}
+            {character.armas && character.armas.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#fff5f5",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #e53e3e",
+                    maxHeight: "140px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armas
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.armas.map((weapon, idx) => (
+                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                        {weapon.name} - {weapon.damage || "—"}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 8. ARMADURAS */}
+            {character.armaduras && character.armaduras.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#f5f9e6",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #48bb78",
+                    maxHeight: "140px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Armaduras
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.armaduras.map((armor, idx) => {
+                      const isShield =
+                        armor.name?.toLowerCase().includes("escudo") ||
+                        (parseInt(armor.defense || 0) === 0 &&
+                          parseInt(armor.ap || 0) > 0);
+
+                      const def =
+                        armor.defense && parseInt(armor.defense) !== 0
+                          ? armor.defense
+                          : null;
+                      const ap =
+                        armor.ap && parseInt(armor.ap) !== 0 ? armor.ap : null;
+                      const stats = [def && `Def +${def}`, ap && `Ap +${ap}`]
+                        .filter(Boolean)
+                        .join(", ");
+
+                      return (
+                        <div key={idx} style={{fontSize: "0.85rem"}}>
+                          {armor.name}
+                          {stats ? `: ${stats}` : ""}
+                        </div>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 9. ITENS */}
+            {character.itens && character.itens.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box sx={{background: "#f5f5f5", p: 1.5, borderRadius: 1}}>
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Itens ({character.itens.length})
+                  </h4>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 1,
+                    }}
+                  >
+                    {character.itens.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          fontSize: "0.8rem",
+                          padding: "4px 8px",
+                          background: "#fff",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {item.name}
+                        {item.quantity && item.quantity != 1
+                          ? ` (x${item.quantity})`
+                          : ""}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 10. ESPÓLIOS */}
+            {character.espolios && character.espolios.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    background: "#e0f2f1",
+                    p: 1.5,
+                    borderRadius: 1,
+                    borderLeft: "3px solid #009688",
+                    maxHeight: "140px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: "0 0 8px 0",
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Espólios
+                  </h4>
+                  <Box
+                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
+                  >
+                    {character.espolios.map((item, idx) => (
+                      <div key={idx} style={{fontSize: "0.85rem"}}>
+                        {item.name}{" "}
+                        {item.quantity && item.quantity != 1
+                          ? `(x${item.quantity})`
+                          : ""}
+                      </div>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
+            {/* 11. IMAGEM DO PERSONAGEM */}
+            {character.imagem_url && (
+              <Grid item xs={12}>
                 <Box
                   sx={{
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    fontSize: "0.85rem",
+                    justifyContent: "center",
+                    p: 1,
+                    background: "#fff",
+                    borderRadius: 1,
+                    border: "1px solid #eee",
                   }}
                 >
-                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
-                    <span>XP:</span>
-                    <strong style={{color: "#667eea"}}>
-                      {character.xp || 0}
-                    </strong>
+                  <img
+                    src={character.imagem_url}
+                    alt="Personagem"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "400px",
+                      borderRadius: "4px",
+                      objectFit: "contain",
+                    }}
+                  />
+                </Box>
+              </Grid>
+            )}
+
+            {/* 12. SAÚDE (CONDIÇÕES E SAÚDE) */}
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  background: "#fff5f5",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "3px solid #e53e3e",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Condições e Saúde
+                </h4>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  {/* Abalado */}
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        color: "#d97706",
+                      }}
+                    >
+                      ABALADO
+                    </span>
+                    <Checkbox
+                      checked={character.abalado || false}
+                      onChange={(e) =>
+                        updateAttribute("abalado", e.target.checked)
+                      }
+                      size="small"
+                      sx={{
+                        p: 0,
+                        color: "#d97706",
+                        "&.Mui-checked": {color: "#d97706"},
+                      }}
+                    />
                   </Box>
-                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
-                    <span>Riqueza ($):</span>
-                    <strong style={{color: "#667eea"}}>
-                      ${character.riqueza || 0}
-                    </strong>
+
+                  {/* Ferimentos */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        color: "#dc2626",
+                      }}
+                    >
+                      FERIMENTOS
+                    </span>
+                    <Box sx={{display: "flex"}}>
+                      {[1, 2, 3].map((level) => (
+                        <Checkbox
+                          key={level}
+                          checked={(character.ferimentos || 0) >= level}
+                          onChange={() => {
+                            const current = character.ferimentos || 0;
+                            const newVal =
+                              current === level ? level - 1 : level;
+                            if (newVal > current && !character.abalado) {
+                              updateAttribute("abalado", true);
+                            }
+                            updateAttribute("ferimentos", newVal);
+                          }}
+                          size="small"
+                          sx={{
+                            p: 0.5,
+                            color: "#ef4444",
+                            "&.Mui-checked": {color: "#dc2626"},
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+
+                  {/* Penalidade */}
+                  <Box
+                    sx={{
+                      background: "white",
+                      border: "1px solid #fecaca",
+                      borderRadius: 1,
+                      px: 2,
+                      py: 0.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      width: "fit-content",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.7rem",
+                        fontWeight: "bold",
+                        color: "#7f1d1d",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Penalidade
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: 800,
+                        color: "#dc2626",
+                      }}
+                    >
+                      -{(character.ferimentos || 0) + (character.fadiga || 0)}
+                    </span>
+                  </Box>
+
+                  {/* Fadiga */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        color: "#991b1b",
+                      }}
+                    >
+                      FADIGA
+                    </span>
+                    <Box sx={{display: "flex"}}>
+                      {[1, 2].map((level) => (
+                        <Checkbox
+                          key={level}
+                          checked={(character.fadiga || 0) >= level}
+                          onChange={() => {
+                            const current = character.fadiga || 0;
+                            const newVal =
+                              current === level ? level - 1 : level;
+                            updateAttribute("fadiga", newVal);
+                          }}
+                          size="small"
+                          sx={{
+                            p: 0.5,
+                            color: "#ef4444",
+                            "&.Mui-checked": {color: "#dc2626"},
+                          }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
                 </Box>
               </Box>
             </Grid>
 
-            {/* CARD DE COMBATE */}
+            {/* 13. COMBATE */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
@@ -749,15 +1159,14 @@ function SheetView({saveSuccess, onLoad}) {
               </Box>
             </Grid>
 
+            {/* 14. PROGRESSO */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
-                  background: "#e8eaf6",
+                  background: "#fff8e1",
                   p: 1.5,
                   borderRadius: 1,
-                  maxHeight: "100%",
-                  borderLeft: "3px solid #3f51b5",
-                  overflowY: "auto",
+                  borderLeft: "3px solid #ffc107",
                 }}
               >
                 <h4
@@ -767,387 +1176,31 @@ function SheetView({saveSuccess, onLoad}) {
                     fontWeight: 600,
                   }}
                 >
-                  Perícias
+                  Progresso
                 </h4>
-                {character.pericias && character.pericias.length > 0 ? (
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.pericias.map((skill, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        <span>{skill.name}</span>
-                        <strong style={{color: "#667eea"}}>{skill.die}</strong>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <p style={{margin: 0, fontSize: "0.85rem", color: "#999"}}>
-                    Nenhuma perícia
-                  </p>
-                )}
-              </Box>
-            </Grid>
-
-            {character.recursos_despertar &&
-              character.recursos_despertar.length > 0 && (
-                <Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      background: "#fff0f5",
-                      p: 1.5,
-                      borderRadius: 1,
-                      borderLeft: "3px solid #e53e3e",
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    <h4
-                      style={{
-                        margin: "0 0 18px 0",
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      Recursos Despertar
-                    </h4>
-                    <Box
-                      sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                    >
-                      {character.recursos_despertar.map((res, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          <div className="w-full flex flex-col justify-start items-center gap-2">
-                            <div className="w-full flex justify-between items-center">
-                              <i>{res.name}</i>
-                              <div style={{fontSize: "0.75rem", color: "#666"}}>
-                                PP: {res.custo} | Nível {res.nivel}
-                              </div>
-                            </div>
-                            <div className="w-full font-bold text-[10px]">
-                              <span>Descrição: </span>
-                              <span className="font-normal text-[10px] ">
-                                {res.descricao || "N/A"}
-                              </span>
-                            </div>
-                            <div className="w-full font-bold  text-[10px]">
-                              <span>Limitação: </span>
-                              <span className="font-normal">
-                                {res.limitacao || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                </Grid>
-              )}
-
-            {character.vantagens && character.vantagens.length > 0 && (
-              <Grid item xs={12} md={6}>
                 <Box
                   sx={{
-                    background: "#f0fff4",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #667eea",
                     display: "flex",
                     flexDirection: "column",
+                    gap: 1,
+                    fontSize: "0.85rem",
                   }}
                 >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Vantagens
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.5,
-                      flex: 1,
-                    }}
-                  >
-                    {character.vantagens.map((edge, idx) => {
-                      const source =
-                        EDGES.find((e) => e.name === edge.name)?.source ||
-                        "SWADE";
-                      return (
-                        <div key={idx} style={{fontSize: "0.7rem"}}>
-                          • {edge.name}
-                          <span
-                            style={{
-                              fontSize: "0.7rem",
-                              color: "#999",
-                              marginLeft: "4px",
-                            }}
-                          >
-                            ({source})
-                          </span>
-                        </div>
-                      );
-                    })}
+                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
+                    <span>XP:</span>
+                    <strong style={{color: "#667eea"}}>
+                      {character.xp || 0}
+                    </strong>
+                  </Box>
+                  <Box sx={{display: "flex", justifyContent: "space-between"}}>
+                    <span>Riqueza ($):</span>
+                    <strong style={{color: "#667eea"}}>
+                      ${character.riqueza || 0}
+                    </strong>
                   </Box>
                 </Box>
-              </Grid>
-            )}
-
-            {character.complicacoes && character.complicacoes.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#fffbf0",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #ff9800",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Complicações
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.complicacoes.map((hind, idx) => (
-                      <div key={idx} style={{fontSize: "0.7rem"}}>
-                        • {hind.name}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {character.magias && character.magias.length > 0 && (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    background: "#f0e6ff",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #667eea",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Magias Conhecidas
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {xs: "1fr", md: "1fr 1fr"},
-                      gap: 1,
-                    }}
-                  >
-                    {character.magias.map((spell, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          fontSize: "0.7rem",
-                          background: "rgba(255,255,255,0.6)",
-                          p: 1,
-                          borderRadius: "4px",
-                        }}
-                      >
-                        <span className="font-semibold">{spell.name}</span>
-                        <div style={{fontSize: "0.6rem", color: "#666"}}>
-                          PP: {spell.pp} | {spell.range} | {spell.duration}
-                        </div>
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {character.armas && character.armas.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#fff5f5",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #e53e3e",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Armas
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.armas.map((weapon, idx) => (
-                      <div key={idx} style={{fontSize: "0.85rem"}}>
-                        {weapon.name} - {weapon.damage || "—"}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {character.armaduras && character.armaduras.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#f5f9e6",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #48bb78",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Armaduras
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.armaduras.map((armor, idx) => {
-                      const isShield =
-                        armor.name?.toLowerCase().includes("escudo") ||
-                        (parseInt(armor.defense || 0) === 0 &&
-                          parseInt(armor.ap || 0) > 0);
-
-                      const def =
-                        armor.defense && parseInt(armor.defense) !== 0
-                          ? armor.defense
-                          : null;
-                      const ap =
-                        armor.ap && parseInt(armor.ap) !== 0 ? armor.ap : null;
-                      const stats = [def && `Def +${def}`, ap && `Ap +${ap}`]
-                        .filter(Boolean)
-                        .join(", ");
-
-                      return (
-                        <div key={idx} style={{fontSize: "0.85rem"}}>
-                          {armor.name}
-                          {stats ? `: ${stats}` : ""}
-                        </div>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {character.espolios && character.espolios.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    background: "#e0f2f1",
-                    p: 1.5,
-                    borderRadius: 1,
-                    borderLeft: "3px solid #009688",
-                    maxHeight: "140px",
-                    overflowY: "auto",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Espólios
-                  </h4>
-                  <Box
-                    sx={{display: "flex", flexDirection: "column", gap: 0.5}}
-                  >
-                    {character.espolios.map((item, idx) => (
-                      <div key={idx} style={{fontSize: "0.85rem"}}>
-                        {item.name}{" "}
-                        {item.quantity && item.quantity != 1
-                          ? `(x${item.quantity})`
-                          : ""}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {character.itens && character.itens.length > 0 && (
-              <Grid item xs={12} md={6}>
-                <Box sx={{background: "#f5f5f5", p: 1.5, borderRadius: 1}}>
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Itens ({character.itens.length})
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: 1,
-                    }}
-                  >
-                    {character.itens.map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          fontSize: "0.8rem",
-                          padding: "4px 8px",
-                          background: "#fff",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {item.name}
-                        {item.quantity && item.quantity != 1
-                          ? ` (x${item.quantity})`
-                          : ""}
-                      </div>
-                    ))}
-                  </Box>
-                </Box>
-              </Grid>
-            )}
+              </Box>
+            </Grid>
           </Grid>
         </Box>
       )}
