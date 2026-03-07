@@ -1,30 +1,28 @@
 # syntax=docker/dockerfile:1
-
-# Estágio de Build - Atualizado para Node 20
 FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Instalação de dependências
 COPY package*.json ./
+# Instalamos as dependências
 RUN npm install
-
-# Cópia do código e geração do build (Front + Back)
 COPY . .
+
+# Desativamos a telemetria para acelerar o build
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# O build agora passará pois a rota foi marcada como dinâmica
 RUN npm run build
 
-# Estágio de Execução (Runner)
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Copia apenas os artefatos necessários
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Criação da pasta de uploads para evitar erro de permissão no volume
-RUN mkdir -p uploads
+RUN mkdir -p uploads public/uploads
 
 EXPOSE 3000
 CMD ["npm", "start"]

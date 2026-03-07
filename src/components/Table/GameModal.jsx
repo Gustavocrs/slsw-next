@@ -29,6 +29,7 @@ import {
   ListItemAvatar,
   Button,
   Badge,
+  CircularProgress,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -71,6 +72,7 @@ function GameModal() {
   const [uploading, setUploading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState("");
+  const [lightboxLoading, setLightboxLoading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [customFileName, setCustomFileName] = useState("");
@@ -197,14 +199,39 @@ function GameModal() {
     }
   };
 
-  const handleImageClick = (file) => {
+  const handleViewFile = async (file) => {
     const isImg =
       file.type?.startsWith("image/") ||
       file.name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
 
     if (isImg) {
-      setLightboxSrc(file.url);
+      setLightboxSrc(null);
+      setLightboxLoading(true);
       setLightboxOpen(true);
+
+      try {
+        // Gera o Blob via fetch para evitar abrir nova aba/janela
+        const response = await fetch(file.url);
+        if (!response.ok) throw new Error("Erro ao carregar arquivo");
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setLightboxSrc(objectUrl);
+      } catch (error) {
+        console.error("Erro ao gerar blob da imagem:", error);
+        showNotification("Erro ao carregar imagem.", "error");
+        setLightboxOpen(false);
+      } finally {
+        setLightboxLoading(false);
+      }
+    } else {
+      // Para outros arquivos, força o download direto
+      const link = document.createElement("a");
+      link.href = file.url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -290,7 +317,14 @@ function GameModal() {
         }}
       >
         <Box
-          sx={{position: "relative", display: "flex", justifyContent: "center"}}
+          sx={{
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 200,
+            minWidth: 300,
+          }}
         >
           <IconButton
             onClick={() => setLightboxOpen(false)}
@@ -305,11 +339,17 @@ function GameModal() {
           >
             <CloseIcon />
           </IconButton>
-          <img
-            src={lightboxSrc}
-            alt="Visualização"
-            style={{maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8}}
-          />
+          {lightboxLoading ? (
+            <CircularProgress sx={{color: "white"}} />
+          ) : (
+            lightboxSrc && (
+              <img
+                src={lightboxSrc}
+                alt="Visualização"
+                style={{maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8}}
+              />
+            )
+          )}
         </Box>
       </Dialog>
 
@@ -482,26 +522,30 @@ function GameModal() {
                                     ? "pointer"
                                     : "default",
                               }}
-                              onClick={() => handleImageClick(file)}
+                              onClick={() => handleViewFile(file)}
                             >
                               {getFileIcon(file)}
                             </ListItemIcon>
                             <ListItemText
                               primary={
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    textDecoration: "none",
-                                    color: "#333",
+                                <Typography
+                                  component="span"
+                                  variant="body1"
+                                  onClick={() => handleViewFile(file)}
+                                  sx={{
                                     fontWeight: 600,
                                     display: "block",
                                     wordBreak: "break-word",
+                                    cursor: "pointer",
+                                    color: "primary.main",
+                                    textDecoration: "underline",
+                                    "&:hover": {
+                                      color: "primary.dark",
+                                    },
                                   }}
                                 >
                                   {getFileDisplayName(file)}
-                                </a>
+                                </Typography>
                               }
                               secondary={new Date(
                                 file.uploadedAt,

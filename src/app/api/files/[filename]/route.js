@@ -68,7 +68,8 @@ export async function GET(request, {params}) {
       headers: {
         "Content-Type": contentType,
         "Content-Length": stats.size.toString(),
-        "Cache-Control": "public, max-age=3600, must-revalidate",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
       },
     });
   } catch (error) {
