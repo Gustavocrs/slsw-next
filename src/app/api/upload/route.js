@@ -17,8 +17,8 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Salvar em uploads na raiz (persistente e servido via API)
-    const uploadDir = path.join(process.cwd(), "uploads");
+    // Salvar em public/uploads (servido estaticamente pelo Next.js/Nginx)
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
 
     // Garantir que o diretório existe
     await mkdir(uploadDir, {recursive: true});
@@ -40,7 +40,7 @@ export async function POST(request) {
 
     await writeFile(filePath, buffer);
 
-    const url = `/api/files/${fileName}`;
+    const url = `/uploads/${fileName}`;
 
     return NextResponse.json({
       fileName,

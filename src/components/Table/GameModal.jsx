@@ -40,6 +40,7 @@ import {
   Delete as DeleteIcon,
   CloudUpload as UploadIcon,
   Download as DownloadIcon,
+  PersonRemove as PersonRemoveIcon,
 } from "@mui/icons-material";
 import {
   BsFiletypePdf,
@@ -144,6 +145,32 @@ function GameModal() {
       `Solicitar arquivo de ${selectedPlayer?.name || "Jogador"} (Em breve)`,
       "info",
     );
+    handleCloseMenu();
+  };
+
+  const handleRemovePlayer = async () => {
+    if (!selectedPlayer || !selectedTable) return;
+
+    if (
+      !confirm(`Tem certeza que deseja remover ${selectedPlayer.name} da mesa?`)
+    ) {
+      handleCloseMenu();
+      return;
+    }
+
+    try {
+      await APIService.removePlayer(selectedTable._id, selectedPlayer.uid);
+
+      // Atualizar estado local removendo o jogador da lista
+      const updatedPlayers = selectedTable.players.filter(
+        (p) => p.uid !== selectedPlayer.uid,
+      );
+      setSelectedTable({...selectedTable, players: updatedPlayers});
+      showNotification(`${selectedPlayer.name} removido da mesa.`, "info");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao remover jogador.", "error");
+    }
     handleCloseMenu();
   };
 
@@ -702,6 +729,15 @@ function GameModal() {
                     <FileIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Solicitar Arquivo</ListItemText>
+                </MenuItem>,
+                <Divider key="divider-kick" />,
+                <MenuItem key="remove-player" onClick={handleRemovePlayer}>
+                  <ListItemIcon>
+                    <PersonRemoveIcon fontSize="small" color="error" />
+                  </ListItemIcon>
+                  <ListItemText sx={{color: "error.main"}}>
+                    Remover Jogador
+                  </ListItemText>
                 </MenuItem>,
               ]}
 

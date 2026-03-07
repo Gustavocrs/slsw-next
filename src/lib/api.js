@@ -274,6 +274,13 @@ class APIService {
   // 9. ENVIAR CONVITE (Via Resend API Route)
   static async sendTableInvite(tableId, email, gmName, tableName) {
     try {
+      // 1. Registrar o convite no banco de dados (Firestore)
+      const tableRef = doc(db, "tables", tableId);
+      await updateDoc(tableRef, {
+        invites: arrayUnion(email),
+        updatedAt: serverTimestamp(),
+      });
+
       const response = await fetch("/api/emails/invite", {
         method: "POST",
         headers: {
@@ -415,6 +422,37 @@ class APIService {
       };
     } catch (error) {
       console.error("Erro ao fazer upload de anexo:", error);
+      throw error;
+    }
+  }
+
+  // 13. REMOVER JOGADOR DA MESA (KICK)
+  static async removePlayer(tableId, playerId) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+      const tableSnap = await getDoc(tableRef);
+
+      if (!tableSnap.exists()) throw new Error("Mesa não encontrada");
+
+      const tableData = tableSnap.data();
+
+      // Filtra a lista de objetos de jogadores e a lista de IDs
+      const updatedPlayers = (tableData.players || []).filter(
+        (p) => p.uid !== playerId,
+      );
+      const updatedPlayerIds = (tableData.playerIds || []).filter(
+        (id) => id !== playerId,
+      );
+
+      await updateDoc(tableRef, {
+        players: updatedPlayers,
+        playerIds: updatedPlayerIds,
+        updatedAt: serverTimestamp(),
+      });
+
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao remover jogador:", error);
       throw error;
     }
   }
