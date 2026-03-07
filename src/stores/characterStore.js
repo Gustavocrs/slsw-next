@@ -91,7 +91,15 @@ export const useAuthStore = create((set) => ({
 
 export const useUIStore = create((set) => ({
   viewMode: "book",
+  tableCreateModalOpen: false, // Modal de Criar
+  tableListModalOpen: false, // Modal de Listar (Dashboard)
+
   toggleView: () =>
     set((state) => ({viewMode: state.viewMode === "book" ? "sheet" : "book"})),
   setViewMode: (mode) => set({viewMode: mode}),
+
+  toggleTableCreateModal: () =>
+    set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),
+  toggleTableListModal: () =>
+    set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
 }));

@@ -1,0 +1,278 @@
+/**
+ * CreateTableModal Component
+ * Modal/Tela para criação e configuração de Mesa de RPG
+ */
+
+"use client";
+
+import React, {useState} from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Box,
+  Typography,
+  Chip,
+  Stack,
+  Switch,
+  FormControlLabel,
+  InputAdornment,
+} from "@mui/material";
+import {
+  Close as CloseIcon,
+  Add as AddIcon,
+  CalendarMonth as CalendarIcon,
+  Link as LinkIcon,
+  Email as EmailIcon,
+} from "@mui/icons-material";
+import {useUIStore} from "@/stores/characterStore";
+import {useAuth} from "@/hooks";
+import APIService from "@/lib/api";
+
+function CreateTableModal() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("md")); // Tela cheia no mobile
+  const {tableCreateModalOpen, toggleTableCreateModal, toggleTableListModal} =
+    useUIStore();
+  const {user} = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  // Form States
+  const [tableName, setTableName] = useState("");
+  const [description, setDescription] = useState("");
+  const [nextSession, setNextSession] = useState("");
+  const [externalLink, setExternalLink] = useState("");
+  const [isPrivate, setIsPrivate] = useState(true);
+
+  // Invite System
+  const [inviteEmail, setInviteEmail] = useState("gustavocrsilva.ti@gmail.com");
+  const [invites, setInvites] = useState([]);
+
+  const handleAddInvite = () => {
+    if (inviteEmail && !invites.includes(inviteEmail)) {
+      setInvites([...invites, inviteEmail]);
+      setInviteEmail("");
+    }
+  };
+
+  const handleRemoveInvite = (emailToRemove) => {
+    setInvites(invites.filter((email) => email !== emailToRemove));
+  };
+
+  const handleCreate = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      const tableData = {
+        name: tableName,
+        description,
+        nextSession,
+        externalLink,
+        isPrivate,
+        invites,
+        gmId: user.uid,
+        gmName: user.displayName || "Mestre Desconhecido",
+      };
+
+      await APIService.createTable(tableData);
+
+      // Limpar form e fechar
+      setTableName("");
+      setInvites([]);
+      toggleTableCreateModal();
+      toggleTableListModal(); // Abre a lista para ver a mesa criada
+    } catch (error) {
+      alert("Erro ao criar mesa: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={tableCreateModalOpen}
+      onClose={toggleTableCreateModal}
+      fullScreen={fullScreen}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: fullScreen ? 0 : 3,
+          padding: fullScreen ? 0 : 1,
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="h6" component="span" fontWeight="bold">
+          🏰 Criar Nova Mesa
+        </Typography>
+        <IconButton onClick={toggleTableCreateModal} edge="end">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        <Stack spacing={3} sx={{mt: 1}}>
+          {/* Informações Básicas */}
+          <Box>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Configurações Principais
+            </Typography>
+            <TextField
+              autoFocus
+              label="Nome da Mesa"
+              placeholder="Ex: A Torre dos Demônios"
+              fullWidth
+              value={tableName}
+              onChange={(e) => setTableName(e.target.value)}
+              variant="outlined"
+              sx={{mb: 2}}
+            />
+            <TextField
+              label="Descrição / Sinopse"
+              placeholder="Breve resumo da campanha..."
+              fullWidth
+              multiline
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Box>
+
+          {/* Logística */}
+          <Box>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Logística & Sessão
+            </Typography>
+            <Stack direction={{xs: "column", sm: "row"}} spacing={2}>
+              <TextField
+                label="Próxima Sessão"
+                type="datetime-local"
+                fullWidth
+                InputLabelProps={{shrink: true}}
+                value={nextSession}
+                onChange={(e) => setNextSession(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CalendarIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Link (Discord/VTT)"
+                placeholder="https://..."
+                fullWidth
+                value={externalLink}
+                onChange={(e) => setExternalLink(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LinkIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
+          </Box>
+
+          {/* Convites */}
+          <Box>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Convidar Jogadores
+            </Typography>
+            <Box sx={{display: "flex", gap: 1, mb: 2}}>
+              <TextField
+                label="E-mail do Jogador"
+                placeholder="jogador@email.com"
+                fullWidth
+                size="small"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleAddInvite}
+                disabled={!inviteEmail}
+              >
+                <AddIcon />
+              </Button>
+            </Box>
+
+            <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+              {invites.map((email) => (
+                <Chip
+                  key={email}
+                  label={email}
+                  onDelete={() => handleRemoveInvite(email)}
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+              {invites.length === 0 && (
+                <Typography variant="caption" color="text.secondary">
+                  Nenhum convite adicionado ainda.
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
+          {/* Privacidade */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+              />
+            }
+            label={
+              isPrivate
+                ? "🔒 Mesa Privada (Apenas convidados)"
+                : "🌍 Mesa Pública (Listada no Hub)"
+            }
+          />
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{p: 2}}>
+        <Button onClick={toggleTableCreateModal} color="inherit">
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleCreate}
+          variant="contained"
+          disabled={!tableName || loading}
+          sx={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            px: 4,
+          }}
+        >
+          {loading ? "Criando..." : "Criar Mesa"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+export default CreateTableModal;

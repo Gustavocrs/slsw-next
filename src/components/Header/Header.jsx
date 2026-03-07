@@ -15,11 +15,14 @@ import {
 import {
   Assignment as AssignmentIcon,
   Save as SaveIcon,
-  MenuBook as BookIcon, // NOME CORRIGIDO para não dar conflito
+  MenuBook as BookIcon,
   Google as GoogleIcon,
   Menu as MenuIcon,
+  TableRestaurant as TableIcon,
 } from "@mui/icons-material";
 import UserMenu from "../UserMenu";
+import CreateTableModal from "../Table/CreateTableModal";
+import TableListModal from "../Table/TableListModal";
 
 const StyledAppBar = styled(AppBar)`
   && {
@@ -76,7 +79,7 @@ const HeaderButton = styled(Button)`
 
 function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {user, loading, loginWithGoogle} = useAuth();
-  const {viewMode, toggleView} = useUIStore();
+  const {viewMode, toggleView, toggleTableListModal} = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleLogin = async () => {
@@ -113,53 +116,67 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   };
 
   return (
-    <StyledAppBar position="fixed" color="primary">
-      <HeaderContent>
-        <UserSection>
-          <UserMenu />
-        </UserSection>
+    <>
+      <StyledAppBar position="fixed" color="primary">
+        <HeaderContent>
+          <UserSection>
+            <UserMenu />
+          </UserSection>
 
-        <ControlsSection>
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : !user ? (
-            <HeaderButton startIcon={<GoogleIcon />} onClick={handleLogin}>
-              Login
-            </HeaderButton>
-          ) : (
-            <>
-              <HeaderButton
-                startIcon={
-                  (currentView || viewMode) === "book" ? (
-                    <AssignmentIcon />
-                  ) : (
-                    <BookIcon />
-                  )
-                }
-                onClick={handleToggleView}
-              >
-                {(currentView || viewMode) === "book" ? "Ficha" : "Livro"}
+          <ControlsSection>
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : !user ? (
+              <HeaderButton startIcon={<GoogleIcon />} onClick={handleLogin}>
+                Login
               </HeaderButton>
-
-              {(currentView || viewMode) === "sheet" && (
+            ) : (
+              <>
                 <HeaderButton
-                  startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  color="secondary"
-                  sx={{
-                    background: "rgba(255, 255, 255, 0.2)",
-                    "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
-                  }}
+                  startIcon={<TableIcon />}
+                  onClick={toggleTableListModal}
+                  sx={{mr: 1}}
                 >
-                  {isSaving ? "..." : "Salvar"}
+                  Mesa
                 </HeaderButton>
-              )}
-            </>
-          )}
-        </ControlsSection>
-      </HeaderContent>
-    </StyledAppBar>
+
+                <HeaderButton
+                  startIcon={
+                    (currentView || viewMode) === "book" ? (
+                      <AssignmentIcon />
+                    ) : (
+                      <BookIcon />
+                    )
+                  }
+                  onClick={handleToggleView}
+                >
+                  {(currentView || viewMode) === "book" ? "Ficha" : "Livro"}
+                </HeaderButton>
+
+                {(currentView || viewMode) === "sheet" && (
+                  <HeaderButton
+                    startIcon={<SaveIcon />}
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    color="secondary"
+                    sx={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
+                    }}
+                  >
+                    {isSaving ? "..." : "Salvar"}
+                  </HeaderButton>
+                )}
+              </>
+            )}
+          </ControlsSection>
+        </HeaderContent>
+      </StyledAppBar>
+
+      {/* Modais Globais */}
+      <CreateTableModal />
+      <TableListModal />
+    </>
   );
 }
 

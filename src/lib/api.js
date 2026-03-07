@@ -13,6 +13,8 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  getDoc,
+  or,
 } from "firebase/firestore";
 
 class APIService {
@@ -42,6 +44,21 @@ class APIService {
       return {_id: docData.id, ...docData.data()};
     } catch (error) {
       console.error("Firebase: Erro ao buscar:", error);
+      throw error;
+    }
+  }
+
+  // 1.1 BUSCAR PERSONAGEM POR ID (Para o Mestre ver a ficha)
+  static async getCharacterById(characterId) {
+    try {
+      const docRef = doc(db, "characters", characterId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return {_id: docSnap.id, ...docSnap.data()};
+      }
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar personagem por ID:", error);
       throw error;
     }
   }
@@ -124,6 +141,48 @@ class APIService {
     } catch (error) {
       console.error("Erro ao duplicar:", error);
       throw error;
+    }
+  }
+
+  // =================================================================
+  // MÉTODOS DE MESA (TABLES)
+  // =================================================================
+
+  // 5. CRIAR MESA
+  static async createTable(tableData) {
+    try {
+      const payload = this._cleanData({
+        ...tableData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        players: [], // Lista de jogadores que aceitaram (uid, charId)
+      });
+
+      const docRef = await addDoc(collection(db, "tables"), payload);
+      return {_id: docRef.id, ...payload};
+    } catch (error) {
+      console.error("Erro ao criar mesa:", error);
+      throw error;
+    }
+  }
+
+  // 6. LISTAR MESAS (Onde sou Mestre OU Jogador convidado)
+  static async getTables(userEmail, userId) {
+    try {
+      // Busca mesas onde sou o GM (gmId == userId) OU fui convidado (invites contem email)
+      const q = query(
+        collection(db, "tables"),
+        or(
+          where("gmId", "==", userId),
+          where("invites", "array-contains", userEmail),
+        ),
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+    } catch (error) {
+      console.error("Erro ao listar mesas:", error);
+      return [];
     }
   }
 }
