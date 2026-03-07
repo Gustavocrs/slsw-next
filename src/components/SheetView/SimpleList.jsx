@@ -6,42 +6,42 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {Box, TextField, IconButton} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 
-const ItemRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  margin-bottom: 8px;
-  border: 1px solid #e0e0e0;
+const ItemRow = styled(Box)(({theme}) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  gap: "12px",
+  alignItems: "center",
+  padding: "12px",
+  borderRadius: "8px",
+  background: "#f9f9f9",
+  marginBottom: "8px",
+  border: "1px solid #e0e0e0",
 
-  &:hover {
-    background: #f5f5f5;
-  }
-`;
+  "&:hover": {
+    background: "#f5f5f5",
+  },
+}));
 
-const DisplayRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  margin-bottom: 8px;
-  border: 1px solid #e0e0e0;
-  cursor: pointer;
+const DisplayRow = styled(Box)(({theme}) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  gap: "12px",
+  alignItems: "center",
+  padding: "12px",
+  borderRadius: "8px",
+  background: "#f9f9f9",
+  marginBottom: "8px",
+  border: "1px solid #e0e0e0",
+  cursor: "pointer",
 
-  &:hover {
-    background: #f5f5f5;
-  }
-`;
+  "&:hover": {
+    background: "#f5f5f5",
+  },
+}));
 
 function SimpleList({
   items = [],

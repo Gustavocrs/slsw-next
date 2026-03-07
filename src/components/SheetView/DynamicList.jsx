@@ -6,7 +6,7 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {
   Card,
   CardContent,
@@ -25,52 +25,48 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 
-const CardStyled = styled(Card)`
-  && {
-    margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background: #fff;
-  }
-`;
+const CardStyled = styled(Card)(({theme}) => ({
+  marginBottom: "20px",
+  borderRadius: "12px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+  background: "#fff",
+}));
 
-const CardHeaderStyled = styled(CardHeader)`
-  && {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px 12px 0 0;
+const CardHeaderStyled = styled(CardHeader)(({theme}) => ({
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  color: "white",
+  borderRadius: "12px 12px 0 0",
 
-    .MuiCardHeader-title {
-      font-weight: 700;
-      font-size: 1.2rem;
-    }
-  }
-`;
+  "& .MuiCardHeader-title": {
+    fontWeight: 700,
+    fontSize: "1.2rem",
+  },
+}));
 
-const ItemRow = styled(Box)`
-  display: grid;
-  grid-template-columns: ${(props) => props.columns || "1fr"};
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #e0e0e0;
-  align-items: center;
+const ItemRow = styled(Box)(({theme, columns}) => ({
+  display: "grid",
+  gridTemplateColumns: columns || "1fr",
+  gap: "12px",
+  padding: "12px 0",
+  borderBottom: "1px solid #e0e0e0",
+  alignItems: "center",
 
-  &:last-child {
-    border-bottom: none;
-  }
-`;
+  "&:last-child": {
+    borderBottom: "none",
+  },
+}));
 
-const ActionButtons = styled(Box)`
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-`;
+const ActionButtons = styled(Box)(({theme}) => ({
+  display: "flex",
+  gap: "8px",
+  justifyContent: "flex-end",
+}));
 
-const AddButtonContainer = styled(Box)`
-  padding-top: 12px;
-  display: flex;
-  gap: 8px;
-`;
+const AddButtonContainer = styled(Box)(({theme}) => ({
+  paddingTop: "12px",
+  display: "flex",
+  gap: "8px",
+}));
 
 function DynamicList({
   title,

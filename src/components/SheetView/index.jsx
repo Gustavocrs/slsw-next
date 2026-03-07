@@ -110,6 +110,64 @@ const PointsBadge = styled("span")(({theme}) => ({
   marginLeft: "8px",
 }));
 
+const GridCard = ({
+  title,
+  children,
+  color = "#667eea",
+  bg = "#fff",
+  retro = false,
+  sx = {},
+}) => (
+  <Box
+    sx={{
+      background: retro ? "#f4e4bc" : bg,
+      p: 1.5,
+      borderRadius: retro ? 0 : 2,
+      border: retro ? "1px solid #5d4037" : "none",
+      borderLeft: retro ? "1px solid #5d4037" : `3px solid ${color}`,
+      boxShadow: retro
+        ? "3px 3px 0 rgba(93, 64, 55, 0.4)"
+        : "0 2px 4px rgba(0,0,0,0.05)",
+      overflowY: "auto",
+      height: "100%",
+      position: "relative",
+      "&::before": retro
+        ? {
+            content: '""',
+            position: "absolute",
+            top: "2px",
+            left: "2px",
+            right: "2px",
+            bottom: "2px",
+            border: "1px solid rgba(93, 64, 55, 0.2)",
+            pointerEvents: "none",
+          }
+        : {},
+      ...sx,
+    }}
+  >
+    {title && (
+      <h4
+        style={{
+          margin: "0 0 8px 0",
+          fontSize: retro ? "0.9rem" : "0.8rem",
+          fontWeight: retro ? 700 : 600,
+          color: retro ? "#3e2723" : "#444",
+          fontFamily: retro ? '"Times New Roman", serif' : "inherit",
+          textTransform: retro ? "uppercase" : "none",
+          borderBottom: retro ? "1px solid rgba(93, 64, 55, 0.2)" : "none",
+          paddingBottom: retro ? "4px" : "0",
+        }}
+      >
+        {title}
+      </h4>
+    )}
+    <div style={{fontFamily: retro ? '"Times New Roman", serif' : "inherit"}}>
+      {children}
+    </div>
+  </Box>
+);
+
 function SheetView({
   saveSuccess,
   onLoad,
@@ -305,64 +363,6 @@ function SheetView({
   }, 0);
   const vigorDieVal = parseInt((character.vigor || "d4").replace("d", ""), 10);
   const toughnessBase = 2 + vigorDieVal / 2;
-
-  const GridCard = ({
-    title,
-    children,
-    color = "#667eea",
-    bg = "#fff",
-    retro = false,
-    sx = {},
-  }) => (
-    <Box
-      sx={{
-        background: retro ? "#f4e4bc" : bg,
-        p: 1.5,
-        borderRadius: retro ? 0 : 2,
-        border: retro ? "1px solid #5d4037" : "none",
-        borderLeft: retro ? "1px solid #5d4037" : `3px solid ${color}`,
-        boxShadow: retro
-          ? "3px 3px 0 rgba(93, 64, 55, 0.4)"
-          : "0 2px 4px rgba(0,0,0,0.05)",
-        overflowY: "auto",
-        height: "100%",
-        position: "relative",
-        "&::before": retro
-          ? {
-              content: '""',
-              position: "absolute",
-              top: "2px",
-              left: "2px",
-              right: "2px",
-              bottom: "2px",
-              border: "1px solid rgba(93, 64, 55, 0.2)",
-              pointerEvents: "none",
-            }
-          : {},
-        ...sx,
-      }}
-    >
-      {title && (
-        <h4
-          style={{
-            margin: "0 0 8px 0",
-            fontSize: retro ? "0.9rem" : "0.8rem",
-            fontWeight: retro ? 700 : 600,
-            color: retro ? "#3e2723" : "#444",
-            fontFamily: retro ? '"Times New Roman", serif' : "inherit",
-            textTransform: retro ? "uppercase" : "none",
-            borderBottom: retro ? "1px solid rgba(93, 64, 55, 0.2)" : "none",
-            paddingBottom: retro ? "4px" : "0",
-          }}
-        >
-          {title}
-        </h4>
-      )}
-      <div style={{fontFamily: retro ? '"Times New Roman", serif' : "inherit"}}>
-        {children}
-      </div>
-    </Box>
-  );
 
   return (
     <Box>

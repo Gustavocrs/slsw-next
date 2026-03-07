@@ -6,31 +6,35 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {Box, TextField} from "@mui/material";
 
-const FormRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 1fr 80px 80px;
-  gap: 12px;
-  margin-bottom: 12px;
+const FormRow = styled(Box)(({theme}) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr 80px 80px",
+  gap: "12px",
+  marginBottom: "12px",
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "1fr",
+  },
+}));
 
-const FullWidthField = styled(Box)`
-  margin-bottom: 12px;
-`;
+const FullWidthField = styled(Box)(({theme}) => ({
+  marginBottom: "12px",
+}));
 
 function RecursosDespertarList({items = [], onAdd, onUpdate}) {
   const item = items.length > 0 ? items[0] : {};
   const [editName, setEditName] = React.useState(item.name || "");
   const [editCusto, setEditCusto] = React.useState(item.custo || "");
   const [editNivel, setEditNivel] = React.useState(item.nivel || "");
-  const [editDescricao, setEditDescricao] = React.useState(item.descricao || "");
-  const [editLimitacao, setEditLimitacao] = React.useState(item.limitacao || "");
+  const [editDescricao, setEditDescricao] = React.useState(
+    item.descricao || "",
+  );
+  const [editLimitacao, setEditLimitacao] = React.useState(
+    item.limitacao || "",
+  );
   const [hasInitialized, setHasInitialized] = React.useState(items.length > 0);
 
   // Atualizar local state quando o prop mudar
@@ -77,7 +81,14 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
   React.useEffect(() => {
     const timer = setTimeout(handleSave, 500);
     return () => clearTimeout(timer);
-  }, [editName, editCusto, editNivel, editDescricao, editLimitacao, handleSave]);
+  }, [
+    editName,
+    editCusto,
+    editNivel,
+    editDescricao,
+    editLimitacao,
+    handleSave,
+  ]);
 
   return (
     <Box sx={{mb: 2, background: "#f9f9f9", p: 2, borderRadius: 1}}>
