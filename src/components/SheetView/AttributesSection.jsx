@@ -6,7 +6,7 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {
   Paper,
   Grid,
@@ -20,72 +20,63 @@ import {
 import {useCharacterStore} from "@/stores/characterStore";
 import {validateAttributes, DICE} from "@/lib/rpgEngine";
 
-const SectionContainer = styled(Paper)`
-  && {
-    padding: 24px;
-    border-radius: 12px;
-    background: #e3f2fd;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #2196f3;
-  }
-`;
+const SectionContainer = styled(Paper)(({theme}) => ({
+  padding: "24px",
+  borderRadius: "12px",
+  background: "#e3f2fd",
+  marginBottom: "24px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  borderLeft: "4px solid #2196f3",
+}));
 
-const SectionTitle = styled.h2`
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 1.4rem;
-  border-left: 4px solid #667eea;
-  padding-left: 12px;
-`;
+const SectionTitle = styled("h2")(({theme}) => ({
+  margin: "0 0 20px 0",
+  color: "#333",
+  fontSize: "1.4rem",
+  borderLeft: "4px solid #667eea",
+  paddingLeft: "12px",
+}));
 
-const AttributeBox = styled(Box)`
-  padding: 16px;
-  background: white;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+const AttributeBox = styled(Box)(({theme}) => ({
+  padding: "16px",
+  background: "white",
+  borderRadius: "8px",
+  textAlign: "center",
+  boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+  border: "2px solid transparent",
 
-  &:hover {
-    border-color: #667eea;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-  }
+  "&:hover": {
+    borderColor: "#667eea",
+    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.2)",
+  },
 
-  label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  "& label": {
+    display: "block",
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    color: "#666",
+    marginBottom: "8px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  },
 
-  .MuiSelect-root {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #667eea;
-  }
-`;
+  "& .MuiSelect-root": {
+    fontSize: "1.2rem",
+    fontWeight: 700,
+    color: "#667eea",
+  },
+}));
 
-const StatusBar = styled(Box)`
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  font-size: 0.9rem;
-
-  .spent {
-    font-weight: 700;
-    color: #667eea;
-  }
-
-  .max {
-    color: #999;
-  }
-`;
+const StatusBar = styled(Box)(({theme}) => ({
+  display: "flex",
+  gap: "8px",
+  marginTop: "12px",
+  fontSize: "0.9rem",
+  "& .spent": {fontWeight: 700, color: "#667eea"},
+  "& .max": {color: "#999"},
+}));
 
 const ATTRIBUTES = [
   {key: "agilidade", label: "🏃", name: "Agilidade"},

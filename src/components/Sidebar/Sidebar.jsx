@@ -6,57 +6,60 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
-import {Drawer, List, ListItem, ListItemText, IconButton, Box} from "@mui/material";
+import {styled} from "@mui/material/styles";
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Box,
+} from "@mui/material";
 import {Close as CloseIcon} from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
 
-const DrawerStyled = styled(Drawer)`
-  .MuiDrawer-paper {
-    width: 280px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  }
-`;
+const DrawerStyled = styled(Drawer)(({theme}) => ({
+  "& .MuiDrawer-paper": {
+    width: "280px",
+    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+  },
+}));
 
-const SidebarHeader = styled(Box)`
-  padding: 20px;
-  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const SidebarHeader = styled(Box)(({theme}) => ({
+  padding: "20px",
+  borderBottom: "2px solid rgba(102, 126, 234, 0.1)",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
 
-  h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: #333;
-  }
-`;
+  "& h2": {
+    margin: 0,
+    fontSize: "1.3rem",
+    color: "#333",
+  },
+}));
 
-const SectionTitle = styled(ListItemText)`
-  && {
-    .MuiListItemText-primary {
-      font-weight: 700;
-      color: #667eea;
-      font-size: 0.95rem;
-    }
-  }
-`;
+const SectionTitle = styled(ListItemText)(({theme}) => ({
+  "& .MuiListItemText-primary": {
+    fontWeight: 700,
+    color: "#667eea",
+    fontSize: "0.95rem",
+  },
+}));
 
-const NavItem = styled(ListItem)`
-  && {
-    padding-left: 20px;
-    color: #666;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
+const NavItem = styled(ListItem)(({theme}) => ({
+  paddingLeft: "20px",
+  color: "#666",
+  fontSize: "0.95rem",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
 
-    &:hover {
-      background-color: rgba(102, 126, 234, 0.15);
-      color: #667eea;
-      padding-left: 25px;
-    }
-  }
-`;
+  "&:hover": {
+    backgroundColor: "rgba(102, 126, 234, 0.15)",
+    color: "#667eea",
+    paddingLeft: "25px",
+  },
+}));
 
 function Sidebar({open, onClose}) {
   const handleNavigation = (sectionId) => {

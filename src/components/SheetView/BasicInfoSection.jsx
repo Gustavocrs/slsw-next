@@ -6,7 +6,7 @@
 "use client";
 
 import React from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {
   Paper,
   TextField,
@@ -19,39 +19,33 @@ import {
 import {useCharacterStore} from "@/stores/characterStore";
 import {RANKS} from "@/lib/rpgEngine";
 
-const SectionContainer = styled(Paper)`
-  && {
-    padding: 24px;
-    border-radius: 12px;
-    background: #e0f7fa;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #00bcd4;
-  }
-`;
+const SectionContainer = styled(Paper)(({theme}) => ({
+  padding: "24px",
+  borderRadius: "12px",
+  background: "#e0f7fa",
+  marginBottom: "24px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  borderLeft: "4px solid #00bcd4",
+}));
 
-const StyledTextField = styled(TextField)`
-  && {
-    .MuiOutlinedInput-root {
-      border-radius: 8px;
-      transition: all 0.3s ease;
+const StyledTextField = styled(TextField)(({theme}) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "8px",
+    transition: "all 0.3s ease",
 
-      &:hover {
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-      }
+    "&:hover": {
+      boxShadow: "0 2px 8px rgba(102, 126, 234, 0.15)",
+    },
 
-      &.Mui-focused {
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-      }
-    }
-  }
-`;
+    "&.Mui-focused": {
+      boxShadow: "0 4px 12px rgba(102, 126, 234, 0.25)",
+    },
+  },
+}));
 
-const StyledSelect = styled(Select)`
-  && {
-    border-radius: 8px;
-  }
-`;
+const StyledSelect = styled(Select)(({theme}) => ({
+  borderRadius: "8px",
+}));
 
 function BasicInfoSection() {
   const character = useCharacterStore((state) => state.character);

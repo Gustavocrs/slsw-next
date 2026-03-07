@@ -24,7 +24,7 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
 import MagiasList from "./MagiasList";
@@ -51,65 +51,57 @@ import {
   calculateTotalHindrancePoints,
 } from "@/lib/rpgEngine";
 
-const TabsPaper = styled(Paper)`
-  && {
-    margin-bottom: 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-`;
+const TabsPaper = styled(Paper)(({theme}) => ({
+  marginBottom: "12px",
+  borderRadius: "12px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+}));
 
-const TabStyled = styled(Tab)`
-  && {
-    text-transform: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #666;
-    padding: 10px 16px;
-    min-width: auto;
+const TabStyled = styled(Tab)(({theme}) => ({
+  textTransform: "none",
+  fontWeight: 600,
+  fontSize: "0.95rem",
+  color: "#666",
+  padding: "10px 16px",
+  minWidth: "auto",
 
-    @media (max-width: 600px) {
-      padding: 12px 4px;
-      flex: 1;
-      max-width: none;
-    }
+  [theme.breakpoints.down("sm")]: {
+    padding: "12px 4px",
+    flex: 1,
+    maxWidth: "none",
+  },
 
-    &.Mui-selected {
-      color: #667eea;
-      font-weight: 700;
-    }
-  }
-`;
+  "&.Mui-selected": {
+    color: "#667eea",
+    fontWeight: 700,
+  },
+}));
 
-const StyledTextField = styled(TextField)`
-  && {
-    .MuiOutlinedInput-root {
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-    .MuiInputBase-input {
-      padding: 10px 12px;
-    }
-  }
-`;
+const StyledTextField = styled(TextField)(({theme}) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "8px",
+    fontSize: "0.95rem",
+  },
+  "& .MuiInputBase-input": {
+    padding: "10px 12px",
+  },
+}));
 
-const StyledSelect = styled(Select)`
-  && {
-    border-radius: 8px;
-    font-size: 0.95rem;
-  }
-`;
+const StyledSelect = styled(Select)(({theme}) => ({
+  borderRadius: "8px",
+  fontSize: "0.95rem",
+}));
 
-const PointsBadge = styled.span`
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  background: #f0f0f0;
-  color: #333;
-  margin-left: 8px;
-`;
+const PointsBadge = styled("span")(({theme}) => ({
+  display: "inline-block",
+  padding: "4px 10px",
+  borderRadius: "12px",
+  fontSize: "0.75rem",
+  fontWeight: "bold",
+  background: "#f0f0f0",
+  color: "#333",
+  marginLeft: "8px",
+}));
 
 function SheetView({
   saveSuccess,

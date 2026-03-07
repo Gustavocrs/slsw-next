@@ -386,67 +386,76 @@ function GameModal() {
                     selectedTable.gmPhotoURL || (isGM ? user?.photoURL : null),
                 },
                 ...(selectedTable.players || []),
-              ].map((player) => (
-                <Paper
-                  key={player.uid}
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      bgcolor: "#f5f7fa",
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                    },
-                    border: "1px solid #e0e0e0",
-                  }}
-                  onClick={(e) => handlePlayerClick(e, player)}
-                >
-                  <Badge
-                    overlap="circular"
-                    anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-                    badgeContent={
-                      player.isGM ? (
-                        <GmIcon
-                          sx={{
-                            width: 14,
-                            height: 14,
-                            color: "#f57c00",
-                            bgcolor: "white",
-                            borderRadius: "50%",
-                          }}
-                        />
-                      ) : null
-                    }
+              ].map((player) => {
+                const safePhotoURL = player.photoURL?.includes(
+                  "googleusercontent.com",
+                )
+                  ? player.photoURL.replace("=s96-c", "=s100-c")
+                  : player.photoURL;
+
+                return (
+                  <Paper
+                    key={player.uid}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "#f5f7fa",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                      },
+                      border: "1px solid #e0e0e0",
+                    }}
+                    onClick={(e) => handlePlayerClick(e, player)}
                   >
-                    <Avatar
-                      src={player.photoURL}
-                      alt={player.name}
-                      sx={{width: 40, height: 40}}
-                    />
-                  </Badge>
-                  <Box sx={{overflow: "hidden", ml: 1}}>
-                    <Typography variant="body2" fontWeight="bold" noWrap>
-                      {player.name}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
+                    <Badge
+                      overlap="circular"
+                      anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+                      badgeContent={
+                        player.isGM ? (
+                          <GmIcon
+                            sx={{
+                              width: 14,
+                              height: 14,
+                              color: "#f57c00",
+                              bgcolor: "white",
+                              borderRadius: "50%",
+                            }}
+                          />
+                        ) : null
+                      }
                     >
-                      {player.isGM
-                        ? "Game Master"
-                        : isGM
-                          ? "Ver opções"
-                          : "Jogador"}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
+                      <Avatar
+                        src={safePhotoURL}
+                        alt={player.name}
+                        sx={{width: 40, height: 40}}
+                        imgProps={{referrerPolicy: "no-referrer"}}
+                      />
+                    </Badge>
+                    <Box sx={{overflow: "hidden", ml: 1}}>
+                      <Typography variant="body2" fontWeight="bold" noWrap>
+                        {player.name}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        {player.isGM
+                          ? "Game Master"
+                          : isGM
+                            ? "Ver opções"
+                            : "Jogador"}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                );
+              })}
             </Box>
           </Grid>
         </Grid>
@@ -462,22 +471,21 @@ function GameModal() {
           }}
         >
           {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
-          {isGM && !selectedPlayer?.isGM && (
-            <>
-              <MenuItem onClick={handleViewSheet}>
+          {isGM &&
+            !selectedPlayer?.isGM && [
+              <MenuItem key="view-sheet" onClick={handleViewSheet}>
                 <ListItemIcon>
                   <SheetIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Ver Ficha</ListItemText>
-              </MenuItem>
-              <MenuItem onClick={handleRequestFile}>
+              </MenuItem>,
+              <MenuItem key="req-file" onClick={handleRequestFile}>
                 <ListItemIcon>
                   <FileIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Solicitar Arquivo</ListItemText>
-              </MenuItem>
-            </>
-          )}
+              </MenuItem>,
+            ]}
 
           <MenuItem onClick={handleSendMessage}>
             <ListItemIcon>
