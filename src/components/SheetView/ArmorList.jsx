@@ -6,62 +6,62 @@
 "use client";
 
 import React, {useState} from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {Box, TextField, IconButton} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 
-const InputRow = styled(Box)`
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 12px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 16px;
+const InputRow = styled(Box)(({theme}) => ({
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr 1fr auto",
+  gap: "8px",
+  alignItems: "center",
+  padding: "12px",
+  background: "#f9f9f9",
+  borderRadius: "8px",
+  border: "1px solid #e0e0e0",
+  marginBottom: "16px",
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "1fr",
+  },
+}));
 
-const ListItem = styled(Box)`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 6px;
-  font-size: 0.95rem;
+const ListItem = styled(Box)(({theme}) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  gap: "8px",
+  alignItems: "center",
+  padding: "10px 12px",
+  borderRadius: "6px",
+  background: "#f9f9f9",
+  border: "1px solid #e0e0e0",
+  marginBottom: "6px",
+  fontSize: "0.95rem",
 
-  &:hover {
-    background: #f5f5f5;
-  }
-`;
+  "&:hover": {
+    background: "#f5f5f5",
+  },
+}));
 
-const Button = styled.button`
-  padding: 10px 16px;
-  background: #667eea;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: background 0.2s ease;
+const Button = styled("button")(({theme}) => ({
+  padding: "10px 16px",
+  background: "#667eea",
+  color: "#fff",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "0.9rem",
+  fontWeight: 600,
+  transition: "background 0.2s ease",
 
-  &:hover {
-    background: #5568d3;
-  }
+  "&:hover": {
+    background: "#5568d3",
+  },
 
-  &:active {
-    background: #445cb9;
-  }
-`;
+  "&:active": {
+    background: "#445cb9",
+  },
+}));
 
 function ArmorList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
   const [name, setName] = useState("");
