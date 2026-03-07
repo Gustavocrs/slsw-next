@@ -1,7 +1,6 @@
 import {NextResponse} from "next/server";
 import path from "path";
-import {readFile, stat} from "fs/promises";
-import {existsSync} from "fs";
+import fs from "fs";
 
 // Força a rota a ser dinâmica para evitar cache estático que causa loops em dev
 export const dynamic = "force-dynamic";
@@ -10,27 +9,42 @@ export async function GET(request, {params}) {
   // Await params para compatibilidade com Next.js 15+
   const {filename} = await params;
 
-  // Sanitiza o nome do arquivo para evitar navegação de diretório (segurança)
-  const safeFilename = path.basename(filename);
+  // Define o caminho absoluto para a pasta uploads na raiz do projeto
   const uploadDir = path.join(process.cwd(), "uploads");
+  const safeFilename = path.basename(filename);
   const filePath = path.join(uploadDir, safeFilename);
 
-  if (!existsSync(filePath)) {
-    return NextResponse.json({error: "Arquivo não encontrado"}, {status: 404});
-  }
+  // Logs para debug no terminal do servidor (ajuda a verificar se o caminho está correto)
+  console.log(`[API FILE] Solicitado: ${safeFilename}`);
+  console.log(`[API FILE] Caminho absoluto: ${filePath}`);
 
   try {
-    // Verifica se é um arquivo mesmo
-    const stats = await stat(filePath);
-    if (!stats.isFile()) {
-      return NextResponse.json({error: "Caminho inválido"}, {status: 400});
+    // Verifica se a pasta uploads existe
+    if (!fs.existsSync(uploadDir)) {
+      console.error(
+        `[API FILE] ERRO: Pasta 'uploads' não encontrada em ${uploadDir}`,
+      );
+      return NextResponse.json(
+        {error: "Configuração de servidor: pasta uploads inexistente"},
+        {status: 500},
+      );
     }
 
-    const fileBuffer = await readFile(filePath);
+    // Verifica se o arquivo existe
+    if (!fs.existsSync(filePath)) {
+      console.warn(`[API FILE] Arquivo não encontrado: ${filePath}`);
+      return NextResponse.json(
+        {error: "Arquivo não encontrado"},
+        {status: 404},
+      );
+    }
+
+    // Lê o arquivo de forma síncrona (Buffer) para garantir estabilidade e evitar loops de stream
+    const fileBuffer = fs.readFileSync(filePath);
+    const stats = fs.statSync(filePath);
+
     const ext = path.extname(safeFilename).toLowerCase();
 
-    // Define o Content-Type correto
-    let contentType = "application/octet-stream";
     const mimeTypes = {
       ".png": "image/png",
       ".jpg": "image/jpeg",
@@ -48,18 +62,20 @@ export async function GET(request, {params}) {
       ".txt": "text/plain",
     };
 
-    if (mimeTypes[ext]) contentType = mimeTypes[ext];
+    const contentType = mimeTypes[ext] || "application/octet-stream";
 
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": contentType,
         "Content-Length": stats.size.toString(),
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control": "public, max-age=3600, must-revalidate",
       },
     });
   } catch (error) {
-    console.error("Erro ao ler arquivo:", error);
-    return NextResponse.json({error: "Erro ao ler arquivo"}, {status: 500});
+    console.error("[API FILE] Erro crítico ao ler arquivo:", error);
+    return NextResponse.json(
+      {error: "Erro interno ao processar arquivo"},
+      {status: 500},
+    );
   }
 }
