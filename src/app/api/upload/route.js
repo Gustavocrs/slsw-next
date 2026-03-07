@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
-import {writeFile, mkdir} from "fs/promises";
 import path from "path";
+import {writeFile, mkdir} from "fs/promises";
 
 export async function POST(request) {
   try {
@@ -25,22 +25,20 @@ export async function POST(request) {
 
     // Nome único para evitar colisão
     const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-    const fileName = `${timestamp}-${safeName}`;
+    const ext = path.extname(file.name);
+    const baseName = path.basename(file.name, ext);
+    const safeName = baseName
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .substring(0, 40);
+    const fileName = `${timestamp}-${safeName}${ext}`;
     const filePath = path.join(uploadDir, fileName);
 
     await writeFile(filePath, buffer);
 
-    const url = `/api/files/${fileName}`;
-
-    return NextResponse.json({
-      success: true,
-      url,
-      name: file.name,
-      type: file.type,
-    });
+    return NextResponse.json({fileName, url: `/api/files/${fileName}`});
   } catch (error) {
-    console.error("Erro no upload:", error);
+    console.error("Erro ao fazer upload:", error);
     return NextResponse.json(
       {error: "Erro interno no servidor"},
       {status: 500},

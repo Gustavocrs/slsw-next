@@ -1,10 +1,14 @@
 services:
-  slsw-next:
+  slsw-app:
     build: .
     image: slsw-frontend:latest
     container_name: slsw-app
     restart: always
     ports:
       - "5002:3000"
+    volumes:
+      # Persiste os uploads para não perder as imagens no deploy
+      - ./uploads:/app/uploads
+      - ./public/uploads:/app/public/uploads
     environment:
       - NODE_ENV=production

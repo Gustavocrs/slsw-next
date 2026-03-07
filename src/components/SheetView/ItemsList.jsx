@@ -54,7 +54,7 @@ const Button = styled("button")(({theme}) => ({
   borderRadius: "6px",
   cursor: "pointer",
   fontSize: "0.9rem",
-  fontWeight: 600",
+  fontWeight: 600,
   transition: "background 0.2s ease",
 
   "&:hover": {
