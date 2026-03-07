@@ -1,50 +1,38 @@
 import {NextResponse} from "next/server";
-import {writeFile, mkdir} from "fs/promises";
+import {readFile} from "fs/promises";
 import path from "path";
+import {existsSync} from "fs";
 
-export async function POST(request) {
+export async function GET(request, {params}) {
+  const {filename} = await params;
+  const filePath = path.join(process.cwd(), "uploads", filename);
+
+  if (!existsSync(filePath)) {
+    return new NextResponse("Arquivo não encontrado", {status: 404});
+  }
+
   try {
-    const data = await request.formData();
-    const file = data.get("file");
+    const fileBuffer = await readFile(filePath);
 
-    if (!file) {
-      return NextResponse.json(
-        {error: "Nenhum arquivo enviado"},
-        {status: 400},
-      );
-    }
+    // Determinar Content-Type básico
+    const ext = path.extname(filename).toLowerCase();
+    let contentType = "application/octet-stream";
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    if (ext === ".png") contentType = "image/png";
+    else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+    else if (ext === ".gif") contentType = "image/gif";
+    else if (ext === ".webp") contentType = "image/webp";
+    else if (ext === ".pdf") contentType = "application/pdf";
+    else if (ext === ".svg") contentType = "image/svg+xml";
 
-    // Salvar em public/uploads para ser acessível via URL
-    // Em produção (VPS), certifique-se que a pasta public tem permissão de escrita
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-
-    // Garantir que o diretório existe
-    await mkdir(uploadDir, {recursive: true});
-
-    // Nome único para evitar colisão
-    const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-    const fileName = `${timestamp}-${safeName}`;
-    const filePath = path.join(uploadDir, fileName);
-
-    await writeFile(filePath, buffer);
-
-    const url = `/uploads/${fileName}`;
-
-    return NextResponse.json({
-      success: true,
-      url,
-      name: file.name,
-      type: file.type,
+    return new NextResponse(fileBuffer, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
     });
   } catch (error) {
-    console.error("Erro no upload:", error);
-    return NextResponse.json(
-      {error: "Erro interno no servidor"},
-      {status: 500},
-    );
+    console.error("Erro ao ler arquivo:", error);
+    return new NextResponse("Erro interno", {status: 500});
   }
 }
