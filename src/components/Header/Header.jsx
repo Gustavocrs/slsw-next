@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState, useEffect} from "react";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
 import {
@@ -27,59 +27,56 @@ import CreateTableModal from "../Table/CreateTableModal";
 import TableListModal from "../Table/TableListModal";
 import TableDetailsModal from "../Table/TableDetailsModal";
 import GameModal from "../Table/GameModal";
+import InspectSheetModal from "../Table/InspectSheetModal";
 
-const StyledAppBar = styled(AppBar)`
-  && {
-    position: fixed;
-    bottom: 0;
-    top: auto;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1200;
-  }
-`;
+const StyledAppBar = styled(AppBar)(({theme}) => ({
+  position: "fixed",
+  bottom: 0,
+  top: "auto",
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
+  zIndex: 1200,
+}));
 
-const HeaderContent = styled(Toolbar)`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  min-height: 64px;
-`;
+const HeaderContent = styled(Toolbar)(({theme}) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "0 16px",
+  minHeight: "64px",
+}));
 
-const UserSection = styled(Box)`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
+const UserSection = styled(Box)(({theme}) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+}));
 
-const ControlsSection = styled(Box)`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 30px;
-`;
+const ControlsSection = styled(Box)(({theme}) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  height: "30px",
+}));
 
-const HeaderButton = styled(Button)`
-  && {
-    color: white;
-    text-transform: none;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(4px);
-    border-radius: 8px;
-    padding: 6px 16px;
-    min-width: auto;
+const HeaderButton = styled(Button)(({theme}) => ({
+  color: "white",
+  textTransform: "none",
+  fontWeight: 600,
+  background: "rgba(255, 255, 255, 0.1)",
+  backdropFilter: "blur(4px)",
+  borderRadius: "8px",
+  padding: "6px 16px",
+  minWidth: "auto",
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
+  "&:hover": {
+    background: "rgba(255, 255, 255, 0.2)",
+  },
 
-    &.Mui-disabled {
-      color: rgba(255, 255, 255, 0.5);
-    }
-  }
-`;
+  "&.Mui-disabled": {
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+}));
 
 function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {user, loading, loginWithGoogle} = useAuth();
@@ -96,21 +93,12 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sincronização Bidirecional entre Store (Modais) e Props (Página)
-
-  // 1. Prop -> Store: Quando a página muda a view (ex: botão no header), atualiza o store
+  // Sincronização Prop -> Store: Quando a página muda a view, atualiza o store
   useEffect(() => {
     if (currentView && currentView !== viewMode) {
       setViewMode(currentView);
     }
   }, [currentView, viewMode, setViewMode]);
-
-  // 2. Store -> Prop: Quando o store muda (ex: abrir ficha no modal), notifica a página
-  useEffect(() => {
-    if (onViewChange && viewMode && viewMode !== currentView) {
-      onViewChange(viewMode);
-    }
-  }, [viewMode, currentView, onViewChange]);
 
   const handleLogin = async () => {
     try {
@@ -210,6 +198,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       <TableListModal />
       <TableDetailsModal />
       <GameModal />
+      <InspectSheetModal />
 
       {/* Notificações Globais */}
       <Snackbar

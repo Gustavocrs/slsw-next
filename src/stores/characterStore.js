@@ -79,6 +79,9 @@ export const useCharacterStore = create((set) => ({
   // UI Stores Helpers
   setCardOrder: (order) =>
     set((state) => ({character: {...state.character, cardOrder: order}})),
+
+  inspectedCharacter: null,
+  setInspectedCharacter: (char) => set({inspectedCharacter: char}),
 }));
 
 export const useAuthStore = create((set) => ({
@@ -94,6 +97,7 @@ export const useUIStore = create((set) => ({
   tableCreateModalOpen: false, // Modal de Criar
   tableListModalOpen: false, // Modal de Listar (Dashboard)
   tableDetailsModalOpen: false, // Modal de Detalhes/Config
+  inspectModalOpen: false, // Modal de Inspeção de Ficha
   gameModalOpen: false, // Modal de Jogo (Novo)
   selectedTable: null, // Mesa selecionada para ver detalhes
   tablesUpdated: 0, // Timestamp para forçar refresh da lista
@@ -110,6 +114,8 @@ export const useUIStore = create((set) => ({
     set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
   toggleGameModal: () =>
     set((state) => ({gameModalOpen: !state.gameModalOpen})),
+  toggleInspectModal: () =>
+    set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
 
   setSelectedTable: (table) => set({selectedTable: table}),
   notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),

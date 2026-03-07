@@ -49,10 +49,10 @@ function TableDetailsModal() {
     selectedTable,
     notifyTablesUpdated,
     showNotification,
-    setViewMode,
     setSelectedTable,
+    toggleInspectModal,
   } = useUIStore();
-  const {loadCharacter} = useCharacterStore();
+  const {loadCharacter, setInspectedCharacter} = useCharacterStore();
   const {user} = useAuth();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -207,9 +207,8 @@ function TableDetailsModal() {
     try {
       const charData = await APIService.getCharacterById(player.characterId);
       if (charData) {
-        loadCharacter(charData);
-        setViewMode("sheet");
-        toggleTableDetailsModal();
+        setInspectedCharacter(charData);
+        toggleInspectModal();
         showNotification(`Visualizando ficha de ${player.name}`, "success");
       } else {
         showNotification("Ficha não encontrada.", "error");

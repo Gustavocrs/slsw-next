@@ -47,11 +47,11 @@ function GameModal() {
     toggleGameModal,
     selectedTable,
     showNotification,
-    setViewMode,
     toggleTableDetailsModal,
     setSelectedTable,
+    toggleInspectModal,
   } = useUIStore();
-  const {loadCharacter} = useCharacterStore();
+  const {loadCharacter, setInspectedCharacter} = useCharacterStore();
   const {user} = useAuth();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -77,9 +77,8 @@ function GameModal() {
           selectedPlayer.characterId,
         );
         if (charData) {
-          loadCharacter(charData);
-          setViewMode("sheet");
-          toggleGameModal(); // Fecha o modal de jogo
+          setInspectedCharacter(charData);
+          toggleInspectModal();
           showNotification(
             `Visualizando ficha de ${selectedPlayer.name}`,
             "success",

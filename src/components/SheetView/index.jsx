@@ -111,16 +111,36 @@ const PointsBadge = styled.span`
   margin-left: 8px;
 `;
 
-function SheetView({saveSuccess, onLoad}) {
+function SheetView({
+  saveSuccess,
+  onLoad,
+  character: propCharacter,
+  actions: propActions,
+}) {
   const [tabValue, setTabValue] = React.useState(0);
-  const character = useCharacterStore((state) => state.character);
-  const updateAttribute = useCharacterStore((state) => state.updateAttribute);
-  const updateListItem = useCharacterStore((state) => state.updateListItem);
-  const addItemToList = useCharacterStore((state) => state.addItemToList);
-  const removeItemFromList = useCharacterStore(
+
+  // Store Hooks (Default)
+  const storeCharacter = useCharacterStore((state) => state.character);
+  const storeUpdateAttribute = useCharacterStore(
+    (state) => state.updateAttribute,
+  );
+  const storeUpdateListItem = useCharacterStore(
+    (state) => state.updateListItem,
+  );
+  const storeAddItemToList = useCharacterStore((state) => state.addItemToList);
+  const storeRemoveItemFromList = useCharacterStore(
     (state) => state.removeItemFromList,
   );
-  const updateCharacter = useCharacterStore((s) => s.updateCharacter);
+  const storeUpdateCharacter = useCharacterStore((s) => s.updateCharacter);
+
+  // Resolve Character & Actions (Prop vs Store)
+  const character = propCharacter || storeCharacter;
+  const updateAttribute = propActions?.updateAttribute || storeUpdateAttribute;
+  const updateListItem = propActions?.updateListItem || storeUpdateListItem;
+  const addItemToList = propActions?.addItemToList || storeAddItemToList;
+  const removeItemFromList =
+    propActions?.removeItemFromList || storeRemoveItemFromList;
+
   const [retroMode, setRetroMode] = React.useState(true);
 
   // Redirecionar para Visualizar após salvar
