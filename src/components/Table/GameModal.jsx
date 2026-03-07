@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {
   Dialog,
   DialogTitle,
@@ -54,6 +54,8 @@ import {
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
+import {doc, onSnapshot} from "firebase/firestore";
+import {db} from "@/lib/firebase";
 
 function GameModal() {
   const {
@@ -79,6 +81,45 @@ function GameModal() {
   const [customFileName, setCustomFileName] = useState("");
 
   const isGM = selectedTable?.gmId === user?.uid;
+
+  // Efeito para sincronização em tempo real e verificação de segurança
+  useEffect(() => {
+    if (!gameModalOpen || !selectedTable?._id || !user) return;
+
+    const tableRef = doc(db, "tables", selectedTable._id);
+
+    const unsubscribe = onSnapshot(tableRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        toggleGameModal();
+        showNotification("Esta mesa foi excluída.", "warning");
+        return;
+      }
+
+      const data = {_id: docSnap.id, ...docSnap.data()};
+
+      // VERIFICAÇÃO: O usuário ainda tem permissão para ver a mesa?
+      const isUserGM = data.gmId === user.uid;
+      const isUserPlayer = data.playerIds?.includes(user.uid);
+
+      if (!isUserGM && !isUserPlayer) {
+        toggleGameModal();
+        showNotification("Você não faz mais parte desta mesa.", "error");
+        return;
+      }
+
+      // Atualiza os dados da mesa em tempo real (jogadores, arquivos, etc)
+      setSelectedTable(data);
+    });
+
+    return () => unsubscribe();
+  }, [
+    gameModalOpen,
+    selectedTable?._id,
+    user,
+    toggleGameModal,
+    setSelectedTable,
+    showNotification,
+  ]);
 
   const handlePlayerClick = (event, player) => {
     // Lógica de Permissão de Clique
