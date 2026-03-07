@@ -24,7 +24,12 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
-import styled from "styled-components";
+import {styled} from "@mui/material/styles";
+import {
+  CheckCircle,
+  CloudUpload,
+  Error as ErrorIcon,
+} from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
 import MagiasList from "./MagiasList";
@@ -36,6 +41,8 @@ import VantagesList from "./VantagesList";
 import ComplicacoesList from "./ComplicacoesList";
 import AwakeningSection from "./AwakeningSection";
 import {useCharacterStore} from "@/stores/characterStore";
+import {useAuth} from "@/hooks";
+import APIService from "@/lib/api";
 import {
   DICE,
   SKILLS,
@@ -51,65 +58,57 @@ import {
   calculateTotalHindrancePoints,
 } from "@/lib/rpgEngine";
 
-const TabsPaper = styled(Paper)`
-  && {
-    margin-bottom: 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-`;
+const TabsPaper = styled(Paper)(({theme}) => ({
+  marginBottom: "12px",
+  borderRadius: "12px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+}));
 
-const TabStyled = styled(Tab)`
-  && {
-    text-transform: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #666;
-    padding: 10px 16px;
-    min-width: auto;
+const TabStyled = styled(Tab)(({theme}) => ({
+  textTransform: "none",
+  fontWeight: 600,
+  fontSize: "0.95rem",
+  color: "#666",
+  padding: "10px 16px",
+  minWidth: "auto",
 
-    @media (max-width: 600px) {
-      padding: 12px 4px;
-      flex: 1;
-      max-width: none;
-    }
+  [theme.breakpoints.down("sm")]: {
+    padding: "12px 4px",
+    flex: 1,
+    maxWidth: "none",
+  },
 
-    &.Mui-selected {
-      color: #667eea;
-      font-weight: 700;
-    }
-  }
-`;
+  "&.Mui-selected": {
+    color: "#667eea",
+    fontWeight: 700,
+  },
+}));
 
-const StyledTextField = styled(TextField)`
-  && {
-    .MuiOutlinedInput-root {
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-    .MuiInputBase-input {
-      padding: 10px 12px;
-    }
-  }
-`;
+const StyledTextField = styled(TextField)(({theme}) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "8px",
+    fontSize: "0.95rem",
+  },
+  "& .MuiInputBase-input": {
+    padding: "10px 12px",
+  },
+}));
 
-const StyledSelect = styled(Select)`
-  && {
-    border-radius: 8px;
-    font-size: 0.95rem;
-  }
-`;
+const StyledSelect = styled(Select)(({theme}) => ({
+  borderRadius: "8px",
+  fontSize: "0.95rem",
+}));
 
-const PointsBadge = styled.span`
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  background: #f0f0f0;
-  color: #333;
-  margin-left: 8px;
-`;
+const PointsBadge = styled("span")(({theme}) => ({
+  display: "inline-block",
+  padding: "4px 10px",
+  borderRadius: "12px",
+  fontSize: "0.75rem",
+  fontWeight: "bold",
+  background: "#f0f0f0",
+  color: "#333",
+  marginLeft: "8px",
+}));
 
 function SheetView({
   saveSuccess,
@@ -140,6 +139,32 @@ function SheetView({
   const addItemToList = propActions?.addItemToList || storeAddItemToList;
   const removeItemFromList =
     propActions?.removeItemFromList || storeRemoveItemFromList;
+
+  const {user} = useAuth();
+  const [autoSaveStatus, setAutoSaveStatus] = React.useState("idle"); // idle, saving, saved, error
+
+  // Lógica de Auto-Save
+  React.useEffect(() => {
+    // Não salva se estiver inspecionando (propCharacter existe) ou se não tiver ID/User
+    if (propCharacter || !character._id || !user) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setAutoSaveStatus("saving");
+        // Usa APIService direto para não atualizar o store e evitar loops
+        await APIService.saveCharacter(user.uid, character);
+        setAutoSaveStatus("saved");
+
+        // Volta para idle após 2 segundos
+        setTimeout(() => setAutoSaveStatus("idle"), 2000);
+      } catch (error) {
+        console.error("Erro no auto-save:", error);
+        setAutoSaveStatus("error");
+      }
+    }, 3000); // Espera 3 segundos após a última alteração
+
+    return () => clearTimeout(timeoutId);
+  }, [character, propCharacter, user]);
 
   const [retroMode, setRetroMode] = React.useState(true);
 
@@ -531,6 +556,52 @@ function SheetView({
                 </div>
               )}
             </Box>
+
+            {/* Status do Auto-Save */}
+            {!propCharacter && (
+              <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                {autoSaveStatus === "saving" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#666",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <CloudUpload sx={{fontSize: 16, mr: 0.5}} /> Salvando...
+                  </Box>
+                )}
+                {autoSaveStatus === "saved" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#4caf50",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <CheckCircle sx={{fontSize: 16, mr: 0.5}} /> Salvo
+                  </Box>
+                )}
+                {autoSaveStatus === "error" && (
+                  <Tooltip title="Falha ao salvar automaticamente. Verifique sua conexão.">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "#f44336",
+                        fontSize: "0.8rem",
+                        cursor: "help",
+                      }}
+                    >
+                      <ErrorIcon sx={{fontSize: 16, mr: 0.5}} /> Erro ao salvar
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
+            )}
+
             <FormControlLabel
               control={
                 <Switch

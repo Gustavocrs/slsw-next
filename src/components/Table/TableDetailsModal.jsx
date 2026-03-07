@@ -120,6 +120,7 @@ function TableDetailsModal() {
         externalLink,
         isPrivate,
         invites,
+        gmPhotoURL: user.photoURL,
       });
 
       // Identificar e enviar e-mail apenas para NOVOS convidados
@@ -174,6 +175,7 @@ function TableDetailsModal() {
         externalLink,
         isPrivate,
         invites,
+        gmPhotoURL: user.photoURL,
       });
 
       notifyTablesUpdated();
