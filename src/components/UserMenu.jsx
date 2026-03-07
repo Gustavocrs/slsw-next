@@ -9,15 +9,24 @@ import {useState, useEffect} from "react";
 // CORREÇÃO: Importando do lugar certo (hooks)
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
-import {IconButton, Menu, MenuItem, Avatar, Typography} from "@mui/material";
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Typography,
+  Badge,
+} from "@mui/material";
 import {Logout, TableRestaurant} from "@mui/icons-material";
+import APIService from "@/lib/api";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
   const {user, logoutUser} = useAuth();
-  const {toggleTableListModal} = useUIStore();
+  const {toggleTableListModal, tablesUpdated} = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [pendingInvites, setPendingInvites] = useState(0);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -37,6 +46,24 @@ export default function UserMenu() {
     handleClose();
     toggleTableListModal();
   };
+
+  // Verifica convites pendentes
+  useEffect(() => {
+    const checkInvites = async () => {
+      if (user?.email) {
+        try {
+          const tables = await APIService.getTables(user.email, user.uid);
+          const count = tables.filter((t) =>
+            t.invites?.includes(user.email),
+          ).length;
+          setPendingInvites(count);
+        } catch (e) {
+          console.error("Erro ao verificar convites:", e);
+        }
+      }
+    };
+    checkInvites();
+  }, [user, tablesUpdated]);
 
   // Tenta alterar levemente a URL (tamanho) para evitar cache de erro 429 do Google
   const photoURL = user?.photoURL;
@@ -69,15 +96,22 @@ export default function UserMenu() {
         color="inherit"
         sx={{p: 0}}
       >
-        <Avatar
-          src={avatarSrc}
-          alt={displayName}
-          imgProps={{
-            onError: () => setImgError(true),
-            referrerPolicy: "no-referrer",
-          }}
-          sx={{width: 32, height: 32, border: "1px solid white"}}
-        />
+        <Badge
+          badgeContent={pendingInvites}
+          color="error"
+          overlap="circular"
+          anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+        >
+          <Avatar
+            src={avatarSrc}
+            alt={displayName}
+            imgProps={{
+              onError: () => setImgError(true),
+              referrerPolicy: "no-referrer",
+            }}
+            sx={{width: 32, height: 32, border: "1px solid white"}}
+          />
+        </Badge>
       </IconButton>
       <Menu
         id="menu-appbar"
@@ -100,7 +134,15 @@ export default function UserMenu() {
           </Typography>
         </MenuItem>
         <MenuItem onClick={handleOpenTables}>
-          <TableRestaurant fontSize="small" sx={{mr: 1}} />
+          <Badge
+            badgeContent={pendingInvites}
+            color="error"
+            variant="dot"
+            invisible={pendingInvites === 0}
+            sx={{mr: 1}}
+          >
+            <TableRestaurant fontSize="small" />
+          </Badge>
           Minhas Mesas
         </MenuItem>
         <MenuItem onClick={handleLogout}>

@@ -2,7 +2,7 @@
  * src/lib/api.js
  * Versão SERVERLESS (Firebase Firestore direto)
  */
-import {db} from "./firebase";
+import {db, storage} from "./firebase";
 import {
   collection,
   query,
@@ -18,6 +18,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
+import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
 
 class APIService {
   // Helper para limpar dados undefined (Firestore não aceita)
@@ -281,6 +282,34 @@ class APIService {
     }
   }
 
+  // 9.1 ENVIAR ATUALIZAÇÃO DE MESA
+  static async sendTableUpdate(tableId, email, gmName, tableName, details) {
+    try {
+      const response = await fetch("/api/emails/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          gmName,
+          tableName,
+          type: "update",
+          details,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Erro ao enviar email de atualização:",
+          await response.text(),
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao enviar atualização:", error);
+    }
+  }
+
   // 10. ACEITAR CONVITE
   static async acceptInvite(tableId, user) {
     try {
@@ -295,6 +324,7 @@ class APIService {
           uid: user.uid,
           email: user.email,
           name: user.displayName || "Jogador",
+          photoURL: user.photoURL || null,
           joinedAt: new Date().toISOString(),
           characterId: character ? character._id : null,
         }),
@@ -316,6 +346,25 @@ class APIService {
       });
     } catch (error) {
       console.error("Erro ao recusar convite:", error);
+      throw error;
+    }
+  }
+
+  // 12. UPLOAD DE ANEXO DA MESA
+  static async uploadTableAttachment(tableId, file) {
+    try {
+      const storageRef = ref(storage, `tables/${tableId}/${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      return {
+        name: file.name,
+        url: downloadURL,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Erro ao fazer upload de anexo:", error);
       throw error;
     }
   }

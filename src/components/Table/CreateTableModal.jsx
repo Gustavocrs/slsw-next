@@ -80,7 +80,7 @@ function CreateTableModal() {
         isPrivate,
         invites,
         gmId: user.uid,
-        gmName: user.displayName || "Mestre Desconhecido",
+        gmName: user.displayName || "GM Desconhecido",
       };
 
       const newTable = await APIService.createTable(tableData);
@@ -151,7 +151,7 @@ function CreateTableModal() {
             </Typography>
             <TextField
               autoFocus
-              label="Nome da Mesa"
+              label="Jogo"
               placeholder="Ex: A Torre dos Demônios"
               fullWidth
               value={tableName}
@@ -274,9 +274,9 @@ function CreateTableModal() {
       </DialogContent>
 
       <DialogActions sx={{p: 2}}>
-        <Button onClick={toggleTableCreateModal} color="inherit">
+        {/* <Button onClick={toggleTableCreateModal} color="inherit">
           Cancelar
-        </Button>
+        </Button> */}
         <Button
           onClick={handleCreate}
           variant="contained"

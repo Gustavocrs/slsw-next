@@ -139,6 +139,32 @@ function TableDetailsModal() {
         );
       }
 
+      // Enviar e-mail de atualização para TODOS os participantes (Jogadores + Convidados)
+      // se não for apenas uma adição de convite (já tratado acima)
+      const allParticipants = [
+        ...(selectedTable.players || []).map((p) => p.email),
+        ...(selectedTable.invites || []),
+      ];
+      // Remove duplicatas e o próprio GM se estiver na lista
+      const uniqueEmails = [...new Set(allParticipants)].filter(
+        (e) => e !== user.email && !newInvites.includes(e),
+      );
+
+      if (uniqueEmails.length > 0) {
+        const updateDetails = `Novas instruções: ${description}<br/>Próxima Sessão: ${new Date(nextSession).toLocaleString()}`;
+        await Promise.all(
+          uniqueEmails.map((email) =>
+            APIService.sendTableUpdate(
+              selectedTable._id,
+              email,
+              selectedTable.gmName,
+              tableName,
+              updateDetails,
+            ),
+          ),
+        );
+      }
+
       notifyTablesUpdated();
       toggleTableDetailsModal();
       showNotification("Mesa atualizada com sucesso!", "success");
@@ -223,7 +249,7 @@ function TableDetailsModal() {
           </Typography>
           {!isGM && (
             <Typography variant="caption" display="block">
-              Mestre: {selectedTable.gmName}
+              GM: {selectedTable.gmName}
             </Typography>
           )}
         </Box>
@@ -237,7 +263,7 @@ function TableDetailsModal() {
           {/* Modo Leitura vs Edição */}
           <Box>
             <TextField
-              label="Nome da Mesa"
+              label="Jogo"
               fullWidth
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
@@ -417,20 +443,20 @@ function TableDetailsModal() {
             Excluir Mesa
           </Button>
           <Box>
-            <Button
+            {/* <Button
               onClick={toggleTableDetailsModal}
               color="inherit"
               sx={{mr: 1}}
             >
               Cancelar
-            </Button>
+            </Button> */}
             <Button
               onClick={handleUpdate}
               variant="contained"
               startIcon={<SaveIcon />}
               disabled={loading}
             >
-              Salvar
+              Atualizar Mesa
             </Button>
           </Box>
         </DialogActions>

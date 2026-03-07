@@ -19,6 +19,7 @@ import {
   Chip,
   Divider,
   CircularProgress,
+  Fab,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -143,19 +144,6 @@ function TableListModal() {
       </DialogTitle>
 
       <DialogContent dividers sx={{bgcolor: "#f5f7fa"}}>
-        <Box sx={{mb: 3, display: "flex", justifyContent: "flex-end"}}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenCreate}
-            sx={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            Nova Mesa
-          </Button>
-        </Box>
-
         {loading ? (
           <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
             <CircularProgress />
@@ -189,7 +177,6 @@ function TableListModal() {
                     textTransform: "none",
                     textAlign: "left",
                     display: "block",
-                    width: "100%",
                     padding: 0,
                   }}
                 >
@@ -210,9 +197,7 @@ function TableListModal() {
                         {table.name}
                       </Typography>
                       <Chip
-                        label={
-                          isGM ? "Mestre" : isInvited ? "Convite" : "Jogador"
-                        }
+                        label={isGM ? "GM" : isInvited ? "Convite" : "Jogador"}
                         color={
                           isGM ? "secondary" : isInvited ? "warning" : "success"
                         }
@@ -240,7 +225,7 @@ function TableListModal() {
                       <Box sx={{mb: 2}}>
                         <Chip
                           icon={<SecurityIcon fontSize="small" />}
-                          label={`Mestre: ${table.gmName}`}
+                          label={`GM: ${table.gmName}`}
                           size="small"
                           color="secondary"
                           variant="outlined"
@@ -296,6 +281,20 @@ function TableListModal() {
             })}
           </Box>
         )}
+
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={handleOpenCreate}
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        >
+          <AddIcon />
+        </Fab>
       </DialogContent>
     </Dialog>
   );
