@@ -19,6 +19,15 @@ const initialCharacter = {
   magias: [],
   complicacoes: [],
   recursos_despertar: [],
+  // Dados do Despertar
+  despertar_origem: "",
+  despertar_sensacao: "",
+  despertar_afinidade: "",
+  despertar_marca: "",
+  // Estrutura do Poder Único
+  poder_unico_fonte: "",
+  poder_unico_expressao: "",
+  poder_unico_gatilho: "",
   notas: "",
 };
 

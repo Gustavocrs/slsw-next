@@ -21,6 +21,8 @@ import {
   Tooltip,
   Alert,
   Checkbox,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import styled from "styled-components";
 import {CombatList} from "./CombatList";
@@ -32,7 +34,7 @@ import ItemsList from "./ItemsList";
 import EspoliosList from "./EspoliosList";
 import VantagesList from "./VantagesList";
 import ComplicacoesList from "./ComplicacoesList";
-import RecursosDespertarList from "./RecursosDespertarList";
+import AwakeningSection from "./AwakeningSection";
 import {useCharacterStore} from "@/stores/characterStore";
 import {
   DICE,
@@ -119,6 +121,7 @@ function SheetView({saveSuccess, onLoad}) {
     (state) => state.removeItemFromList,
   );
   const updateCharacter = useCharacterStore((s) => s.updateCharacter);
+  const [retroMode, setRetroMode] = React.useState(true);
 
   // Redirecionar para Visualizar após salvar
   React.useEffect(() => {
@@ -263,17 +266,34 @@ function SheetView({saveSuccess, onLoad}) {
     children,
     color = "#667eea",
     bg = "#fff",
+    retro = false,
     sx = {},
   }) => (
     <Box
       sx={{
-        background: bg,
+        background: retro ? "#f4e4bc" : bg,
         p: 1.5,
-        borderRadius: 2,
-        borderLeft: `3px solid ${color}`,
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        borderRadius: retro ? 0 : 2,
+        border: retro ? "1px solid #5d4037" : "none",
+        borderLeft: retro ? "1px solid #5d4037" : `3px solid ${color}`,
+        boxShadow: retro
+          ? "3px 3px 0 rgba(93, 64, 55, 0.4)"
+          : "0 2px 4px rgba(0,0,0,0.05)",
         overflowY: "auto",
         height: "100%",
+        position: "relative",
+        "&::before": retro
+          ? {
+              content: '""',
+              position: "absolute",
+              top: "2px",
+              left: "2px",
+              right: "2px",
+              bottom: "2px",
+              border: "1px solid rgba(93, 64, 55, 0.2)",
+              pointerEvents: "none",
+            }
+          : {},
         ...sx,
       }}
     >
@@ -281,15 +301,21 @@ function SheetView({saveSuccess, onLoad}) {
         <h4
           style={{
             margin: "0 0 8px 0",
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            color: "#444",
+            fontSize: retro ? "0.9rem" : "0.8rem",
+            fontWeight: retro ? 700 : 600,
+            color: retro ? "#3e2723" : "#444",
+            fontFamily: retro ? '"Times New Roman", serif' : "inherit",
+            textTransform: retro ? "uppercase" : "none",
+            borderBottom: retro ? "1px solid rgba(93, 64, 55, 0.2)" : "none",
+            paddingBottom: retro ? "4px" : "0",
           }}
         >
           {title}
         </h4>
       )}
-      {children}
+      <div style={{fontFamily: retro ? '"Times New Roman", serif' : "inherit"}}>
+        {children}
+      </div>
     </Box>
   );
 
@@ -342,6 +368,19 @@ function SheetView({saveSuccess, onLoad}) {
                   sx={{display: {xs: "none", sm: "inline"}}}
                 >
                   Identificação
+                </Box>
+              </Box>
+            }
+          />
+          <TabStyled
+            label={
+              <Box>
+                🌀
+                <Box
+                  component="span"
+                  sx={{display: {xs: "none", sm: "inline"}}}
+                >
+                  Despertar
                 </Box>
               </Box>
             }
@@ -406,7 +445,7 @@ function SheetView({saveSuccess, onLoad}) {
                   component="span"
                   sx={{display: {xs: "none", sm: "inline"}}}
                 >
-                  Poderes
+                  Magias
                 </Box>
               </Box>
             }
@@ -430,33 +469,56 @@ function SheetView({saveSuccess, onLoad}) {
       {/* TAB 0: VISUALIZAR */}
       {tabValue === 0 && (
         <Box sx={{p: 2, pb: 10}}>
-          <Box sx={{mb: 3, pb: 1, borderBottom: "1px solid #e0e0e0"}}>
-            <h2 style={{margin: 0, color: "#333"}}>
-              {character.nome || "Sem Nome"}
-            </h2>
-            <div style={{fontSize: "0.9rem", color: "#666"}}>
-              {character.rank} • {character.arquetipo || "—"} (
-              {character.conceito || "—"})
-              {character.guilda && ` • ${character.guilda}`}
-            </div>
-            {(character.xp !== undefined ||
-              character.riqueza !== undefined) && (
-              <div
-                style={{
-                  fontSize: "0.85rem",
-                  color: "#555",
-                  marginTop: "4px",
-                  fontWeight: 500,
-                }}
-              >
-                {character.xp !== undefined && (
-                  <span style={{marginRight: "12px"}}>XP: {character.xp}</span>
-                )}
-                {character.riqueza !== undefined && (
-                  <span>Riqueza: ${character.riqueza}</span>
-                )}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              mb: 3,
+              pb: 1,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            <Box>
+              <h2 style={{margin: 0, color: "#333"}}>
+                {character.nome || "Sem Nome"}
+              </h2>
+              <div style={{fontSize: "0.9rem", color: "#666"}}>
+                {character.rank} • {character.arquetipo || "—"} (
+                {character.conceito || "—"})
+                {character.guilda && ` • ${character.guilda}`}
               </div>
-            )}
+              {(character.xp !== undefined ||
+                character.riqueza !== undefined) && (
+                <div
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#555",
+                    marginTop: "4px",
+                    fontWeight: 500,
+                  }}
+                >
+                  {character.xp !== undefined && (
+                    <span style={{marginRight: "12px"}}>
+                      XP: {character.xp}
+                    </span>
+                  )}
+                  {character.riqueza !== undefined && (
+                    <span>Riqueza: ${character.riqueza}</span>
+                  )}
+                </div>
+              )}
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={retroMode}
+                  onChange={(e) => setRetroMode(e.target.checked)}
+                  color="default"
+                />
+              }
+              label={retroMode ? "📜 Pergaminho" : "🎨 Moderno"}
+            />
           </Box>
 
           <Box
@@ -509,7 +571,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 2. ATRIBUTOS (Col 2, Row 1) */}
             <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "1"}}}>
-              <GridCard title="Atributos" color="#2196f3" bg="#e3f2fd">
+              <GridCard
+                title="Atributos"
+                color="#2196f3"
+                bg="#e3f2fd"
+                retro={retroMode}
+              >
                 <Box
                   sx={{
                     display: "grid",
@@ -616,7 +683,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 3. COMBATE (Col 3, Row 1) */}
             <Box sx={{gridColumn: {md: "3"}, gridRow: {md: "1"}}}>
-              <GridCard title="Combate" color="#ef5350" bg="#ffebee">
+              <GridCard
+                title="Combate"
+                color="#ef5350"
+                bg="#ffebee"
+                retro={retroMode}
+              >
                 <Box
                   sx={{
                     display: "grid",
@@ -756,7 +828,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 5. PERÍCIAS (Col 4, Row 1) */}
             <Box sx={{gridColumn: {md: "4"}, gridRow: {md: "1 / span 2"}}}>
-              <GridCard title="Perícias" color="#3f51b5" bg="#e8eaf6">
+              <GridCard
+                title="Perícias"
+                color="#3f51b5"
+                bg="#e8eaf6"
+                retro={retroMode}
+              >
                 <Box
                   sx={{
                     display: "grid",
@@ -790,7 +867,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 6. ARMAS (Col 2, Row 2) */}
             <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "2"}}}>
-              <GridCard title="Armas" color="#e53e3e" bg="#fff5f5">
+              <GridCard
+                title="Armas"
+                color="#e53e3e"
+                bg="#fff5f5"
+                retro={retroMode}
+              >
                 {(character.armas || []).map((w, i) => (
                   <div
                     key={i}
@@ -809,7 +891,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 9. ARMADURAS (Col 2, Row 3) */}
             <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "3"}}}>
-              <GridCard title="Armaduras" color="#48bb78" bg="#f0fff4">
+              <GridCard
+                title="Armaduras"
+                color="#48bb78"
+                bg="#f0fff4"
+                retro={retroMode}
+              >
                 {(character.armaduras || []).map((a, i) => (
                   <div key={i} style={{fontSize: "0.7rem"}}>
                     {a.name} (+{a.defense || 0})
@@ -828,7 +915,13 @@ function SheetView({saveSuccess, onLoad}) {
                 gap: 2,
               }}
             >
-              <GridCard title="Vantagens" color="#667eea" bg="#f0fff4">
+              <GridCard
+                title="Vantagens"
+                color="#667eea"
+                bg="#f0fff4"
+                retro={retroMode}
+                sx={{height: "auto"}}
+              >
                 <Box sx={{display: "flex", flexDirection: "column", gap: 0.5}}>
                   {(character.vantagens || []).map((v, i) => (
                     <div key={i} style={{fontSize: "0.7rem"}}>
@@ -837,7 +930,13 @@ function SheetView({saveSuccess, onLoad}) {
                   ))}
                 </Box>
               </GridCard>
-              <GridCard title="Complicações" color="#ff9800" bg="#fffbf0">
+              <GridCard
+                title="Complicações"
+                color="#ff9800"
+                bg="#fffbf0"
+                retro={retroMode}
+                sx={{height: "auto"}}
+              >
                 {(character.complicacoes || []).map((c, i) => (
                   <div key={i} style={{fontSize: "0.7rem"}}>
                     • {c.name}
@@ -852,6 +951,7 @@ function SheetView({saveSuccess, onLoad}) {
                 title="Recursos do Despertar"
                 color="#9c27b0"
                 bg="#f3e5f5"
+                retro={retroMode}
               >
                 {(character.recursos_despertar || []).map((res, idx) => (
                   <Box
@@ -899,14 +999,26 @@ function SheetView({saveSuccess, onLoad}) {
                 gap: 2,
               }}
             >
-              <GridCard title="Itens" color="#607d8b" bg="#eceff1">
+              <GridCard
+                title="Itens"
+                color="#607d8b"
+                bg="#eceff1"
+                retro={retroMode}
+                sx={{height: "auto"}}
+              >
                 {(character.itens || []).map((item, i) => (
                   <div key={i} style={{fontSize: "0.7rem"}}>
                     {item.name}
                   </div>
                 ))}
               </GridCard>
-              <GridCard title="Espólios" color="#009688" bg="#e0f2f1">
+              <GridCard
+                title="Espólios"
+                color="#009688"
+                bg="#e0f2f1"
+                retro={retroMode}
+                sx={{height: "auto"}}
+              >
                 {(character.espolios || []).map((item, i) => (
                   <div key={i} style={{fontSize: "0.7rem"}}>
                     {item.name}
@@ -917,15 +1029,19 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 14. NOTAS (Col 1, Row 5) */}
             <Box sx={{gridColumn: {md: "1"}, gridRow: {md: "5"}}}>
-              <GridCard title="Notas" color="#ffd700" bg="#fffde7">
+              <GridCard
+                title="Notas"
+                color="#ffd700"
+                bg="#fffde7"
+                retro={retroMode}
+              >
                 <textarea
                   style={{
                     width: "100%",
-                    height: "100%",
-                    minHeight: "150px",
+                    minHeight: "200px",
                     border: "none",
                     background: "transparent",
-                    resize: "none",
+                    resize: "vertical",
                     fontFamily: "monospace",
                     fontSize: "0.85rem",
                     outline: "none",
@@ -939,7 +1055,12 @@ function SheetView({saveSuccess, onLoad}) {
 
             {/* 15. MAGIAS (Col 4, Row 3-5) */}
             <Box sx={{gridColumn: {md: "4"}, gridRow: {md: "3 / span 3"}}}>
-              <GridCard title="Magias" color="#7e57c2" bg="#f3e5f5">
+              <GridCard
+                title="Magias"
+                color="#7e57c2"
+                bg="#f3e5f5"
+                retro={retroMode}
+              >
                 <Box
                   sx={{
                     display: "grid",
@@ -1156,13 +1277,16 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 2: COMBATE */}
-      {tabValue === 2 && (
+      {/* TAB 2: DESPERTAR */}
+      {tabValue === 2 && <AwakeningSection />}
+
+      {/* TAB 3: COMBATE */}
+      {tabValue === 3 && (
         <CombatList character={character} updateAttribute={updateAttribute} />
       )}
 
-      {/* TAB 3: PERÍCIAS */}
-      {tabValue === 3 && (
+      {/* TAB 4: PERÍCIAS */}
+      {tabValue === 4 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Box
             sx={{
@@ -1211,8 +1335,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 4: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
-      {tabValue === 4 && (
+      {/* TAB 5: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
+      {tabValue === 5 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* VANTAGENS - Coluna esquerda */}
@@ -1305,8 +1429,8 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 5: EQUIPAMENTOS (2x2 Grid) */}
-      {tabValue === 5 && (
+      {/* TAB 6: EQUIPAMENTOS (2x2 Grid) */}
+      {tabValue === 6 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* ARMAS - Superior esquerdo */}
@@ -1371,12 +1495,12 @@ function SheetView({saveSuccess, onLoad}) {
         </Box>
       )}
 
-      {/* TAB 6: PODERES (Magias + Recursos Despertar) */}
-      {tabValue === 6 && (
+      {/* TAB 7: PODERES (Magias + Recursos Despertar) */}
+      {tabValue === 7 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
                 🔮 Magias
               </h3>
@@ -1386,26 +1510,12 @@ function SheetView({saveSuccess, onLoad}) {
                 onRemove={(idx) => removeItemFromList("magias", idx)}
               />
             </Grid>
-
-            {/* RECURSOS DESPERTAR - Coluna direita */}
-            <Grid item xs={12} md={6}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
-                💥 Recursos do Despertar
-              </h3>
-              <RecursosDespertarList
-                items={character.recursos_despertar || []}
-                onAdd={(item) => addItemToList("recursos_despertar", item)}
-                onUpdate={(idx, item) =>
-                  updateListItem("recursos_despertar", idx, item)
-                }
-              />
-            </Grid>
           </Grid>
         </Box>
       )}
 
-      {/* TAB 7: NOTAS */}
-      {tabValue === 7 && (
+      {/* TAB 8: NOTAS */}
+      {tabValue === 8 && (
         <Box
           sx={{
             padding: "16px",
@@ -1418,12 +1528,13 @@ function SheetView({saveSuccess, onLoad}) {
           <textarea
             style={{
               width: "100%",
-              height: "300px",
+              minHeight: "600px",
               padding: "12px",
               borderRadius: "8px",
               border: "1px solid #e0e0e0",
               fontFamily: "monospace",
               fontSize: "0.9rem",
+              resize: "vertical",
             }}
             value={character.notas || ""}
             onChange={(e) =>
