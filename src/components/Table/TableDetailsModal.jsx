@@ -165,6 +165,17 @@ function TableDetailsModal() {
         );
       }
 
+      // Atualizar a mesa selecionada no store para refletir as mudanças imediatamente
+      setSelectedTable({
+        ...selectedTable,
+        name: tableName,
+        description,
+        nextSession,
+        externalLink,
+        isPrivate,
+        invites,
+      });
+
       notifyTablesUpdated();
       toggleTableDetailsModal();
       showNotification("Mesa atualizada com sucesso!", "success");

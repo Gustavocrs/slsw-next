@@ -18,6 +18,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
+import {useUIStore} from "@/stores/characterStore";
 
 class APIService {
   // Helper para limpar dados undefined (Firestore não aceita)
@@ -270,13 +271,20 @@ class APIService {
       });
 
       if (!response.ok) {
-        console.error(
-          "Erro ao enviar email via Resend:",
-          await response.text(),
-        );
+        const errData = await response.json();
+        console.error("Erro ao enviar email via Resend:", errData);
+        useUIStore
+          .getState()
+          .showNotification(
+            `Alerta de E-mail: ${errData.message || "Falha no envio"}`,
+            "warning",
+          );
       }
     } catch (error) {
       console.error("Erro ao enviar convite:", error);
+      useUIStore
+        .getState()
+        .showNotification("Erro de conexão ao enviar convite.", "error");
       // Não lança erro para não bloquear o fluxo do usuário
     }
   }
@@ -299,13 +307,20 @@ class APIService {
       });
 
       if (!response.ok) {
-        console.error(
-          "Erro ao enviar email de atualização:",
-          await response.text(),
-        );
+        const errData = await response.json();
+        console.error("Erro ao enviar email de atualização:", errData);
+        useUIStore
+          .getState()
+          .showNotification(
+            `Alerta de E-mail: ${errData.message || "Falha no envio"}`,
+            "warning",
+          );
       }
     } catch (error) {
       console.error("Erro ao enviar atualização:", error);
+      useUIStore
+        .getState()
+        .showNotification("Erro de conexão ao enviar atualização.", "error");
     }
   }
 

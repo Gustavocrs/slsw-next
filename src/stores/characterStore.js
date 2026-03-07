@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import {persist} from "zustand/middleware";
 
 const initialCharacter = {
   nome: "",
@@ -92,38 +93,49 @@ export const useAuthStore = create((set) => ({
   logout: () => set({user: null}),
 }));
 
-export const useUIStore = create((set) => ({
-  viewMode: "book",
-  tableCreateModalOpen: false, // Modal de Criar
-  tableListModalOpen: false, // Modal de Listar (Dashboard)
-  tableDetailsModalOpen: false, // Modal de Detalhes/Config
-  inspectModalOpen: false, // Modal de Inspeção de Ficha
-  gameModalOpen: false, // Modal de Jogo (Novo)
-  selectedTable: null, // Mesa selecionada para ver detalhes
-  tablesUpdated: 0, // Timestamp para forçar refresh da lista
+export const useUIStore = create(
+  persist(
+    (set) => ({
+      viewMode: "book",
+      tableCreateModalOpen: false, // Modal de Criar
+      tableListModalOpen: false, // Modal de Listar (Dashboard)
+      tableDetailsModalOpen: false, // Modal de Detalhes/Config
+      inspectModalOpen: false, // Modal de Inspeção de Ficha
+      gameModalOpen: false, // Modal de Jogo (Novo)
+      selectedTable: null, // Mesa selecionada para ver detalhes
+      tablesUpdated: 0, // Timestamp para forçar refresh da lista
 
-  toggleView: () =>
-    set((state) => ({viewMode: state.viewMode === "book" ? "sheet" : "book"})),
-  setViewMode: (mode) => set({viewMode: mode}),
+      toggleView: () =>
+        set((state) => ({
+          viewMode: state.viewMode === "book" ? "sheet" : "book",
+        })),
+      setViewMode: (mode) => set({viewMode: mode}),
 
-  toggleTableCreateModal: () =>
-    set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),
-  toggleTableListModal: () =>
-    set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
-  toggleTableDetailsModal: () =>
-    set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
-  toggleGameModal: () =>
-    set((state) => ({gameModalOpen: !state.gameModalOpen})),
-  toggleInspectModal: () =>
-    set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
+      toggleTableCreateModal: () =>
+        set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),
+      toggleTableListModal: () =>
+        set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
+      toggleTableDetailsModal: () =>
+        set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
+      toggleGameModal: () =>
+        set((state) => ({gameModalOpen: !state.gameModalOpen})),
+      toggleInspectModal: () =>
+        set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
 
-  setSelectedTable: (table) => set({selectedTable: table}),
-  notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
+      setSelectedTable: (table) => set({selectedTable: table}),
+      notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
 
-  // Sistema de Notificações Global
-  notification: {open: false, message: "", severity: "info"},
-  showNotification: (message, severity = "info") =>
-    set({notification: {open: true, message, severity}}),
-  hideNotification: () =>
-    set((state) => ({notification: {...state.notification, open: false}})),
-}));
+      // Sistema de Notificações Global
+      notification: {open: false, message: "", severity: "info"},
+      showNotification: (message, severity = "info") =>
+        set({notification: {open: true, message, severity}}),
+      hideNotification: () =>
+        set((state) => ({notification: {...state.notification, open: false}})),
+    }),
+    {
+      name: "slsw-ui-store",
+      partialize: (state) => ({selectedTable: state.selectedTable}),
+      version: 1,
+    },
+  ),
+);

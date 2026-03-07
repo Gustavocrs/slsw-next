@@ -150,7 +150,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
               </HeaderButton>
             ) : (
               <>
-                {selectedTable && (
+                {selectedTable && selectedTable._id && (
                   <HeaderButton
                     startIcon={<GameIcon />}
                     onClick={toggleGameModal}

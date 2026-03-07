@@ -40,11 +40,15 @@ export async function POST(request) {
     });
 
     if (error) {
-      return NextResponse.json({error}, {status: 500});
+      console.error("Resend API Error:", error);
+      return NextResponse.json(
+        {message: error.message, name: error.name},
+        {status: error.statusCode || 400},
+      );
     }
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({error: error.message}, {status: 500});
+    return NextResponse.json({message: error.message}, {status: 500});
   }
 }

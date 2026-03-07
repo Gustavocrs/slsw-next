@@ -23,7 +23,7 @@ import APIService from "@/lib/api";
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
   const {user, logoutUser} = useAuth();
-  const {toggleTableListModal, tablesUpdated} = useUIStore();
+  const {toggleTableListModal, tablesUpdated, setSelectedTable} = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
@@ -38,6 +38,7 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     handleClose();
+    setSelectedTable(null); // Limpa a mesa selecionada ao sair
     await logoutUser();
     window.location.reload();
   };
