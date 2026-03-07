@@ -53,7 +53,7 @@ export default function PageLayout() {
   };
 
   return (
-    <Box id="DIVV" sx={{padding: "0", width: "100%", height: "100%"}}>
+    <div id="DIVV" style={{padding: "0", width: "100%", height: "100%"}}>
       <Header
         onToggleSidebar={handleToggleSidebar}
         currentView={currentView}
@@ -70,6 +70,6 @@ export default function PageLayout() {
           <SheetView saveSuccess={saveSuccess} />
         )}
       </Box>
-    </Box>
+    </div>
   );
 }

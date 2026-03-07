@@ -21,12 +21,14 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  Download as DownloadIcon,
+  UploadFile as ImportIcon,
 } from "@mui/icons-material";
 import {useCharacterAPI} from "@/hooks/useCharacterAPI";
 import {useCharacterStore, useUIStore} from "@/stores/characterStore";
 
 export default function SheetManager() {
-  const {listAll, delete: deleteChar} = useCharacterAPI();
+  const {listAll, delete: deleteChar, create} = useCharacterAPI();
   const {loadCharacter, resetCharacter} = useCharacterStore();
   const {showNotification} = useUIStore();
 
@@ -70,6 +72,46 @@ export default function SheetManager() {
     }
   };
 
+  const handleExportSheet = (sheet) => {
+    const dataStr = JSON.stringify(sheet, null, 2);
+    const dataBlob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${sheet.nome || "ficha"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportSheet = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        // Remove IDs e metadados de sistema para criar como nova cópia limpa
+        const {_id, userId, createdAt, updatedAt, ...sheetData} = json;
+
+        await create({
+          ...sheetData,
+          nome: `${sheetData.nome || "Sem Nome"} (Importada)`,
+        });
+
+        showNotification("Ficha importada com sucesso!", "success");
+        fetchSheets();
+      } catch (error) {
+        console.error(error);
+        showNotification("Erro ao importar ficha. Arquivo inválido.", "error");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ""; // Limpa o input
+  };
+
   return (
     <Box sx={{mt: 2}}>
       <Box
@@ -81,14 +123,31 @@ export default function SheetManager() {
         }}
       >
         <Typography variant="h6">Minhas Fichas</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleNewSheet}
-          size="small"
-        >
-          Nova Ficha
-        </Button>
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<ImportIcon />}
+            component="label"
+            size="small"
+            sx={{mr: 1}}
+          >
+            Importar
+            <input
+              type="file"
+              hidden
+              accept=".json"
+              onChange={handleImportSheet}
+            />
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleNewSheet}
+            size="small"
+          >
+            Nova Ficha
+          </Button>
+        </Box>
       </Box>
 
       {loading ? (
@@ -113,6 +172,15 @@ export default function SheetManager() {
                     secondary={`${sheet.arquetipo || "Novato"} - Rank ${sheet.rank || "Novato"}`}
                   />
                   <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="export"
+                      onClick={() => handleExportSheet(sheet)}
+                      sx={{mr: 1}}
+                      title="Exportar JSON"
+                    >
+                      <DownloadIcon />
+                    </IconButton>
                     <IconButton
                       edge="end"
                       aria-label="edit"

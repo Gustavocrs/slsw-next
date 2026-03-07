@@ -16,9 +16,18 @@ import {
   Avatar,
   Typography,
   Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from "@mui/material";
-import {Logout, TableRestaurant} from "@mui/icons-material";
+import {
+  Logout,
+  TableRestaurant,
+  Description as SheetIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import APIService from "@/lib/api";
+import SheetManager from "@/components/SheetView/SheetManager";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
@@ -27,6 +36,7 @@ export default function UserMenu() {
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
+  const [sheetManagerOpen, setSheetManagerOpen] = useState(false);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -46,6 +56,11 @@ export default function UserMenu() {
   const handleOpenTables = () => {
     handleClose();
     toggleTableListModal();
+  };
+
+  const handleOpenSheets = () => {
+    handleClose();
+    setSheetManagerOpen(true);
   };
 
   // Verifica convites pendentes
@@ -134,6 +149,10 @@ export default function UserMenu() {
             {displayName}
           </Typography>
         </MenuItem>
+        <MenuItem onClick={handleOpenSheets}>
+          <SheetIcon fontSize="small" sx={{mr: 1}} />
+          Minhas Fichas
+        </MenuItem>
         <MenuItem onClick={handleOpenTables}>
           <Badge
             badgeContent={pendingInvites}
@@ -151,6 +170,30 @@ export default function UserMenu() {
           Sair
         </MenuItem>
       </Menu>
+
+      {/* Modal de Gerenciamento de Fichas */}
+      <Dialog
+        open={sheetManagerOpen}
+        onClose={() => setSheetManagerOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          Gerenciar Fichas
+          <IconButton onClick={() => setSheetManagerOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <SheetManager />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
