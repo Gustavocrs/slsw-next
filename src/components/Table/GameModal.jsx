@@ -10,6 +10,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  TextField,
   IconButton,
   Typography,
   Box,
@@ -69,6 +71,9 @@ function GameModal() {
   const [uploading, setUploading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState("");
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [fileToUpload, setFileToUpload] = useState(null);
+  const [customFileName, setCustomFileName] = useState("");
 
   const isGM = selectedTable?.gmId === user?.uid;
 
@@ -140,16 +145,28 @@ function GameModal() {
     handleCloseMenu();
   };
 
-  const handleFileUpload = async (event) => {
+  const handleFileSelect = (event) => {
     const file = event.target.files[0];
-    if (!file || !selectedTable) return;
+    if (!file) return;
+
+    setFileToUpload(file);
+    setCustomFileName(file.name); // Sugere o nome original
+    setUploadModalOpen(true);
+    event.target.value = ""; // Limpa o input para permitir selecionar o mesmo arquivo novamente
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!fileToUpload || !selectedTable) return;
 
     setUploading(true);
     try {
       const attachment = await APIService.uploadTableAttachment(
         selectedTable._id,
-        file,
+        fileToUpload,
       );
+
+      // Sobrescreve o nome com o escolhido pelo usuário
+      attachment.name = customFileName || attachment.name;
 
       // Atualizar a mesa com o novo arquivo
       const updatedFiles = [...(selectedTable.files || []), attachment];
@@ -158,6 +175,8 @@ function GameModal() {
       // Atualizar estado local
       setSelectedTable({...selectedTable, files: updatedFiles});
       showNotification("Arquivo anexado com sucesso!", "success");
+      setUploadModalOpen(false);
+      setFileToUpload(null);
     } catch (error) {
       console.error(error);
       showNotification("Erro ao enviar arquivo.", "error");
@@ -250,14 +269,7 @@ function GameModal() {
 
   // Helper para nome amigável
   const getFileDisplayName = (file) => {
-    const type = file.type?.toLowerCase() || "";
-
-    if (type.startsWith("image/")) return "Imagem";
-    if (type.includes("pdf")) return "Documento PDF";
-    if (type.includes("sheet") || type.includes("excel")) return "Planilha";
-    if (type.includes("word") || type.includes("document")) return "Documento";
-    if (type.includes("presentation")) return "Apresentação";
-    return "Arquivo Anexado";
+    return file.name || "Arquivo Anexado";
   };
 
   if (!selectedTable) return null;
@@ -420,8 +432,8 @@ function GameModal() {
                           "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                       }}
                     >
-                      {uploading ? "Enviando..." : "Anexar Arquivo"}
-                      <input type="file" hidden onChange={handleFileUpload} />
+                      Anexar Arquivo
+                      <input type="file" hidden onChange={handleFileSelect} />
                     </Button>
                   )}
                 </Box>
@@ -657,6 +669,45 @@ function GameModal() {
             </MenuItem>
           </Menu>
         </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmação de Upload */}
+      <Dialog
+        open={uploadModalOpen}
+        onClose={() => !uploading && setUploadModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Nomear Arquivo</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+            Defina um nome para identificar este arquivo na lista de anexos.
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome do Arquivo"
+            fullWidth
+            variant="outlined"
+            value={customFileName}
+            onChange={(e) => setCustomFileName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setUploadModalOpen(false)}
+            disabled={uploading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmUpload}
+            variant="contained"
+            disabled={uploading}
+          >
+            {uploading ? "Enviando..." : "Salvar Anexo"}
+          </Button>
+        </DialogActions>
       </Dialog>
     </>
   );
