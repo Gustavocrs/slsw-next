@@ -23,11 +23,27 @@ import {useUIStore} from "@/stores/characterStore";
 class APIService {
   // Helper para limpar dados undefined (Firestore não aceita)
   static _cleanData(data) {
-    const clean = {...data};
-    Object.keys(clean).forEach((key) => {
-      if (clean[key] === undefined) delete clean[key];
-    });
-    return clean;
+    if (data === undefined) return undefined;
+    if (data === null) return null;
+
+    if (Array.isArray(data)) {
+      return data
+        .map((item) => this._cleanData(item))
+        .filter((item) => item !== undefined);
+    }
+
+    if (typeof data === "object" && data.constructor === Object) {
+      const clean = {};
+      Object.keys(data).forEach((key) => {
+        const value = this._cleanData(data[key]);
+        if (value !== undefined) {
+          clean[key] = value;
+        }
+      });
+      return clean;
+    }
+
+    return data;
   }
 
   // 1. BUSCAR PERSONAGEM (Singleton por UserID)
@@ -392,9 +408,9 @@ class APIService {
       const data = await response.json();
 
       return {
-        name: data.name,
-        url: data.url,
-        type: data.type,
+        name: file.name || "Arquivo",
+        url: data.url || "",
+        type: file.type || "application/octet-stream",
         uploadedAt: new Date().toISOString(),
       };
     } catch (error) {
