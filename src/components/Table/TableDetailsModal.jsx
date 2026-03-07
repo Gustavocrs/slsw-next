@@ -24,6 +24,10 @@ import {
   FormControlLabel,
   InputAdornment,
   Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -33,6 +37,7 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
   Add as AddIcon,
+  Send as SendIcon,
 } from "@mui/icons-material";
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -84,6 +89,23 @@ function TableDetailsModal() {
 
   const handleRemoveInvite = (emailToRemove) => {
     setInvites(invites.filter((email) => email !== emailToRemove));
+  };
+
+  const handleResendInvite = async (email) => {
+    if (!selectedTable) return;
+    try {
+      showNotification(`Reenviando convite para ${email}...`, "info");
+      await APIService.sendTableInvite(
+        selectedTable._id,
+        email,
+        selectedTable.gmName,
+        selectedTable.name,
+      );
+      showNotification(`Convite reenviado para ${email}!`, "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao reenviar convite.", "error");
+    }
   };
 
   const handleUpdate = async () => {
@@ -264,21 +286,56 @@ function TableDetailsModal() {
                 </Button>
               </Box>
             )}
-            <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+
+            {/* Lista de Convites com Ações */}
+            <List dense sx={{bgcolor: "#f9f9f9", borderRadius: 2, mb: 2}}>
               {invites.map((email) => (
-                <Chip
-                  key={email}
-                  label={email}
-                  onDelete={isGM ? () => handleRemoveInvite(email) : undefined}
-                  icon={<EmailIcon fontSize="small" />}
-                />
+                <ListItem key={email} divider>
+                  <Box
+                    sx={{
+                      mr: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      color: "text.secondary",
+                    }}
+                  >
+                    <EmailIcon fontSize="small" />
+                  </Box>
+                  <ListItemText
+                    primary={email}
+                    secondary="Pendente"
+                    primaryTypographyProps={{fontWeight: 500}}
+                  />
+                  {isGM && (
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        aria-label="resend"
+                        onClick={() => handleResendInvite(email)}
+                        sx={{mr: 1, color: "#667eea"}}
+                        title="Reenviar E-mail"
+                      >
+                        <SendIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleRemoveInvite(email)}
+                        color="error"
+                        title="Remover"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  )}
+                </ListItem>
               ))}
               {invites.length === 0 && (
-                <Typography variant="caption" color="text.secondary">
-                  Nenhum convite ativo.
-                </Typography>
+                <ListItem>
+                  <ListItemText secondary="Nenhum convite ativo." />
+                </ListItem>
               )}
-            </Box>
+            </List>
           </Box>
 
           {isGM && (

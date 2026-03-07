@@ -28,6 +28,8 @@ import {
   Person as PersonIcon,
   Email as EmailIcon,
   Launch as LaunchIcon,
+  Send as SendIcon,
+  Check as CheckIcon,
 } from "@mui/icons-material";
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -43,6 +45,7 @@ function TableListModal() {
     toggleTableDetailsModal,
     setSelectedTable,
     tablesUpdated, // Gatilho de atualização
+    showNotification,
   } = useUIStore();
   const {user} = useAuth();
 
@@ -76,6 +79,47 @@ function TableListModal() {
   const handleTableClick = (table) => {
     setSelectedTable(table);
     toggleTableDetailsModal();
+  };
+
+  const handleResendInvite = async (e, table, email) => {
+    e.stopPropagation(); // Impede abrir o modal de detalhes
+    try {
+      showNotification(`Reenviando para ${email}...`, "info");
+      await APIService.sendTableInvite(
+        table._id,
+        email,
+        table.gmName,
+        table.name,
+      );
+      showNotification(`E-mail enviado para ${email}!`, "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao enviar e-mail.", "error");
+    }
+  };
+
+  const handleAcceptInvite = async (e, table) => {
+    e.stopPropagation();
+    try {
+      await APIService.acceptInvite(table._id, user);
+      showNotification(`Você entrou na mesa "${table.name}"!`, "success");
+      // Força atualização da lista
+      useUIStore.getState().notifyTablesUpdated();
+    } catch (error) {
+      showNotification("Erro ao aceitar convite: " + error.message, "error");
+    }
+  };
+
+  const handleDeclineInvite = async (e, table) => {
+    e.stopPropagation();
+    if (!confirm("Tem certeza que deseja recusar este convite?")) return;
+    try {
+      await APIService.declineInvite(table._id, user.email);
+      showNotification("Convite recusado.", "info");
+      useUIStore.getState().notifyTablesUpdated();
+    } catch (error) {
+      showNotification("Erro ao recusar: " + error.message, "error");
+    }
   };
 
   return (
@@ -127,6 +171,8 @@ function TableListModal() {
           <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
             {tables.map((table) => {
               const isGM = table.gmId === user?.uid;
+              const isInvited = table.invites?.includes(user?.email);
+              const isPlayer = table.playerIds?.includes(user?.uid);
 
               return (
                 <Card
@@ -162,8 +208,12 @@ function TableListModal() {
                         {table.name}
                       </Typography>
                       <Chip
-                        label={isGM ? "Mestre" : "Jogador"}
-                        color={isGM ? "secondary" : "default"}
+                        label={
+                          isGM ? "Mestre" : isInvited ? "Convite" : "Jogador"
+                        }
+                        color={
+                          isGM ? "secondary" : isInvited ? "warning" : "success"
+                        }
                         size="small"
                       />
                     </Box>
@@ -175,6 +225,30 @@ function TableListModal() {
                     >
                       {table.description || "Sem descrição."}
                     </Typography>
+
+                    {/* Ações de Convite */}
+                    {isInvited && (
+                      <Box sx={{mb: 2, display: "flex", gap: 1}}>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          startIcon={<CheckIcon />}
+                          onClick={(e) => handleAcceptInvite(e, table)}
+                        >
+                          Aceitar
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          startIcon={<CloseIcon />}
+                          onClick={(e) => handleDeclineInvite(e, table)}
+                        >
+                          Recusar
+                        </Button>
+                      </Box>
+                    )}
 
                     <Divider sx={{my: 2}} />
 
@@ -203,6 +277,25 @@ function TableListModal() {
                             size="small"
                             color="warning"
                             title="Convite Pendente"
+                            onDelete={
+                              isGM
+                                ? (e) => handleResendInvite(e, table, email)
+                                : undefined
+                            }
+                            deleteIcon={
+                              <Box
+                                component="span"
+                                sx={{
+                                  display: "flex",
+                                  borderRadius: "50%",
+                                  p: 0.5,
+                                  "&:hover": {bgcolor: "rgba(0,0,0,0.1)"},
+                                }}
+                                title="Reenviar E-mail"
+                              >
+                                <SendIcon style={{fontSize: 14}} />
+                              </Box>
+                            }
                           />
                         ))}
 

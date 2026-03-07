@@ -15,6 +15,8 @@ import {
   serverTimestamp,
   getDoc,
   or,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 
 class APIService {
@@ -156,6 +158,7 @@ class APIService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         players: [], // Lista de jogadores que aceitaram (uid, charId)
+        playerIds: [], // Lista auxiliar de UIDs para consultas
       });
 
       const docRef = await addDoc(collection(db, "tables"), payload);
@@ -169,17 +172,50 @@ class APIService {
   // 6. LISTAR MESAS (Onde sou Mestre OU Jogador convidado)
   static async getTables(userEmail, userId) {
     try {
-      // Busca mesas onde sou o GM (gmId == userId) OU fui convidado (invites contem email)
-      const q = query(
-        collection(db, "tables"),
-        or(
-          where("gmId", "==", userId),
-          where("invites", "array-contains", userEmail),
-        ),
-      );
+      // Firestore tem limitações com 'or' e múltiplos 'array-contains'.
+      // Dividimos em consultas paralelas para garantir robustez e evitar erros de índice.
+      const tablesMap = new Map();
+      const promises = [];
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+      // 1. Mesas onde sou GM
+      if (userId) {
+        promises.push(
+          getDocs(query(collection(db, "tables"), where("gmId", "==", userId))),
+        );
+        // 3. Mesas onde sou Jogador
+        promises.push(
+          getDocs(
+            query(
+              collection(db, "tables"),
+              where("playerIds", "array-contains", userId),
+            ),
+          ),
+        );
+      }
+
+      // 2. Mesas onde fui convidado
+      if (userEmail) {
+        promises.push(
+          getDocs(
+            query(
+              collection(db, "tables"),
+              where("invites", "array-contains", userEmail),
+            ),
+          ),
+        );
+      }
+
+      const snapshots = await Promise.all(promises);
+
+      snapshots.forEach((snap) => {
+        snap.docs.forEach((doc) => {
+          if (!tablesMap.has(doc.id)) {
+            tablesMap.set(doc.id, {_id: doc.id, ...doc.data()});
+          }
+        });
+      });
+
+      return Array.from(tablesMap.values());
     } catch (error) {
       console.error("Erro ao listar mesas:", error);
       return [];
@@ -237,6 +273,39 @@ class APIService {
     } catch (error) {
       console.error("Erro ao enviar convite:", error);
       // Não lança erro para não bloquear o fluxo do usuário
+    }
+  }
+
+  // 10. ACEITAR CONVITE
+  static async acceptInvite(tableId, user) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+      await updateDoc(tableRef, {
+        invites: arrayRemove(user.email),
+        playerIds: arrayUnion(user.uid),
+        players: arrayUnion({
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || "Jogador",
+          joinedAt: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error("Erro ao aceitar convite:", error);
+      throw error;
+    }
+  }
+
+  // 11. RECUSAR CONVITE
+  static async declineInvite(tableId, email) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+      await updateDoc(tableRef, {
+        invites: arrayRemove(email),
+      });
+    } catch (error) {
+      console.error("Erro ao recusar convite:", error);
+      throw error;
     }
   }
 }
