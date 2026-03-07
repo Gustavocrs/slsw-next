@@ -1,22 +1,14 @@
 services:
-  slsw-app:
+  app:
+    container_name: slsw-next-app
     build:
       context: .
-      args:
-        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
-        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
-    image: slsw-frontend:latest
-    container_name: slsw-app
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - "5002:3000"
-    volumes:
-      # Persiste os uploads para não perder as imagens no deploy
-      - ./uploads:/app/uploads
-      - ./public/uploads:/app/public/uploads
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+    # Se tiver variáveis de ambiente, descomente abaixo:
+    # env_file:
+    #   - .env

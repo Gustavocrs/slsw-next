@@ -1,43 +1,62 @@
-# syntax=docker/dockerfile:1
+# Etapa 1: Dependências
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copia os arquivos de dependência
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+
+# Instala dependências baseado no gerenciador de pacotes detectado
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Etapa 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-# Instalamos as dependências
-RUN npm install
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Recebe as variáveis de ambiente para o build (Next.js precisa delas aqui)
-ARG NEXT_PUBLIC_FIREBASE_API_KEY
-ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
-ARG NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-ARG NEXT_PUBLIC_FIREBASE_APP_ID
-
-ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY
-ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
-ENV NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
-
-# Desativamos a telemetria para acelerar o build
+# Desabilita telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# O build agora passará pois a rota foi marcada como dinâmica
-RUN npm run build
+# Build da aplicação
+RUN \
+  if [ -f yarn.lock ]; then yarn run build; \
+  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
+# Etapa 3: Runner (Imagem de Produção)
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+
+ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-RUN mkdir -p uploads public/uploads
+# Copia apenas o necessário para rodar
+COPY --from=builder /app/public ./public
+
+# Configura permissões para o cache do Next.js
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copia o output standalone e estáticos
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
 
 EXPOSE 3000
-CMD ["npm", "start"]
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]
