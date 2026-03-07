@@ -26,6 +26,7 @@ import {
   ListItem,
   ListItemAvatar,
   Button,
+  Badge,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -61,8 +62,19 @@ function GameModal() {
   const isGM = selectedTable?.gmId === user?.uid;
 
   const handlePlayerClick = (event, player) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedPlayer(player);
+    // Lógica de Permissão de Clique
+    if (isGM) {
+      // GM pode clicar em qualquer um (exceto ele mesmo, opcional)
+      if (player.uid === user.uid) return;
+      setAnchorEl(event.currentTarget);
+      setSelectedPlayer(player);
+    } else {
+      // Jogador só pode clicar no GM
+      if (player.isGM) {
+        setAnchorEl(event.currentTarget);
+        setSelectedPlayer(player);
+      }
+    }
   };
 
   const handleCloseMenu = () => {
@@ -362,53 +374,79 @@ function GameModal() {
               <Chip label="Jogadores" size="small" />
             </Divider>
 
+            {/* Lista Combinada: GM + Jogadores */}
             <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-              {selectedTable.players && selectedTable.players.length > 0 ? (
-                selectedTable.players.map((player) => (
-                  <Paper
-                    key={player.uid}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        bgcolor: "#f5f7fa",
-                        transform: "translateY(-2px)",
-                        boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                      },
-                      border: "1px solid #e0e0e0",
-                    }}
-                    onClick={(e) => handlePlayerClick(e, player)}
+              {[
+                {
+                  uid: selectedTable.gmId,
+                  name: selectedTable.gmName,
+                  isGM: true,
+                  // Usa a foto salva na mesa, ou a do usuário atual se for o GM
+                  photoURL:
+                    selectedTable.gmPhotoURL || (isGM ? user?.photoURL : null),
+                },
+                ...(selectedTable.players || []),
+              ].map((player) => (
+                <Paper
+                  key={player.uid}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: "#f5f7fa",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                    },
+                    border: "1px solid #e0e0e0",
+                  }}
+                  onClick={(e) => handlePlayerClick(e, player)}
+                >
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+                    badgeContent={
+                      player.isGM ? (
+                        <GmIcon
+                          sx={{
+                            width: 14,
+                            height: 14,
+                            color: "#f57c00",
+                            bgcolor: "white",
+                            borderRadius: "50%",
+                          }}
+                        />
+                      ) : null
+                    }
                   >
                     <Avatar
                       src={player.photoURL}
                       alt={player.name}
                       sx={{width: 40, height: 40}}
                     />
-                    <Box sx={{overflow: "hidden"}}>
-                      <Typography variant="body2" fontWeight="bold" noWrap>
-                        {player.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Ver opções
-                      </Typography>
-                    </Box>
-                  </Paper>
-                ))
-              ) : (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  align="center"
-                  sx={{mt: 2}}
-                >
-                  Nenhum jogador na mesa.
-                </Typography>
-              )}
+                  </Badge>
+                  <Box sx={{overflow: "hidden", ml: 1}}>
+                    <Typography variant="body2" fontWeight="bold" noWrap>
+                      {player.name}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                    >
+                      {player.isGM
+                        ? "Game Master"
+                        : isGM
+                          ? "Ver opções"
+                          : "Jogador"}
+                    </Typography>
+                  </Box>
+                </Paper>
+              ))}
             </Box>
           </Grid>
         </Grid>
@@ -423,23 +461,29 @@ function GameModal() {
             sx: {minWidth: 180},
           }}
         >
-          <MenuItem onClick={handleViewSheet}>
-            <ListItemIcon>
-              <SheetIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Ver Ficha</ListItemText>
-          </MenuItem>
+          {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
+          {isGM && !selectedPlayer?.isGM && (
+            <>
+              <MenuItem onClick={handleViewSheet}>
+                <ListItemIcon>
+                  <SheetIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Ver Ficha</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={handleRequestFile}>
+                <ListItemIcon>
+                  <FileIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Solicitar Arquivo</ListItemText>
+              </MenuItem>
+            </>
+          )}
+
           <MenuItem onClick={handleSendMessage}>
             <ListItemIcon>
               <MessageIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>Enviar Msg</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleRequestFile}>
-            <ListItemIcon>
-              <FileIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Solicitar Arquivo</ListItemText>
           </MenuItem>
         </Menu>
       </DialogContent>

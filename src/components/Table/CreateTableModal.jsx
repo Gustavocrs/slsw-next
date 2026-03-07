@@ -81,6 +81,7 @@ function CreateTableModal() {
         invites,
         gmId: user.uid,
         gmName: user.displayName || "GM Desconhecido",
+        gmPhotoURL: user.photoURL,
       };
 
       const newTable = await APIService.createTable(tableData);
