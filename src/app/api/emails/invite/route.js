@@ -36,7 +36,7 @@ export async function POST(request) {
     const fromEmail =
       process.env.EMAIL_FROM ||
       process.env.RESEND_FROM_EMAIL ||
-      "onboarding@resend.dev";
+      "nao-responda@systechdev.com.br";
 
     const {data, error} = await resend.emails.send({
       from: `Solo Leveling RPG <${fromEmail}>`,

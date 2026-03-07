@@ -82,29 +82,45 @@ class APIService {
     }
   }
 
+  // 1.2 BUSCAR TODAS AS FICHAS DO USUÁRIO
+  static async getAllCharacters(userId) {
+    if (!userId) return [];
+    try {
+      const q = query(
+        collection(db, "characters"),
+        where("userId", "==", userId),
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+    } catch (error) {
+      console.error("Erro ao buscar fichas:", error);
+      throw error;
+    }
+  }
+
   // 2. SALVAR (Cria ou Atualiza Automaticamente)
   static async saveCharacter(userId, characterData) {
     if (!userId) throw new Error("Usuário não logado");
 
     try {
-      // Verifica se já existe ficha para este usuário
-      const existing = await this.getCharacter(userId);
       const payload = this._cleanData({
         ...characterData,
         userId,
         updatedAt: serverTimestamp(), // Marca a hora do update
       });
 
-      // Remove _id do payload para não salvar o ID dentro dos dados
-      delete payload._id;
-
-      if (existing && existing._id) {
-        // ATUALIZA
-        const docRef = doc(db, "characters", existing._id);
+      // Se o objeto já tem _id, é uma atualização
+      if (characterData._id) {
+        const docId = characterData._id;
+        delete payload._id; // Não salvar o ID dentro do doc
+        const docRef = doc(db, "characters", docId);
         await updateDoc(docRef, payload);
-        return {_id: existing._id, ...payload};
-      } else {
-        // CRIA NOVO
+        return {_id: docId, ...payload};
+      }
+
+      // Se não tem _id, cria um novo
+      // (Lógica de singleton removida para permitir múltiplas fichas)
+      {
         payload.createdAt = serverTimestamp();
         payload.nome = payload.nome || "Novo Caçador";
 

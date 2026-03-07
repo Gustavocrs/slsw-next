@@ -40,6 +40,11 @@ export const useCharacterStore = create((set) => ({
       character: {...initialCharacter, ...data},
     })),
 
+  resetCharacter: () =>
+    set((state) => ({
+      character: initialCharacter,
+    })),
+
   updateAttribute: (key, value) =>
     set((state) => ({
       character: {...state.character, [key]: value},

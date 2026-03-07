@@ -68,6 +68,20 @@ export function useCharacterAPI() {
     }
   }, [user, loadCharacter]);
 
+  // Listar todos os personagens (Para o gerenciador de fichas)
+  const listAll = useCallback(async () => {
+    if (!user?.uid) return [];
+    try {
+      setLoading(true);
+      return await APIService.getAllCharacters(user.uid);
+    } catch (err) {
+      setError(err.message);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Atualizar personagem
   const update = useCallback(
     async (id, data) => {
@@ -77,8 +91,9 @@ export function useCharacterAPI() {
         setLoading(true);
         setError(null);
 
-        // CORREÇÃO: Usa saveCharacter para garantir consistência
-        const result = await APIService.saveCharacter(user.uid, data);
+        // Garante que o ID seja passado para o saveCharacter identificar como update
+        const dataWithId = {...data, _id: id};
+        const result = await APIService.saveCharacter(user.uid, dataWithId);
 
         if (result) {
           loadCharacter(result);
@@ -131,6 +146,7 @@ export function useCharacterAPI() {
   return {
     create,
     list,
+    listAll,
     update,
     delete: delete_,
     duplicate,
