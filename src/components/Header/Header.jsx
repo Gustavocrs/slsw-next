@@ -20,7 +20,7 @@ import {
   MenuBook as BookIcon,
   Google as GoogleIcon,
   Menu as MenuIcon,
-  TableRestaurant as TableIcon,
+  SportsEsports as GameIcon,
 } from "@mui/icons-material";
 import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
@@ -88,6 +88,8 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     toggleTableListModal,
     notification,
     hideNotification,
+    selectedTable,
+    toggleTableDetailsModal,
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -141,13 +143,15 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
               </HeaderButton>
             ) : (
               <>
-                <HeaderButton
-                  startIcon={<TableIcon />}
-                  onClick={toggleTableListModal}
-                  sx={{mr: 1}}
-                >
-                  Mesa
-                </HeaderButton>
+                {selectedTable && (
+                  <HeaderButton
+                    startIcon={<GameIcon />}
+                    onClick={toggleTableDetailsModal}
+                    sx={{mr: 1}}
+                  >
+                    Jogo
+                  </HeaderButton>
+                )}
 
                 <HeaderButton
                   startIcon={

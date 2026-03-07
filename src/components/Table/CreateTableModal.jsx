@@ -43,6 +43,7 @@ function CreateTableModal() {
     toggleTableCreateModal,
     toggleTableListModal,
     showNotification,
+    setSelectedTable,
   } = useUIStore();
   const {user} = useAuth();
   const [loading, setLoading] = useState(false);
@@ -105,6 +106,7 @@ function CreateTableModal() {
       // Limpar form e fechar
       setTableName("");
       setInvites([]);
+      setSelectedTable(newTable);
       toggleTableCreateModal();
       toggleTableListModal(); // Abre a lista para ver a mesa criada
       showNotification("Mesa criada com sucesso!", "success");

@@ -54,6 +54,7 @@ function TableDetailsModal() {
     notifyTablesUpdated,
     showNotification,
     setViewMode,
+    setSelectedTable,
   } = useUIStore();
   const {loadCharacter} = useCharacterStore();
   const {user} = useAuth();
@@ -165,6 +166,7 @@ function TableDetailsModal() {
       await APIService.deleteTable(selectedTable._id);
       notifyTablesUpdated();
       toggleTableDetailsModal();
+      setSelectedTable(null);
       showNotification("Mesa excluída.", "info");
     } catch (error) {
       showNotification("Erro ao excluir: " + error.message, "error");
