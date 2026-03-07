@@ -11,6 +11,8 @@ import {
   IconButton,
   Box,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Assignment as AssignmentIcon,
@@ -23,6 +25,7 @@ import {
 import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
 import TableListModal from "../Table/TableListModal";
+import TableDetailsModal from "../Table/TableDetailsModal";
 
 const StyledAppBar = styled(AppBar)`
   && {
@@ -79,7 +82,13 @@ const HeaderButton = styled(Button)`
 
 function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {user, loading, loginWithGoogle} = useAuth();
-  const {viewMode, toggleView, toggleTableListModal} = useUIStore();
+  const {
+    viewMode,
+    toggleView,
+    toggleTableListModal,
+    notification,
+    hideNotification,
+  } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleLogin = async () => {
@@ -176,6 +185,24 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       {/* Modais Globais */}
       <CreateTableModal />
       <TableListModal />
+      <TableDetailsModal />
+
+      {/* Notificações Globais */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={hideNotification}
+        anchorOrigin={{vertical: "bottom", horizontal: "center"}}
+      >
+        <Alert
+          onClose={hideNotification}
+          severity={notification.severity}
+          sx={{width: "100%"}}
+          variant="filled"
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

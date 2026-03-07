@@ -185,6 +185,60 @@ class APIService {
       return [];
     }
   }
+
+  // 7. ATUALIZAR MESA
+  static async updateTable(tableId, data) {
+    try {
+      const docRef = doc(db, "tables", tableId);
+      const payload = this._cleanData({
+        ...data,
+        updatedAt: serverTimestamp(),
+      });
+      await updateDoc(docRef, payload);
+      return {_id: tableId, ...payload};
+    } catch (error) {
+      console.error("Erro ao atualizar mesa:", error);
+      throw error;
+    }
+  }
+
+  // 8. DELETAR MESA
+  static async deleteTable(tableId) {
+    try {
+      await deleteDoc(doc(db, "tables", tableId));
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao deletar mesa:", error);
+      throw error;
+    }
+  }
+
+  // 9. ENVIAR CONVITE (Via Resend API Route)
+  static async sendTableInvite(tableId, email, gmName, tableName) {
+    try {
+      const response = await fetch("/api/emails/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          gmName,
+          tableName,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Erro ao enviar email via Resend:",
+          await response.text(),
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao enviar convite:", error);
+      // Não lança erro para não bloquear o fluxo do usuário
+    }
+  }
 }
 
 export default APIService;

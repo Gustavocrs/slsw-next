@@ -38,8 +38,12 @@ import APIService from "@/lib/api";
 function CreateTableModal() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md")); // Tela cheia no mobile
-  const {tableCreateModalOpen, toggleTableCreateModal, toggleTableListModal} =
-    useUIStore();
+  const {
+    tableCreateModalOpen,
+    toggleTableCreateModal,
+    toggleTableListModal,
+    showNotification,
+  } = useUIStore();
   const {user} = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -81,15 +85,30 @@ function CreateTableModal() {
         gmName: user.displayName || "Mestre Desconhecido",
       };
 
-      await APIService.createTable(tableData);
+      const newTable = await APIService.createTable(tableData);
+
+      // Enviar convites por email
+      if (invites.length > 0) {
+        await Promise.all(
+          invites.map((email) =>
+            APIService.sendTableInvite(
+              newTable._id,
+              email,
+              user.displayName,
+              tableName,
+            ),
+          ),
+        );
+      }
 
       // Limpar form e fechar
       setTableName("");
       setInvites([]);
       toggleTableCreateModal();
       toggleTableListModal(); // Abre a lista para ver a mesa criada
+      showNotification("Mesa criada com sucesso!", "success");
     } catch (error) {
-      alert("Erro ao criar mesa: " + error.message);
+      showNotification("Erro ao criar mesa: " + error.message, "error");
     } finally {
       setLoading(false);
     }

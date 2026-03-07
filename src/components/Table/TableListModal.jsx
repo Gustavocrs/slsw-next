@@ -36,8 +36,14 @@ import APIService from "@/lib/api";
 function TableListModal() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const {tableListModalOpen, toggleTableListModal, toggleTableCreateModal} =
-    useUIStore();
+  const {
+    tableListModalOpen,
+    toggleTableListModal,
+    toggleTableCreateModal,
+    toggleTableDetailsModal,
+    setSelectedTable,
+    tablesUpdated, // Gatilho de atualização
+  } = useUIStore();
   const {user} = useAuth();
 
   const [tables, setTables] = useState([]);
@@ -48,7 +54,7 @@ function TableListModal() {
     if (tableListModalOpen && user) {
       fetchTables();
     }
-  }, [tableListModalOpen, user]);
+  }, [tableListModalOpen, user, tablesUpdated]); // Adicionado tablesUpdated
 
   const fetchTables = async () => {
     setLoading(true);
@@ -65,6 +71,11 @@ function TableListModal() {
   const handleOpenCreate = () => {
     toggleTableListModal(); // Fecha lista
     toggleTableCreateModal(); // Abre criação
+  };
+
+  const handleTableClick = (table) => {
+    setSelectedTable(table);
+    toggleTableDetailsModal();
   };
 
   return (
@@ -123,6 +134,15 @@ function TableListModal() {
                   sx={{
                     borderRadius: 3,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  }}
+                  component={Button} // Torna o card clicável visualmente
+                  onClick={() => handleTableClick(table)}
+                  style={{
+                    textTransform: "none",
+                    textAlign: "left",
+                    display: "block",
+                    width: "100%",
+                    padding: 0,
                   }}
                 >
                   <CardContent>

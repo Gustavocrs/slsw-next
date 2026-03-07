@@ -93,6 +93,9 @@ export const useUIStore = create((set) => ({
   viewMode: "book",
   tableCreateModalOpen: false, // Modal de Criar
   tableListModalOpen: false, // Modal de Listar (Dashboard)
+  tableDetailsModalOpen: false, // Modal de Detalhes/Config
+  selectedTable: null, // Mesa selecionada para ver detalhes
+  tablesUpdated: 0, // Timestamp para forçar refresh da lista
 
   toggleView: () =>
     set((state) => ({viewMode: state.viewMode === "book" ? "sheet" : "book"})),
@@ -102,4 +105,16 @@ export const useUIStore = create((set) => ({
     set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),
   toggleTableListModal: () =>
     set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
+  toggleTableDetailsModal: () =>
+    set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
+
+  setSelectedTable: (table) => set({selectedTable: table}),
+  notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
+
+  // Sistema de Notificações Global
+  notification: {open: false, message: "", severity: "info"},
+  showNotification: (message, severity = "info") =>
+    set({notification: {open: true, message, severity}}),
+  hideNotification: () =>
+    set((state) => ({notification: {...state.notification, open: false}})),
 }));
