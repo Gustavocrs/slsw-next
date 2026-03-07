@@ -34,15 +34,19 @@ import {
   Message as MessageIcon,
   AttachFile as FileIcon,
   Security as GmIcon,
-  InsertDriveFile as DocIcon,
   Delete as DeleteIcon,
   CloudUpload as UploadIcon,
-  PictureAsPdf as PdfIcon,
-  TableChart as ExcelIcon,
-  Slideshow as PptIcon,
-  Image as ImageIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
+import {
+  BsFiletypePdf,
+  BsFiletypeXls,
+  BsFiletypeDoc,
+  BsFiletypePpt,
+  BsFiletypeTxt,
+  BsCardImage,
+  BsFileEarmark,
+} from "react-icons/bs";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
@@ -189,84 +193,59 @@ function GameModal() {
   const getFileIcon = (file) => {
     const type = file.type?.toLowerCase() || "";
     const name = file.name?.toLowerCase() || "";
-    const extension = name.includes(".")
-      ? name.split(".").pop().toUpperCase()
-      : "FILE";
+    const size = 26;
 
-    // Imagem: Renderiza Thumbnail
-    if (
-      type.startsWith("image/") ||
-      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/)
-    ) {
-      return (
-        <Avatar
-          src={file.url}
-          variant="rounded"
-          sx={{width: 48, height: 48, mr: 1, border: "1px solid #e0e0e0"}}
-          imgProps={{style: {objectFit: "cover"}}}
-        >
-          <ImageIcon />
-        </Avatar>
-      );
+    // PDF
+    if (type.includes("pdf") || name.endsWith(".pdf")) {
+      return <BsFiletypePdf size={size} color="#d32f2f" />;
     }
 
-    // Documentos: Renderiza Ícone Específico
-    let Icon = null;
-    let color = "#757575";
-    let bg = "#f5f5f5";
-
-    if (type.includes("pdf") || name.endsWith(".pdf")) {
-      Icon = PdfIcon;
-      color = "#d32f2f"; // Vermelho
-      bg = "#ffebee";
-    } else if (
+    // Excel / Planilhas
+    if (
       type.includes("sheet") ||
       type.includes("excel") ||
-      type.includes("spreadsheet") ||
       name.endsWith(".xls") ||
       name.endsWith(".xlsx") ||
       name.endsWith(".csv")
     ) {
-      Icon = ExcelIcon;
-      color = "#2e7d32"; // Verde
-      bg = "#e8f5e9";
-    } else if (
+      return <BsFiletypeXls size={size} color="#2e7d32" />;
+    }
+
+    // Word / Documentos
+    if (
       type.includes("word") ||
       type.includes("document") ||
       name.endsWith(".doc") ||
       name.endsWith(".docx")
     ) {
-      Icon = SheetIcon; // Ícone de descrição/texto (Azul)
-      color = "#1976d2";
-      bg = "#e3f2fd";
-    } else if (
+      return <BsFiletypeDoc size={size} color="#1976d2" />;
+    }
+
+    // PowerPoint / Apresentações
+    if (
       type.includes("presentation") ||
       type.includes("powerpoint") ||
       name.endsWith(".ppt") ||
       name.endsWith(".pptx")
     ) {
-      Icon = PptIcon;
-      color = "#f57c00"; // Laranja
-      bg = "#fff3e0";
+      return <BsFiletypePpt size={size} color="#f57c00" />;
     }
 
-    return (
-      <Avatar
-        sx={{bgcolor: bg, color: color, width: 48, height: 48, mr: 1}}
-        variant="rounded"
-      >
-        {Icon ? (
-          <Icon />
-        ) : (
-          <Typography
-            variant="caption"
-            sx={{fontWeight: "bold", fontSize: "0.7rem"}}
-          >
-            {extension.slice(0, 4)}
-          </Typography>
-        )}
-      </Avatar>
-    );
+    // Texto
+    if (type.includes("text") || name.endsWith(".txt")) {
+      return <BsFiletypeTxt size={size} color="#616161" />;
+    }
+
+    // Imagens
+    if (
+      type.startsWith("image/") ||
+      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/)
+    ) {
+      return <BsCardImage size={size} color="#7b1fa2" />;
+    }
+
+    // Genérico
+    return <BsFileEarmark size={size} color="#9e9e9e" />;
   };
 
   // Helper para nome amigável
@@ -480,8 +459,9 @@ function GameModal() {
                               </Box>
                             }
                           >
-                            <ListItemAvatar
+                            <ListItemIcon
                               sx={{
+                                minWidth: 40,
                                 cursor:
                                   file.type?.startsWith("image/") ||
                                   file.name?.match(
@@ -493,7 +473,7 @@ function GameModal() {
                               onClick={() => handleImageClick(file)}
                             >
                               {getFileIcon(file)}
-                            </ListItemAvatar>
+                            </ListItemIcon>
                             <ListItemText
                               primary={
                                 <a
