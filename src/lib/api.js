@@ -2,7 +2,7 @@
  * src/lib/api.js
  * Versão SERVERLESS (Firebase Firestore direto)
  */
-import {db, storage} from "./firebase";
+import {db} from "./firebase";
 import {
   collection,
   query,
@@ -18,7 +18,6 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
-import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
 
 class APIService {
   // Helper para limpar dados undefined (Firestore não aceita)
@@ -353,14 +352,24 @@ class APIService {
   // 12. UPLOAD DE ANEXO DA MESA
   static async uploadTableAttachment(tableId, file) {
     try {
-      const storageRef = ref(storage, `tables/${tableId}/${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha no upload");
+      }
+
+      const data = await response.json();
 
       return {
-        name: file.name,
-        url: downloadURL,
-        type: file.type,
+        name: data.name,
+        url: data.url,
+        type: data.type,
         uploadedAt: new Date().toISOString(),
       };
     } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import styled from "styled-components";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
@@ -86,6 +86,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {
     viewMode,
     toggleView,
+    setViewMode,
     toggleTableListModal,
     notification,
     hideNotification,
@@ -94,6 +95,22 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     toggleGameModal,
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sincronização Bidirecional entre Store (Modais) e Props (Página)
+
+  // 1. Prop -> Store: Quando a página muda a view (ex: botão no header), atualiza o store
+  useEffect(() => {
+    if (currentView && currentView !== viewMode) {
+      setViewMode(currentView);
+    }
+  }, [currentView, viewMode, setViewMode]);
+
+  // 2. Store -> Prop: Quando o store muda (ex: abrir ficha no modal), notifica a página
+  useEffect(() => {
+    if (onViewChange && viewMode && viewMode !== currentView) {
+      onViewChange(viewMode);
+    }
+  }, [viewMode, currentView, onViewChange]);
 
   const handleLogin = async () => {
     try {
