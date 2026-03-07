@@ -11,7 +11,8 @@ export async function POST(request) {
         <div style="font-family: sans-serif; padding: 20px; color: #333; border: 1px solid #e0e0e0; border-radius: 8px;">
           <h2 style="color: #667eea;">🏰 Nova Mesa: ${tableName}</h2>
           <p>O GM <strong>${gmName}</strong> convidou você para participar do jogo.</p>
-          <p>Acesse o sistema Solo Leveling RPG para ver seus convites e vincular sua ficha.</p>
+          <p>Acesse o sistema Solo Leveling RPG para ver seus convites e vincular sua ficha:</p>
+          <p><a href="https://slsw.systechdev.com.br" style="color: #667eea; font-weight: bold;">https://slsw.systechdev.com.br</a></p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;"><em>Solo Leveling System</em></p>
         </div>
@@ -24,7 +25,8 @@ export async function POST(request) {
           <h2 style="color: #2196f3;">📢 Atualização da Mesa</h2>
           <p>O GM <strong>${gmName}</strong> atualizou as informações do jogo <strong>${tableName}</strong>.</p>
           ${details ? `<div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin: 15px 0;">${details}</div>` : ""}
-          <p>Acesse o sistema para conferir os novos detalhes.</p>
+          <p>Acesse o sistema para conferir os novos detalhes:</p>
+          <p><a href="https://slsw.systechdev.com.br" style="color: #2196f3; font-weight: bold;">https://slsw.systechdev.com.br</a></p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;"><em>Solo Leveling System</em></p>
         </div>
