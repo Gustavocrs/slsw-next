@@ -7,7 +7,13 @@
 
 import React, {useState} from "react";
 import {styled} from "@mui/material/styles";
-import {Box, Select, MenuItem, IconButton} from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 import {POWERS} from "@/lib/rpgEngine";
 
@@ -64,44 +70,69 @@ const Button = styled("button")(({theme}) => ({
   },
 }));
 
-function MagiasList({items = [], onAdd, onRemove}) {
-  const [powerName, setPowerName] = useState("");
+function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
+  const [value, setValue] = useState(null);
+
+  const optionsMap = availableOptions || POWERS;
+  const optionsArray = React.useMemo(
+    () =>
+      Object.entries(optionsMap)
+        .map(([name, data]) => ({
+          name,
+          ...data,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [optionsMap],
+  );
 
   const handleAdd = () => {
-    if (powerName) {
-      const powerData = POWERS[powerName];
+    if (value) {
       onAdd?.({
-        name: powerName,
-        pp: powerData?.pp || "",
-        range: powerData?.range || "",
-        duration: powerData?.duration || "",
-        rank: powerData?.rank || "",
+        name: value.name,
+        pp: value.pp || "",
+        range: value.range || "",
+        duration: value.duration || "",
+        rank: value.rank || "",
       });
-      setPowerName("");
+      setValue(null);
     }
   };
 
   return (
     <Box sx={{mb: 2}}>
       <InputRow>
-        <Select
-          value={powerName}
-          onChange={(e) => setPowerName(e.target.value)}
-          displayEmpty
-          size="small"
+        <Autocomplete
+          value={value}
+          onChange={(event, newValue) => setValue(newValue)}
+          options={optionsArray}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField {...params} label="Selecione uma magia" size="small" />
+          )}
+          renderOption={(props, option) => {
+            const {key, ...optionProps} = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Box>
+                  <Typography variant="body2" sx={{fontWeight: 600}}>
+                    {option.name} ({option.rank})
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    PP: {option.pp} | Alcance: {option.range} | Duração:{" "}
+                    {option.duration}
+                  </Typography>
+                </Box>
+              </li>
+            );
+          }}
           fullWidth
-          sx={{background: "#fff", borderRadius: "6px", maxWidth: "100%"}}
-          MenuProps={{PaperProps: {style: {maxHeight: 300}}}}
-        >
-          <MenuItem value="">Selecione uma magia</MenuItem>
-          {Object.keys(POWERS)
-            .sort()
-            .map((key) => (
-              <MenuItem key={key} value={key}>
-                {key} ({POWERS[key].rank})
-              </MenuItem>
-            ))}
-        </Select>
+          size="small"
+          sx={{background: "#fff", borderRadius: "6px"}}
+        />
         <Button onClick={handleAdd}>+</Button>
       </InputRow>
 

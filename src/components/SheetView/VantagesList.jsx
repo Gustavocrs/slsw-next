@@ -7,7 +7,13 @@
 
 import React from "react";
 import {styled} from "@mui/material/styles";
-import {Box, Select, MenuItem, IconButton} from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 import {EDGES} from "@/lib/rpgEngine";
 
@@ -60,13 +66,15 @@ const Button = styled("button")(({theme}) => ({
   },
 }));
 
-function VantagesList({items = [], onAdd, onRemove}) {
-  const [inputName, setInputName] = React.useState("");
+function VantagesList({items = [], onAdd, onRemove, availableOptions}) {
+  const [value, setValue] = React.useState(null);
+
+  const options = availableOptions || EDGES;
 
   const handleAdd = () => {
-    if (inputName) {
-      onAdd?.({name: inputName});
-      setInputName("");
+    if (value) {
+      onAdd?.({name: value.name});
+      setValue(null);
     }
   };
 
@@ -78,25 +86,44 @@ function VantagesList({items = [], onAdd, onRemove}) {
     <Box sx={{mb: 2}}>
       {/* Input Row */}
       <InputRow>
-        <Select
-          value={inputName}
-          onChange={(e) => setInputName(e.target.value)}
-          displayEmpty
-          size="small"
+        <Autocomplete
+          value={value}
+          onChange={(event, newValue) => setValue(newValue)}
+          options={options}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Selecione uma vantagem"
+              size="small"
+            />
+          )}
+          renderOption={(props, option) => {
+            const {key, ...optionProps} = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Box>
+                  <Typography variant="body2" sx={{fontWeight: 600}}>
+                    {option.name} ({option.source}) - {option.rank}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    {option.description}
+                  </Typography>
+                </Box>
+              </li>
+            );
+          }}
           fullWidth
+          size="small"
           sx={{
             background: "#fff",
             borderRadius: "6px",
           }}
-          MenuProps={{PaperProps: {style: {maxHeight: 300}}}}
-        >
-          <MenuItem value="">Selecione uma vantagem</MenuItem>
-          {EDGES.map((edge) => (
-            <MenuItem key={edge.name} value={edge.name}>
-              {edge.name}({edge.source}) - {edge.rank}
-            </MenuItem>
-          ))}
-        </Select>
+        />
 
         <Button onClick={handleAdd}>+ </Button>
       </InputRow>

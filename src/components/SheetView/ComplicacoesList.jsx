@@ -7,7 +7,13 @@
 
 import React from "react";
 import {styled} from "@mui/material/styles";
-import {Box, Select, MenuItem, IconButton} from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 import {HINDRANCES} from "@/lib/rpgEngine";
 
@@ -61,12 +67,12 @@ const Button = styled("button")(({theme}) => ({
 }));
 
 function ComplicacoesList({items = [], onAdd, onRemove}) {
-  const [inputName, setInputName] = React.useState("");
+  const [value, setValue] = React.useState(null);
 
   const handleAdd = () => {
-    if (inputName) {
-      onAdd?.({name: inputName});
-      setInputName("");
+    if (value) {
+      onAdd?.({name: value.name});
+      setValue(null);
     }
   };
 
@@ -78,26 +84,47 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
     <Box sx={{mb: 2}}>
       {/* Input Row */}
       <InputRow>
-        <Select
-          value={inputName}
-          onChange={(e) => setInputName(e.target.value)}
-          displayEmpty
-          size="small"
+        <Autocomplete
+          value={value}
+          onChange={(event, newValue) => setValue(newValue)}
+          options={HINDRANCES}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Selecione uma complicação"
+              size="small"
+            />
+          )}
+          renderOption={(props, option) => {
+            const {key, ...optionProps} = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Box>
+                  <Typography variant="body2" sx={{fontWeight: 600}}>
+                    {option.name}{" "}
+                    {option.name.includes(`(${option.type})`)
+                      ? ""
+                      : `(${option.type})`}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    {option.description}
+                  </Typography>
+                </Box>
+              </li>
+            );
+          }}
           fullWidth
+          size="small"
           sx={{
             background: "#fff",
             borderRadius: "6px",
           }}
-          MenuProps={{PaperProps: {style: {maxHeight: 300}}}}
-        >
-          <MenuItem value="">Selecione uma complicação</MenuItem>
-          {HINDRANCES.map((hind) => (
-            <MenuItem key={hind.name} value={hind.name}>
-              {hind.name}{" "}
-              {hind.name.includes(`(${hind.type})`) ? "" : `(${hind.type})`}
-            </MenuItem>
-          ))}
-        </Select>
+        />
 
         <Button onClick={handleAdd}>+ </Button>
       </InputRow>

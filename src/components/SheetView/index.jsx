@@ -1470,6 +1470,7 @@ function SheetView({
                     const edge = EDGES.find((e) => e.name === v.name);
                     return edge ? {...edge, ...v} : v;
                   })}
+                  availableOptions={availableEdges}
                   onAdd={(item) => addItemToList("vantagens", item)}
                   onRemove={(idx) => removeItemFromList("vantagens", idx)}
                   onUpdate={(idx, item) =>
@@ -1608,6 +1609,7 @@ function SheetView({
               <MagiasList
                 items={character.magias || []}
                 onAdd={(item) => addItemToList("magias", item)}
+                availableOptions={availablePowers}
                 onRemove={(idx) => removeItemFromList("magias", idx)}
               />
             </Grid>
