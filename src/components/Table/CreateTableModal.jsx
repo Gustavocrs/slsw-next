@@ -59,8 +59,9 @@ function CreateTableModal() {
   const [invites, setInvites] = useState([]);
 
   const handleAddInvite = () => {
-    if (inviteEmail && !invites.includes(inviteEmail)) {
-      setInvites([...invites, inviteEmail]);
+    const email = inviteEmail.trim().toLowerCase();
+    if (email && !invites.includes(email)) {
+      setInvites([...invites, email]);
       setInviteEmail("");
     }
   };
@@ -258,7 +259,7 @@ function CreateTableModal() {
           </Box>
 
           {/* Privacidade */}
-          <FormControlLabel
+          {/* <FormControlLabel
             control={
               <Switch
                 checked={isPrivate}
@@ -270,7 +271,7 @@ function CreateTableModal() {
                 ? "🔒 Mesa Privada (Apenas convidados)"
                 : "🌍 Mesa Pública (Listada no Hub)"
             }
-          />
+          /> */}
         </Stack>
       </DialogContent>
 

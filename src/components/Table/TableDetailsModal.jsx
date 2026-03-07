@@ -38,8 +38,9 @@ import {
   Save as SaveIcon,
   Add as AddIcon,
   Send as SendIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
-import {useUIStore} from "@/stores/characterStore";
+import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 
@@ -52,7 +53,9 @@ function TableDetailsModal() {
     selectedTable,
     notifyTablesUpdated,
     showNotification,
+    setViewMode,
   } = useUIStore();
+  const {loadCharacter} = useCharacterStore();
   const {user} = useAuth();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -81,8 +84,9 @@ function TableDetailsModal() {
   }, [selectedTable, tableDetailsModalOpen]);
 
   const handleAddInvite = () => {
-    if (inviteEmail && !invites.includes(inviteEmail)) {
-      setInvites([...invites, inviteEmail]);
+    const email = inviteEmail.trim().toLowerCase();
+    if (email && !invites.includes(email)) {
+      setInvites([...invites, email]);
       setInviteEmail("");
     }
   };
@@ -169,6 +173,31 @@ function TableDetailsModal() {
     }
   };
 
+  const handleOpenPlayerSheet = async (player) => {
+    if (!player.characterId) {
+      showNotification("Este jogador não possui ficha vinculada.", "warning");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const charData = await APIService.getCharacterById(player.characterId);
+      if (charData) {
+        loadCharacter(charData);
+        setViewMode("sheet");
+        toggleTableDetailsModal();
+        showNotification(`Visualizando ficha de ${player.name}`, "success");
+      } else {
+        showNotification("Ficha não encontrada.", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao carregar ficha.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!selectedTable) return null;
 
   return (
@@ -222,7 +251,7 @@ function TableDetailsModal() {
               label="Descrição"
               fullWidth
               multiline
-              rows={3}
+              rows={1}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={!isGM}
@@ -272,6 +301,33 @@ function TableDetailsModal() {
             <Typography variant="subtitle2" color="primary" gutterBottom>
               Jogadores & Convites
             </Typography>
+
+            {/* Jogadores Confirmados */}
+            {selectedTable?.players?.length > 0 && (
+              <Box sx={{mb: 2}}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{mb: 1, display: "block"}}
+                >
+                  Jogadores na Mesa:
+                </Typography>
+                <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+                  {selectedTable.players.map((player) => (
+                    <Chip
+                      key={player.uid}
+                      icon={<PersonIcon fontSize="small" />}
+                      label={player.name}
+                      color="primary"
+                      size="small"
+                      onDoubleClick={() => handleOpenPlayerSheet(player)}
+                      title="Clique duplo para ver a ficha"
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
             {isGM && (
               <Box sx={{display: "flex", gap: 1, mb: 2}}>
                 <TextField
@@ -338,7 +394,7 @@ function TableDetailsModal() {
             </List>
           </Box>
 
-          {isGM && (
+          {/* {isGM && (
             <FormControlLabel
               control={
                 <Switch
@@ -348,7 +404,7 @@ function TableDetailsModal() {
               }
               label="Mesa Privada"
             />
-          )}
+          )} */}
         </Stack>
       </DialogContent>
 

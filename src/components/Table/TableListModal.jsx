@@ -30,6 +30,7 @@ import {
   Launch as LaunchIcon,
   Send as SendIcon,
   Check as CheckIcon,
+  Security as SecurityIcon,
 } from "@mui/icons-material";
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -226,6 +227,19 @@ function TableListModal() {
                       {table.description || "Sem descrição."}
                     </Typography>
 
+                    {/* Exibir Mestre se não for o próprio */}
+                    {!isGM && (
+                      <Box sx={{mb: 2}}>
+                        <Chip
+                          icon={<SecurityIcon fontSize="small" />}
+                          label={`Mestre: ${table.gmName}`}
+                          size="small"
+                          color="secondary"
+                          variant="outlined"
+                        />
+                      </Box>
+                    )}
+
                     {/* Ações de Convite */}
                     {isInvited && (
                       <Box sx={{mb: 2, display: "flex", gap: 1}}>
@@ -267,6 +281,18 @@ function TableListModal() {
                       </Typography>
 
                       <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+                        {/* Jogadores Aceitos */}
+                        {(table.players || []).map((player) => (
+                          <Chip
+                            key={player.uid}
+                            icon={<PersonIcon fontSize="small" />}
+                            label={player.name}
+                            variant="filled"
+                            size="small"
+                            color="primary"
+                          />
+                        ))}
+
                         {/* Lista de Convites Pendentes */}
                         {(table.invites || []).map((email) => (
                           <Chip
@@ -299,10 +325,9 @@ function TableListModal() {
                           />
                         ))}
 
-                        {/* Futuro: Lista de Jogadores Aceitos */}
-                        {(!table.invites || table.invites.length === 0) && (
+                        {!table.invites?.length && !table.players?.length && (
                           <Typography variant="caption" color="text.secondary">
-                            Nenhum jogador convidado.
+                            Nenhum participante.
                           </Typography>
                         )}
                       </Box>

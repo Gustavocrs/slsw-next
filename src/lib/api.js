@@ -205,14 +205,19 @@ class APIService {
         );
       }
 
-      const snapshots = await Promise.all(promises);
+      // Usar allSettled para evitar que erro de permissão em uma query bloqueie as outras
+      const results = await Promise.allSettled(promises);
 
-      snapshots.forEach((snap) => {
-        snap.docs.forEach((doc) => {
-          if (!tablesMap.has(doc.id)) {
-            tablesMap.set(doc.id, {_id: doc.id, ...doc.data()});
-          }
-        });
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
+          result.value.docs.forEach((doc) => {
+            if (!tablesMap.has(doc.id)) {
+              tablesMap.set(doc.id, {_id: doc.id, ...doc.data()});
+            }
+          });
+        } else {
+          console.warn("Uma das consultas de mesa falhou:", result.reason);
+        }
       });
 
       return Array.from(tablesMap.values());
@@ -279,6 +284,9 @@ class APIService {
   // 10. ACEITAR CONVITE
   static async acceptInvite(tableId, user) {
     try {
+      // Buscar ficha do usuário para vincular
+      const character = await this.getCharacter(user.uid);
+
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
         invites: arrayRemove(user.email),
@@ -288,7 +296,9 @@ class APIService {
           email: user.email,
           name: user.displayName || "Jogador",
           joinedAt: new Date().toISOString(),
+          characterId: character ? character._id : null,
         }),
+        updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error("Erro ao aceitar convite:", error);
@@ -302,6 +312,7 @@ class APIService {
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
         invites: arrayRemove(email),
+        updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error("Erro ao recusar convite:", error);
