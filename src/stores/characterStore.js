@@ -102,6 +102,7 @@ export const useUIStore = create(
   persist(
     (set) => ({
       viewMode: "book",
+      sheetTab: 0, // 0: Visualizar, 1: Identificação, etc.
       tableCreateModalOpen: false, // Modal de Criar
       tableListModalOpen: false, // Modal de Listar (Dashboard)
       tableDetailsModalOpen: false, // Modal de Detalhes/Config
@@ -115,6 +116,7 @@ export const useUIStore = create(
           viewMode: state.viewMode === "book" ? "sheet" : "book",
         })),
       setViewMode: (mode) => set({viewMode: mode}),
+      setSheetTab: (tab) => set({sheetTab: tab}),
 
       toggleTableCreateModal: () =>
         set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),

@@ -16,6 +16,8 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  ListItemIcon,
+  Radio,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -23,14 +25,15 @@ import {
   Add as AddIcon,
   Download as DownloadIcon,
   UploadFile as ImportIcon,
+  ContentCopy as DuplicateIcon,
 } from "@mui/icons-material";
 import {useCharacterAPI} from "@/hooks/useCharacterAPI";
 import {useCharacterStore, useUIStore} from "@/stores/characterStore";
 
-export default function SheetManager() {
-  const {listAll, delete: deleteChar, create} = useCharacterAPI();
-  const {loadCharacter, resetCharacter} = useCharacterStore();
-  const {showNotification} = useUIStore();
+export default function SheetManager({onClose}) {
+  const {listAll, delete: deleteChar, create, duplicate} = useCharacterAPI();
+  const {loadCharacter, resetCharacter, character} = useCharacterStore();
+  const {showNotification, setViewMode, setSheetTab} = useUIStore();
 
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,13 +53,21 @@ export default function SheetManager() {
   const handleNewSheet = () => {
     resetCharacter();
     showNotification("Nova ficha iniciada! Preencha e salve.", "info");
-    // Dica: Aqui você pode fechar o modal de perfil se necessário
+
+    // Redireciona para a aba de Identificação e fecha o modal
+    setViewMode("sheet");
+    setSheetTab(1); // 1 = Aba de Identificação
+    if (onClose) onClose();
   };
 
   const handleEditSheet = (sheet) => {
     loadCharacter(sheet);
     showNotification(`Ficha "${sheet.nome}" carregada.`, "success");
-    // Dica: Aqui você pode fechar o modal de perfil se necessário
+
+    // Redireciona para a aba de Visualização e fecha o modal
+    setViewMode("sheet");
+    setSheetTab(0); // 0 = Aba de Visualizar
+    if (onClose) onClose();
   };
 
   const handleDeleteSheet = async () => {
@@ -110,6 +121,16 @@ export default function SheetManager() {
     };
     reader.readAsText(file);
     event.target.value = ""; // Limpa o input
+  };
+
+  const handleDuplicateSheet = async (sheet) => {
+    try {
+      await duplicate(sheet._id);
+      showNotification(`Ficha "${sheet.nome}" duplicada!`, "success");
+      fetchSheets();
+    } catch (error) {
+      showNotification("Erro ao duplicar ficha.", "error");
+    }
   };
 
   return (
@@ -166,8 +187,25 @@ export default function SheetManager() {
               </ListItem>
             ) : (
               sheets.map((sheet) => (
-                <ListItem key={sheet._id} divider>
+                <ListItem
+                  key={sheet._id}
+                  divider
+                  selected={character?._id === sheet._id}
+                >
+                  <ListItemIcon
+                    onClick={() => handleEditSheet(sheet)}
+                    sx={{cursor: "pointer"}}
+                  >
+                    <Radio
+                      edge="start"
+                      checked={character?._id === sheet._id}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
                   <ListItemText
+                    sx={{cursor: "pointer"}}
+                    onClick={() => handleEditSheet(sheet)}
                     primary={sheet.nome || "Sem Nome"}
                     secondary={`${sheet.arquetipo || "Novato"} - Rank ${sheet.rank || "Novato"}`}
                   />
@@ -180,6 +218,15 @@ export default function SheetManager() {
                       title="Exportar JSON"
                     >
                       <DownloadIcon />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="duplicate"
+                      onClick={() => handleDuplicateSheet(sheet)}
+                      sx={{mr: 1}}
+                      title="Duplicar Ficha"
+                    >
+                      <DuplicateIcon />
                     </IconButton>
                     <IconButton
                       edge="end"

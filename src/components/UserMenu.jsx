@@ -70,7 +70,9 @@ export default function UserMenu() {
         try {
           const tables = await APIService.getTables(user.email, user.uid);
           const count = tables.filter((t) =>
-            t.invites?.includes(user.email),
+            t.invites?.some(
+              (invite) => invite.toLowerCase() === user.email.toLowerCase(),
+            ),
           ).length;
           setPendingInvites(count);
         } catch (e) {
@@ -191,7 +193,7 @@ export default function UserMenu() {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <SheetManager />
+          <SheetManager onClose={() => setSheetManagerOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>

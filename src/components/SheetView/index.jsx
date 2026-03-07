@@ -40,7 +40,7 @@ import EspoliosList from "./EspoliosList";
 import VantagesList from "./VantagesList";
 import ComplicacoesList from "./ComplicacoesList";
 import AwakeningSection from "./AwakeningSection";
-import {useCharacterStore} from "@/stores/characterStore";
+import {useCharacterStore, useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {
@@ -174,7 +174,15 @@ function SheetView({
   character: propCharacter,
   actions: propActions,
 }) {
-  const [tabValue, setTabValue] = React.useState(0);
+  const {sheetTab, setSheetTab} = useUIStore();
+
+  // Se estiver inspecionando (propCharacter), usa estado local para não afetar a navegação principal
+  const [localTab, setLocalTab] = React.useState(0);
+  const isInspection = !!propCharacter;
+
+  const tabValue = isInspection ? localTab : sheetTab;
+  const handleTabChange = (e, newValue) =>
+    isInspection ? setLocalTab(newValue) : setSheetTab(newValue);
 
   // Store Hooks (Default)
   const storeCharacter = useCharacterStore((state) => state.character);
@@ -228,10 +236,10 @@ function SheetView({
 
   // Redirecionar para Visualizar após salvar
   React.useEffect(() => {
-    if (saveSuccess) {
-      setTabValue(0);
+    if (saveSuccess && !isInspection) {
+      setSheetTab(0);
     }
-  }, [saveSuccess]);
+  }, [saveSuccess, isInspection, setSheetTab]);
 
   // Carregar dados ao montar o componente para garantir sincronia com Firestore
   React.useEffect(() => {
@@ -370,7 +378,7 @@ function SheetView({
       <TabsPaper>
         <Tabs
           value={tabValue}
-          onChange={(e, newValue) => setTabValue(newValue)}
+          onChange={handleTabChange}
           sx={{
             borderBottom: "2px solid #e0e0e0",
             "& .MuiTabs-indicator": {

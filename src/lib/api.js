@@ -228,11 +228,15 @@ class APIService {
 
       // 2. Mesas onde fui convidado
       if (userEmail) {
+        // Busca tanto pelo email original quanto lowercase para evitar erros de digitação/login
+        const emailsQuery = [userEmail, userEmail.toLowerCase()];
+        const uniqueEmails = [...new Set(emailsQuery)]; // Remove duplicatas
+
         promises.push(
           getDocs(
             query(
               collection(db, "tables"),
-              where("invites", "array-contains", userEmail),
+              where("invites", "array-contains-any", uniqueEmails),
             ),
           ),
         );
@@ -290,10 +294,12 @@ class APIService {
   // 9. ENVIAR CONVITE (Via Resend API Route)
   static async sendTableInvite(tableId, email, gmName, tableName) {
     try {
+      const normalizedEmail = email.toLowerCase().trim();
+
       // 1. Registrar o convite no banco de dados (Firestore)
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
-        invites: arrayUnion(email),
+        invites: arrayUnion(normalizedEmail),
         updatedAt: serverTimestamp(),
       });
 
@@ -303,7 +309,7 @@ class APIService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          email: normalizedEmail,
           gmName,
           tableName,
         }),
@@ -381,7 +387,7 @@ class APIService {
 
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
-        invites: arrayRemove(user.email),
+        invites: arrayRemove(user.email, user.email.toLowerCase()),
         playerIds: arrayUnion(user.uid),
         players: arrayUnion({
           uid: user.uid,
@@ -404,7 +410,7 @@ class APIService {
     try {
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
-        invites: arrayRemove(email),
+        invites: arrayRemove(email, email.toLowerCase()),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
