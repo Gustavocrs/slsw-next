@@ -136,6 +136,12 @@ export const useUIStore = create(
       name: "slsw-ui-store",
       partialize: (state) => ({selectedTable: state.selectedTable}),
       version: 1,
+      migrate: (persistedState, version) => {
+        if (version !== 1) {
+          return {selectedTable: null};
+        }
+        return persistedState;
+      },
     },
   ),
 );

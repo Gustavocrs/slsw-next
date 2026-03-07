@@ -273,12 +273,17 @@ class APIService {
       if (!response.ok) {
         const errData = await response.json();
         console.error("Erro ao enviar email via Resend:", errData);
+
+        let errorMsg = errData.message || "Falha no envio";
+        // Tratamento para limitação do plano gratuito do Resend
+        if (errorMsg.includes("only send testing emails")) {
+          errorMsg =
+            "Modo Teste: Envie apenas para seu próprio e-mail (Resend).";
+        }
+
         useUIStore
           .getState()
-          .showNotification(
-            `Alerta de E-mail: ${errData.message || "Falha no envio"}`,
-            "warning",
-          );
+          .showNotification(`Alerta de E-mail: ${errorMsg}`, "warning");
       }
     } catch (error) {
       console.error("Erro ao enviar convite:", error);
@@ -309,12 +314,17 @@ class APIService {
       if (!response.ok) {
         const errData = await response.json();
         console.error("Erro ao enviar email de atualização:", errData);
+
+        let errorMsg = errData.message || "Falha no envio";
+        // Tratamento para limitação do plano gratuito do Resend
+        if (errorMsg.includes("only send testing emails")) {
+          errorMsg =
+            "Modo Teste: Envie apenas para seu próprio e-mail (Resend).";
+        }
+
         useUIStore
           .getState()
-          .showNotification(
-            `Alerta de E-mail: ${errData.message || "Falha no envio"}`,
-            "warning",
-          );
+          .showNotification(`Alerta de E-mail: ${errorMsg}`, "warning");
       }
     } catch (error) {
       console.error("Erro ao enviar atualização:", error);

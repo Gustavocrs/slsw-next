@@ -4,6 +4,7 @@ import React, {useState, useEffect} from "react";
 import {styled} from "@mui/material/styles";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
+import APIService from "@/lib/api";
 import {
   AppBar,
   Toolbar,
@@ -90,6 +91,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     selectedTable,
     toggleTableDetailsModal,
     toggleGameModal,
+    setSelectedTable,
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -99,6 +101,24 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       setViewMode(currentView);
     }
   }, [currentView, viewMode, setViewMode]);
+
+  // Auto-selecionar mesa se o usuário for GM ao logar
+  useEffect(() => {
+    const autoSelectTable = async () => {
+      if (user && !selectedTable) {
+        try {
+          const tables = await APIService.getTables(user.email, user.uid);
+          const gmTable = tables.find((t) => t.gmId === user.uid);
+          if (gmTable) {
+            setSelectedTable(gmTable);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar mesas do GM:", error);
+        }
+      }
+    };
+    autoSelectTable();
+  }, [user, selectedTable, setSelectedTable]);
 
   const handleLogin = async () => {
     try {
