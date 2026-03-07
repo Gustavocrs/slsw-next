@@ -25,13 +25,14 @@ export async function POST(request) {
 
     // Nome único para evitar colisão
     const timestamp = Date.now();
-    const ext = path.extname(file.name);
-    const baseName = path.basename(file.name, ext);
-    const safeName = baseName
-      .replace(/[^a-zA-Z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .substring(0, 40);
-    const fileName = `${timestamp}-${safeName}${ext}`;
+    const ext = path.extname(file.name).toLowerCase();
+
+    let prefix = "FILE";
+    if ([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"].includes(ext)) {
+      prefix = "IMG";
+    }
+
+    const fileName = `${prefix}-${ext}`;
     const filePath = path.join(uploadDir, fileName);
 
     await writeFile(filePath, buffer);
