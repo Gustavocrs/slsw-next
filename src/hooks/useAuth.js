@@ -42,6 +42,7 @@ export function useAuth() {
       return result.user;
     } catch (error) {
       console.error("Erro no login:", error);
+      alert(`Erro ao fazer login: ${error.message}`);
       throw error;
     }
   };
