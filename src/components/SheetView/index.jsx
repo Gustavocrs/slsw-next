@@ -25,6 +25,11 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import {styled} from "@mui/material/styles";
+import {
+  CheckCircle,
+  CloudUpload,
+  Error as ErrorIcon,
+} from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
 import MagiasList from "./MagiasList";
@@ -36,6 +41,8 @@ import VantagesList from "./VantagesList";
 import ComplicacoesList from "./ComplicacoesList";
 import AwakeningSection from "./AwakeningSection";
 import {useCharacterStore} from "@/stores/characterStore";
+import {useAuth} from "@/hooks";
+import APIService from "@/lib/api";
 import {
   DICE,
   SKILLS,
@@ -132,6 +139,32 @@ function SheetView({
   const addItemToList = propActions?.addItemToList || storeAddItemToList;
   const removeItemFromList =
     propActions?.removeItemFromList || storeRemoveItemFromList;
+
+  const {user} = useAuth();
+  const [autoSaveStatus, setAutoSaveStatus] = React.useState("idle"); // idle, saving, saved, error
+
+  // Lógica de Auto-Save
+  React.useEffect(() => {
+    // Não salva se estiver inspecionando (propCharacter existe) ou se não tiver ID/User
+    if (propCharacter || !character._id || !user) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setAutoSaveStatus("saving");
+        // Usa APIService direto para não atualizar o store e evitar loops
+        await APIService.saveCharacter(user.uid, character);
+        setAutoSaveStatus("saved");
+
+        // Volta para idle após 2 segundos
+        setTimeout(() => setAutoSaveStatus("idle"), 2000);
+      } catch (error) {
+        console.error("Erro no auto-save:", error);
+        setAutoSaveStatus("error");
+      }
+    }, 3000); // Espera 3 segundos após a última alteração
+
+    return () => clearTimeout(timeoutId);
+  }, [character, propCharacter, user]);
 
   const [retroMode, setRetroMode] = React.useState(true);
 
@@ -523,6 +556,52 @@ function SheetView({
                 </div>
               )}
             </Box>
+
+            {/* Status do Auto-Save */}
+            {!propCharacter && (
+              <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                {autoSaveStatus === "saving" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#666",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <CloudUpload sx={{fontSize: 16, mr: 0.5}} /> Salvando...
+                  </Box>
+                )}
+                {autoSaveStatus === "saved" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#4caf50",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <CheckCircle sx={{fontSize: 16, mr: 0.5}} /> Salvo
+                  </Box>
+                )}
+                {autoSaveStatus === "error" && (
+                  <Tooltip title="Falha ao salvar automaticamente. Verifique sua conexão.">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "#f44336",
+                        fontSize: "0.8rem",
+                        cursor: "help",
+                      }}
+                    >
+                      <ErrorIcon sx={{fontSize: 16, mr: 0.5}} /> Erro ao salvar
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
+            )}
+
             <FormControlLabel
               control={
                 <Switch

@@ -37,6 +37,10 @@ import {
   InsertDriveFile as DocIcon,
   Delete as DeleteIcon,
   CloudUpload as UploadIcon,
+  PictureAsPdf as PdfIcon,
+  TableChart as ExcelIcon,
+  Slideshow as PptIcon,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -165,6 +169,78 @@ function GameModal() {
     } catch (error) {
       showNotification("Erro ao remover arquivo.", "error");
     }
+  };
+
+  // Helper para renderizar ícone ou thumbnail baseado no tipo de arquivo
+  const getFileIcon = (file) => {
+    const type = file.type?.toLowerCase() || "";
+    const name = file.name?.toLowerCase() || "";
+
+    // Imagem: Renderiza Thumbnail
+    if (
+      type.startsWith("image/") ||
+      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/)
+    ) {
+      return (
+        <Avatar
+          src={file.url}
+          variant="rounded"
+          sx={{width: 48, height: 48, mr: 1, border: "1px solid #e0e0e0"}}
+          imgProps={{style: {objectFit: "cover"}}}
+        >
+          <ImageIcon />
+        </Avatar>
+      );
+    }
+
+    // Documentos: Renderiza Ícone Específico
+    let Icon = DocIcon;
+    let color = "#757575";
+    let bg = "#f5f5f5";
+
+    if (type.includes("pdf") || name.endsWith(".pdf")) {
+      Icon = PdfIcon;
+      color = "#d32f2f"; // Vermelho
+      bg = "#ffebee";
+    } else if (
+      type.includes("sheet") ||
+      type.includes("excel") ||
+      type.includes("spreadsheet") ||
+      name.endsWith(".xls") ||
+      name.endsWith(".xlsx") ||
+      name.endsWith(".csv")
+    ) {
+      Icon = ExcelIcon;
+      color = "#2e7d32"; // Verde
+      bg = "#e8f5e9";
+    } else if (
+      type.includes("word") ||
+      type.includes("document") ||
+      name.endsWith(".doc") ||
+      name.endsWith(".docx")
+    ) {
+      Icon = SheetIcon; // Ícone de descrição/texto (Azul)
+      color = "#1976d2";
+      bg = "#e3f2fd";
+    } else if (
+      type.includes("presentation") ||
+      type.includes("powerpoint") ||
+      name.endsWith(".ppt") ||
+      name.endsWith(".pptx")
+    ) {
+      Icon = PptIcon;
+      color = "#f57c00"; // Laranja
+      bg = "#fff3e0";
+    }
+
+    return (
+      <Avatar
+        sx={{bgcolor: bg, color: color, width: 48, height: 48, mr: 1}}
+        variant="rounded"
+      >
+        <Icon />
+      </Avatar>
+    );
   };
 
   if (!selectedTable) return null;
@@ -314,11 +390,7 @@ function GameModal() {
                             )
                           }
                         >
-                          <ListItemAvatar>
-                            <Avatar sx={{bgcolor: "#e3f2fd", color: "#1976d2"}}>
-                              <DocIcon />
-                            </Avatar>
-                          </ListItemAvatar>
+                          <ListItemAvatar>{getFileIcon(file)}</ListItemAvatar>
                           <ListItemText
                             primary={
                               <a
@@ -328,7 +400,9 @@ function GameModal() {
                                 style={{
                                   textDecoration: "none",
                                   color: "#333",
-                                  fontWeight: 500,
+                                  fontWeight: 600,
+                                  display: "block",
+                                  wordBreak: "break-word",
                                 }}
                               >
                                 {file.name}
