@@ -26,6 +26,7 @@ import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
 import TableListModal from "../Table/TableListModal";
 import TableDetailsModal from "../Table/TableDetailsModal";
+import GameModal from "../Table/GameModal";
 
 const StyledAppBar = styled(AppBar)`
   && {
@@ -90,6 +91,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     hideNotification,
     selectedTable,
     toggleTableDetailsModal,
+    toggleGameModal,
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -146,7 +148,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                 {selectedTable && (
                   <HeaderButton
                     startIcon={<GameIcon />}
-                    onClick={toggleTableDetailsModal}
+                    onClick={toggleGameModal}
                     sx={{mr: 1}}
                   >
                     Jogo
@@ -190,6 +192,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       <CreateTableModal />
       <TableListModal />
       <TableDetailsModal />
+      <GameModal />
 
       {/* Notificações Globais */}
       <Snackbar

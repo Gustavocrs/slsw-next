@@ -13,8 +13,6 @@ import {
   DialogActions,
   TextField,
   Button,
-  useMediaQuery,
-  useTheme,
   IconButton,
   Box,
   Typography,
@@ -45,8 +43,6 @@ import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 
 function TableDetailsModal() {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const {
     tableDetailsModalOpen,
     toggleTableDetailsModal,
@@ -206,11 +202,11 @@ function TableDetailsModal() {
     <Dialog
       open={tableDetailsModalOpen}
       onClose={toggleTableDetailsModal}
-      fullScreen={fullScreen}
+      fullScreen
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: {borderRadius: fullScreen ? 0 : 3},
+        sx: {borderRadius: 0},
       }}
     >
       <DialogTitle

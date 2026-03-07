@@ -13,8 +13,6 @@ import {
   DialogActions,
   TextField,
   Button,
-  useMediaQuery,
-  useTheme,
   IconButton,
   Box,
   Typography,
@@ -36,8 +34,6 @@ import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 
 function CreateTableModal() {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md")); // Tela cheia no mobile
   const {
     tableCreateModalOpen,
     toggleTableCreateModal,
@@ -121,13 +117,13 @@ function CreateTableModal() {
     <Dialog
       open={tableCreateModalOpen}
       onClose={toggleTableCreateModal}
-      fullScreen={fullScreen}
+      fullScreen
       maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: fullScreen ? 0 : 3,
-          padding: fullScreen ? 0 : 1,
+          borderRadius: 0,
+          padding: 0,
         },
       }}
     >

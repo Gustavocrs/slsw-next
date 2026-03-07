@@ -94,6 +94,7 @@ export const useUIStore = create((set) => ({
   tableCreateModalOpen: false, // Modal de Criar
   tableListModalOpen: false, // Modal de Listar (Dashboard)
   tableDetailsModalOpen: false, // Modal de Detalhes/Config
+  gameModalOpen: false, // Modal de Jogo (Novo)
   selectedTable: null, // Mesa selecionada para ver detalhes
   tablesUpdated: 0, // Timestamp para forçar refresh da lista
 
@@ -107,6 +108,8 @@ export const useUIStore = create((set) => ({
     set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
   toggleTableDetailsModal: () =>
     set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
+  toggleGameModal: () =>
+    set((state) => ({gameModalOpen: !state.gameModalOpen})),
 
   setSelectedTable: (table) => set({selectedTable: table}),
   notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),

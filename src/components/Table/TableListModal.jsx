@@ -18,8 +18,6 @@ import {
   CardContent,
   Chip,
   Divider,
-  useMediaQuery,
-  useTheme,
   CircularProgress,
 } from "@mui/material";
 import {
@@ -37,8 +35,6 @@ import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 
 function TableListModal() {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const {
     tableListModalOpen,
     toggleTableListModal,
@@ -127,7 +123,7 @@ function TableListModal() {
     <Dialog
       open={tableListModalOpen}
       onClose={toggleTableListModal}
-      fullScreen={fullScreen}
+      fullScreen
       maxWidth="md"
       fullWidth
     >
@@ -169,7 +165,7 @@ function TableListModal() {
             <Typography>Você ainda não participa de nenhuma mesa.</Typography>
           </Box>
         ) : (
-          <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
+          <Box sx={{display: "flex", flexWrap: "wrap", gap: 2}}>
             {tables.map((table) => {
               const isGM = table.gmId === user?.uid;
               const isInvited = table.invites?.includes(user?.email);
@@ -181,6 +177,11 @@ function TableListModal() {
                   sx={{
                     borderRadius: 3,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    width: {
+                      xs: "100%",
+                      sm: "calc(50% - 8px)",
+                      md: "calc(33.33% - 11px)",
+                    },
                   }}
                   component={Button} // Torna o card clicável visualmente
                   onClick={() => handleTableClick(table)}
@@ -192,7 +193,7 @@ function TableListModal() {
                     padding: 0,
                   }}
                 >
-                  <CardContent>
+                  <CardContent sx={{width: "100%"}}>
                     <Box
                       sx={{
                         display: "flex",
@@ -222,7 +223,14 @@ function TableListModal() {
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{mb: 2}}
+                      sx={{
+                        mb: 2,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        minHeight: "40px",
+                      }}
                     >
                       {table.description || "Sem descrição."}
                     </Typography>
@@ -266,71 +274,21 @@ function TableListModal() {
 
                     <Divider sx={{my: 2}} />
 
-                    {/* Seção de Jogadores / Convites */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mb: 1,
-                        }}
-                      >
-                        <PersonIcon fontSize="small" /> Jogadores & Convites
-                      </Typography>
-
-                      <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
-                        {/* Jogadores Aceitos */}
-                        {(table.players || []).map((player) => (
-                          <Chip
-                            key={player.uid}
-                            icon={<PersonIcon fontSize="small" />}
-                            label={player.name}
-                            variant="filled"
-                            size="small"
-                            color="primary"
-                          />
-                        ))}
-
-                        {/* Lista de Convites Pendentes */}
-                        {(table.invites || []).map((email) => (
-                          <Chip
-                            key={email}
-                            icon={<EmailIcon fontSize="small" />}
-                            label={email}
-                            variant="outlined"
-                            size="small"
-                            color="warning"
-                            title="Convite Pendente"
-                            onDelete={
-                              isGM
-                                ? (e) => handleResendInvite(e, table, email)
-                                : undefined
-                            }
-                            deleteIcon={
-                              <Box
-                                component="span"
-                                sx={{
-                                  display: "flex",
-                                  borderRadius: "50%",
-                                  p: 0.5,
-                                  "&:hover": {bgcolor: "rgba(0,0,0,0.1)"},
-                                }}
-                                title="Reenviar E-mail"
-                              >
-                                <SendIcon style={{fontSize: 14}} />
-                              </Box>
-                            }
-                          />
-                        ))}
-
-                        {!table.invites?.length && !table.players?.length && (
-                          <Typography variant="caption" color="text.secondary">
-                            Nenhum participante.
-                          </Typography>
-                        )}
-                      </Box>
+                    {/* Resumo de Participantes */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        color: "text.secondary",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      <PersonIcon fontSize="small" />
+                      <span>{table.players?.length || 0} Jogadores</span>
+                      {table.invites?.length > 0 && (
+                        <span>• {table.invites.length} Convites</span>
+                      )}
                     </Box>
                   </CardContent>
                 </Card>

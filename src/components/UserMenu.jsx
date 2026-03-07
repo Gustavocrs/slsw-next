@@ -8,12 +8,14 @@
 import {useState, useEffect} from "react";
 // CORREÇÃO: Importando do lugar certo (hooks)
 import {useAuth} from "@/hooks";
+import {useUIStore} from "@/stores/characterStore";
 import {IconButton, Menu, MenuItem, Avatar, Typography} from "@mui/material";
-import {Logout} from "@mui/icons-material";
+import {Logout, TableRestaurant} from "@mui/icons-material";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
   const {user, logoutUser} = useAuth();
+  const {toggleTableListModal} = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -29,6 +31,11 @@ export default function UserMenu() {
     handleClose();
     await logoutUser();
     window.location.reload();
+  };
+
+  const handleOpenTables = () => {
+    handleClose();
+    toggleTableListModal();
   };
 
   // Tenta alterar levemente a URL (tamanho) para evitar cache de erro 429 do Google
@@ -91,6 +98,10 @@ export default function UserMenu() {
           <Typography variant="body2" color="text.secondary">
             {displayName}
           </Typography>
+        </MenuItem>
+        <MenuItem onClick={handleOpenTables}>
+          <TableRestaurant fontSize="small" sx={{mr: 1}} />
+          Minhas Mesas
         </MenuItem>
         <MenuItem onClick={handleLogout}>
           <Logout fontSize="small" sx={{mr: 1}} />
