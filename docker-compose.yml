@@ -10,5 +10,5 @@ services:
     environment:
       - NODE_ENV=production
     # Se tiver variáveis de ambiente, descomente abaixo:
-    # env_file:
-    #   - .env
+    env_file:
+      - .env.local
