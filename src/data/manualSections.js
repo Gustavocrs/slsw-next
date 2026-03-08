@@ -857,7 +857,7 @@ export const manualSections = [
       <p>
         O Guerreiro é o pilar da defesa em qualquer grupo. Ele enfrenta os piores inimigos, absorve o máximo de dano e cria espaço para que seus aliados atuem. Um Guerreiro versátil pode ser tão letal solo quanto em equipe.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Força d8+, Vigor d8+</p>
+      <p><strong>Atributos Recomendados:</strong> Força d8+, Vigor d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Impacto Rúnico, Quebra-Defesas, Golpe Sísmico, Corpo Indomável, Avatar do Impacto</p>
       <p><strong>Perícias Chave:</strong> Lutar, Atletismo</p>
 
@@ -868,7 +868,7 @@ export const manualSections = [
       <p>
         O Assassino aproveita posicionamento e oportunidades. Ele não é tão durável quanto o Guerreiro, mas pode eliminar um inimigo inteiro em um turno bem executado. Perfeito para quem ama explorar as mecânicas de furtividade e dano crítico.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Agilidade d10+, Esperteza d6+</p>
+      <p><strong>Atributos Recomendados:</strong> Agilidade d8+, Esperteza d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Lâmina Sombria, Passo Silencioso, Golpe de Ponto Vital, Assassino, Vulto</p>
       <p><strong>Perícias Chave:</strong> Furtividade, Lutar, Atirar</p>
 
@@ -881,7 +881,7 @@ export const manualSections = [
       </p>
       <p><strong>Atributos Recomendados:</strong> Espírito d8+, Esperteza d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Escrita Rúnica, Amplificação Arcana, Campo Rúnico, Catalisador Vivo, Arcano Absoluto</p>
-      <p><strong>Perícias Chave:</strong> Ocultismo, Concentração</p>
+      <p><strong>Perícias Chave:</strong> Conhecimento (Ocultismo), Conjuraração</p>
 
       <h4>4. O Paladino</h4>
       <p>
@@ -890,9 +890,9 @@ export const manualSections = [
       <p>
         O Paladino é o guardião do grupo. Ele pode curar, proteger e inspirar aliados simultaneamente. Em equipes, é absolutamente vital. Solo, oferece sobrevivência estendida através de táticas defensivas.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Vigor d8+, Espírito d10+</p>
+      <p><strong>Atributos Recomendados:</strong> Vigor d6+, Espírito d8+</p>
       <p><strong>Vantagens Recomendadas:</strong> Cura Abençoada, Luz Purificadora, Aura Restauradora, Milagre Menor, Avatar da Luz</p>
-      <p><strong>Perícias Chave:</strong> Curar, Persuasão</p>
+      <p><strong>Perícias Chave:</strong> Cura, Persuadir</p>
 
       <h4>5. O Caçador de Sombra</h4>
       <p>
@@ -901,9 +901,9 @@ export const manualSections = [
       <p>
         O Caçador de Sombra é quase impossível de acertar. Ele se move nas beiradas da realidade, observa, ataca quando ninguém espera e desaparece. Perfeito para Dungeons que exigem sutileza e reconhecimento.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Agilidade d10+, Espírito d6+</p>
+      <p><strong>Atributos Recomendados:</strong> Agilidade d8+, Espírito d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Rastejar nas Sombras, Instinto Arcano, Compasso Sombrio, Passo Silencioso</p>
-      <p><strong>Perícias Chave:</strong> Furtividade, Percepção</p>
+      <p><strong>Perícias Chave:</strong> Furtividade, Perceber</p>
 
       <h4>6. O Invocador</h4>
       <p>
@@ -912,9 +912,9 @@ export const manualSections = [
       <p>
         O Invocador nunca está sozinho. Suas bestas são peças poderosas no tabuleiro. Ele comanda, estrategiza e deixa que seus aliados sobrenaturais façam o trabalho duro enquanto ele planeja.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Espírito d10+, Esperteza d6+</p>
+      <p><strong>Atributos Recomendados:</strong> Espírito d8+, Esperteza d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Elo Sombrio, Comando Duplo, Horda Viva, Entidade Maior, Senhor das Criaturas</p>
-      <p><strong>Perícias Chave:</strong> Ocultismo, Vínculo (Controle de Bestas)</p>
+      <p><strong>Perícias Chave:</strong> Conhecimento (Ocultismo), Conjuraração</p>
 
       <h4>7. O Berserker</h4>
       <p>
@@ -923,8 +923,8 @@ export const manualSections = [
       <p>
         O Berserker é risco e recompensa em forma humana. Ele entra em um estado de fúria onde seus golpes são mais mortíferos, mas mais previsíveis. Não é para os cautelosos, mas sim para quem quer destruir tudo rapidamente.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Força d12+, Vigor d8+</p>
-      <p><strong>Vantagens Recomendadas:</strong> Frenesi, Brutamontes, Durão, Golpe Cortante, Furor de Guerra</p>
+      <p><strong>Atributos Recomendados:</strong> Força d10+, Vigor d6+</p>
+      <p><strong>Vantagens Recomendadas:</strong> Frenesi, Brutamontes, Duro de Matar, Golpe Cortante, Furor de Guerra</p>
       <p><strong>Perícias Chave:</strong> Lutar, Atletismo</p>
 
       <h4>8. O Espadachim</h4>
@@ -934,9 +934,9 @@ export const manualSections = [
       <p>
         O Espadachim flui como água. Ele esquiva, contra-ataca, aproveita momentum. Cada golpe é finamente calculado. Tecnicamente menos durável que o Guerreiro, mas infinitamente mais gracioso e mortífero no alcance próximo.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Agilidade d12+, Força d6+</p>
-      <p><strong>Vantagens Recomendadas:</strong> Reflexo Ancestral, Contragolpe, Lâmina Sombria, Arremesso Perfeito</p>
-      <p><strong>Perícias Chave:</strong> Lutar, Esquiva</p>
+      <p><strong>Atributos Recomendados:</strong> Agilidade d10+, Força d6+</p>
+      <p><strong>Vantagens Recomendadas:</strong> Reflexo Ancestral, Contra-Ataque, Lâmina Sombria, Arremesso Perfeito</p>
+      <p><strong>Perícias Chave:</strong> Lutar, Atletismo</p>
 
       <h4>9. O Explorador</h4>
       <p>
@@ -945,9 +945,9 @@ export const manualSections = [
       <p>
         O Explorador é o arqueólogo do mundo de Portais. Ele encontra tesouro onde outros veem apenas ruínas, evita armadilhas que matariam qualquer um, e mapeia Dungeons secretas. Ganho de recursos excepcional.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Esperteza d10+, Percepção d8+</p>
+      <p><strong>Atributos Recomendados:</strong> Esperteza d8+, Vigor d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Percepção Aguçada, Instinto Arcano, Velocidade Guiada pela Mana, Domínio do Foco</p>
-      <p><strong>Perícias Chave:</strong> Procurar, Reparar, Ladinagem</p>
+      <p><strong>Perícias Chave:</strong> Investigar, Consertar, Ladinagem</p>
 
       <h4>10. O Campeão</h4>
       <p>
@@ -956,9 +956,9 @@ export const manualSections = [
       <p>
         O Campeão é o herói verdadeiro. Seu simples ato de estar ali inspira confiança. Se ele cai, o grupo sente. Se ele se levanta triunfante, o grupo é encorajado ao combate final. A presença dele importa narrativamente.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Vontade d10+, Vigor d8+</p>
+      <p><strong>Atributos Recomendados:</strong> Espírito d8+, Vigor d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Caminho do Caçador Alfa, Furor de Guerra, Alma de Aço, Conduíte de Poder</p>
-      <p><strong>Perícias Chave:</strong> Liderança, Intimidação, Lutar</p>
+      <p><strong>Perícias Chave:</strong> Persuadir, Intimidar, Lutar</p>
 
       <h3>Criando um Personagem Multi-Arquétipo</h3>
 

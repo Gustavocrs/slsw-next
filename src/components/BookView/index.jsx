@@ -10,7 +10,7 @@ import styled from "styled-components";
 import {Paper, IconButton} from "@mui/material";
 import {Menu as MenuIcon} from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
-import {EDGES} from "@/lib/rpgEngine";
+import {EDGES, RANKS} from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
@@ -153,7 +153,11 @@ function BookView({onOpenSidebar}) {
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
           if (section.id === "vantagens-avancadas") {
             const slEdges = EDGES.filter((e) => e.source === "SL").sort(
-              (a, b) => a.name.localeCompare(b.name),
+              (a, b) => {
+                const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
+                if (rankDiff !== 0) return rankDiff;
+                return a.name.localeCompare(b.name);
+              },
             );
 
             const edgesHtml = `

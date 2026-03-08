@@ -183,6 +183,12 @@ export const EDGES = [
     description: "Dano desarmado For+d4; conta como Arma Natural.",
   },
   {
+    name: "Assassino",
+    rank: "Novato",
+    source: "SWADE",
+    description: "+2 no dano se atacar inimigo com carta de Iniciativa menor.",
+  },
+  {
     name: "Atirador de Elite",
     rank: "Experiente",
     source: "SWADE",
@@ -900,6 +906,24 @@ export const EDGES = [
     source: "SL",
     description: "Considerado tamanho +1 para resistência.",
   },
+  {
+    name: "Resistência às Runas",
+    rank: "Experiente",
+    source: "SL",
+    description: "+2 em testes contra efeitos sobrenaturais.",
+  },
+  {
+    name: "Reflexo Ancestral",
+    rank: "Experiente",
+    source: "SL",
+    description: "1x/turno, teste de Agilidade para reduzir dano à metade.",
+  },
+  {
+    name: "Presságio Minuto",
+    rank: "Experiente",
+    source: "SL",
+    description: "2x/sessão, role dois dados para concentração.",
+  },
 
   // Arquétipos
   {
@@ -1069,6 +1093,68 @@ export const EDGES = [
     rank: "Lendário",
     source: "SL",
     description: "Não cai inconsciente enquanto tiver Mana.",
+  },
+  // Arqueiro
+  {
+    name: "Disparo Rúnico",
+    rank: "Novato",
+    source: "SL",
+    description: "Gaste 1 Mana para dobrar alcance ou +1d6 dano.",
+  },
+  {
+    name: "Flecha Fantasma",
+    rank: "Experiente",
+    source: "SL",
+    description: "Ignora penalidades de cobertura e escudos.",
+  },
+  {
+    name: "Chuva de Mana",
+    rank: "Veterano",
+    source: "SL",
+    description: "Ataque em área (Pequeno) com dano da arma.",
+  },
+  {
+    name: "Olho do Predador",
+    rank: "Heroico",
+    source: "SL",
+    description: "+2 ataque contra alvos que se moveram.",
+  },
+  {
+    name: "A Morte Silenciosa",
+    rank: "Lendário",
+    source: "SL",
+    description: "Dano dobrado se o alvo não te viu.",
+  },
+  // Ladino
+  {
+    name: "Lâmina Sombria",
+    rank: "Novato",
+    source: "SL",
+    description: "Gaste 1 Mana para +1d6 dano se tiver vantagem.",
+  },
+  {
+    name: "Passo Silencioso",
+    rank: "Experiente",
+    source: "SL",
+    description: "Move-se furtivamente em velocidade total.",
+  },
+  {
+    name: "Golpe de Ponto Vital",
+    rank: "Veterano",
+    source: "SL",
+    description: "Gaste 2 Mana para ignorar Armadura em ataque furtivo.",
+  },
+  {
+    name: "Vulto",
+    rank: "Heroico",
+    source: "SL",
+    description: "-2 para ser atingido por ataques à distância.",
+  },
+  {
+    name: "Executor",
+    rank: "Lendário",
+    source: "SL",
+    description: "Ataques furtivos bem sucedidos são Críticos.",
   },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
