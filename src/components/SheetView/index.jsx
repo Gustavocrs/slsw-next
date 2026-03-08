@@ -1184,6 +1184,19 @@ function SheetView({
                       <div style={{fontSize: "0.65rem", color: "#555"}}>
                         PP: {m.pp} | {m.range}
                       </div>
+                      {m.description && (
+                        <div
+                          style={{
+                            fontSize: "0.6rem",
+                            color: "#666",
+                            fontStyle: "italic",
+                            marginTop: "2px",
+                            lineHeight: "1.1",
+                          }}
+                        >
+                          {m.description}
+                        </div>
+                      )}
                     </Box>
                   ))}
                   {(!character.magias || character.magias.length === 0) && (
