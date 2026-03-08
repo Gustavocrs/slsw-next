@@ -1,14 +1,13 @@
 services:
-  app:
-    container_name: slsw-next-app
+  slsw-api:
+    container_name: slsw-api
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    # Se tiver variáveis de ambiente, descomente abaixo:
     env_file:
       - .env.local
+    environment:
+      - NODE_ENV=production

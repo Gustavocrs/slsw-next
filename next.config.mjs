@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  output: "standalone", // Habilita o build otimizado para Docker
   reactCompiler: true,
   async headers() {
     return [
@@ -26,7 +26,6 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        // Aponte para onde seu backend está rodando (3001 ou URL da Vercel)
         destination: "https://slsw-next.vercel.app/api/:path*",
       },
     ];

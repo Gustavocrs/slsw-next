@@ -3,10 +3,8 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copia os arquivos de dependência
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 
-# Instala dependências baseado no gerenciador de pacotes detectado
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
@@ -20,10 +18,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Desabilita telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# Build da aplicação
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
@@ -31,7 +27,7 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Etapa 3: Runner (Imagem de Produção)
+# Etapa 3: Runner (Produção)
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -41,14 +37,12 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copia apenas o necessário para rodar
 COPY --from=builder /app/public ./public
 
-# Configura permissões para o cache do Next.js
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Copia o output standalone e estáticos
+# Copia o output standalone e arquivos estáticos
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -59,4 +53,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
+# O standalone gera um server.js que substitui o comando "next start"
 CMD ["node", "server.js"]
