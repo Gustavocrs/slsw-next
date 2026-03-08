@@ -33,10 +33,9 @@ if ! docker network ls | grep -q "$NETWORK_NAME"; then
 fi
 
 echo "--- [4/5] Reiniciando Serviço slsw ---"
-# Down sem remover volumes (-v) para preservar uploads locais se não estiverem mapeados externamente
-docker compose down
 
-# Build limpo para garantir que alterações no package.json sejam refletidas
+# Remove containers órfãos e força o build sem cache para evitar arquivos corrompidos
+docker compose down --remove-orphans
 docker compose build --no-cache
 docker compose up -d
 
