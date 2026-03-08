@@ -1,6 +1,6 @@
 services:
   slsw-api:
-    container_name: slsw-api
+    container_name: slsw
     build:
       context: .
       dockerfile: Dockerfile

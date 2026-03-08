@@ -26,7 +26,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://slsw-next.vercel.app/api/:path*",
+        destination: "https://slsw.systechdev.com.br/api/:path*",
       },
     ];
   },
