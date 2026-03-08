@@ -5,7 +5,6 @@
 # Senior FullStack Engineer Mode
 # ==============================================================================
 
-# Diretório dinâmico baseado no home do usuário Gustavo
 DIR_PROJETO="$HOME/projetos/slsw"
 BRANCH="main"
 NETWORK_NAME="slsw-network"
