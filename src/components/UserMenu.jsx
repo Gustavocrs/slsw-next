@@ -184,7 +184,7 @@ export default function UserMenu() {
         onClose={() => setSheetManagerOpen(false)}
         fullWidth
         maxWidth="sm"
-        fullScreen={isMobile}
+        fullScreen
       >
         <DialogTitle
           sx={{

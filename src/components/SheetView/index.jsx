@@ -128,6 +128,7 @@ const GridCard = ({
       boxShadow: retro
         ? "3px 3px 0 rgba(93, 64, 55, 0.4)"
         : "0 2px 4px rgba(0,0,0,0.05)",
+      color: retro ? "#3e2723" : "inherit",
       overflowY: "auto",
       height: "100%",
       position: "relative",
@@ -150,7 +151,7 @@ const GridCard = ({
       <h4
         style={{
           margin: "0 0 8px 0",
-          fontSize: retro ? "0.9rem" : "0.8rem",
+          fontSize: retro ? "1.1rem" : "1rem",
           fontWeight: retro ? 700 : 600,
           color: retro ? "#3e2723" : "#444",
           fontFamily: retro ? '"Times New Roman", serif' : "inherit",
@@ -696,18 +697,18 @@ function SheetView({
                     <Box key={a.l}>
                       <div
                         style={{
-                          fontSize: "0.6rem",
+                          fontSize: "0.8rem",
                           fontWeight: 600,
-                          color: "#666",
+                          color: retroMode ? "#5d4037" : "#666",
                         }}
                       >
                         {a.l}
                       </div>
                       <div
                         style={{
-                          fontSize: "0.9rem",
+                          fontSize: "1.2rem",
                           fontWeight: 700,
-                          color: "#2196f3",
+                          color: retroMode ? "#3e2723" : "#2196f3",
                         }}
                       >
                         {a.v || "d4"}
@@ -721,7 +722,7 @@ function SheetView({
                   <h4
                     style={{
                       margin: "0 0 8px 0",
-                      fontSize: "0.8rem",
+                      fontSize: "0.9rem",
                       fontWeight: 600,
                     }}
                   >
@@ -731,49 +732,55 @@ function SheetView({
                     sx={{
                       display: "flex",
                       justifyContent: "space-around",
-                      fontSize: "0.75rem",
+                      fontSize: "0.9rem",
                       textAlign: "center",
                     }}
                   >
                     <Box>
                       <div
                         style={{
-                          fontSize: "0.65rem",
-                          color: "#666",
+                          fontSize: "0.8rem",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         XP
                       </div>
-                      <strong style={{color: "#667eea"}}>
+                      <strong
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
+                      >
                         {character.xp || 0}
                       </strong>
                     </Box>
                     <Box>
                       <div
                         style={{
-                          fontSize: "0.65rem",
-                          color: "#666",
+                          fontSize: "0.8rem",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         Riqueza ($)
                       </div>
-                      <strong style={{color: "#667eea"}}>
+                      <strong
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
+                      >
                         ${character.riqueza || 0}
                       </strong>
                     </Box>
                     <Box>
                       <div
                         style={{
-                          fontSize: "0.65rem",
-                          color: "#666",
+                          fontSize: "0.8rem",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         Bênçãos
                       </div>
-                      <strong style={{color: "#667eea"}}>
+                      <strong
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
+                      >
                         {character.bencaos ?? 3}
                       </strong>
                     </Box>
@@ -799,24 +806,42 @@ function SheetView({
                   }}
                 >
                   <Box>
-                    <div style={{fontSize: "0.6rem"}}>Aparar</div>
-                    <div style={{fontWeight: "bold", color: "#d32f2f"}}>
+                    <div style={{fontSize: "0.8rem"}}>Aparar</div>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "1.1rem",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
+                      }}
+                    >
                       {parryBase +
                         (character.aparar_bonus || 0) +
                         armorParryBonus}
                     </div>
                   </Box>
                   <Box>
-                    <div style={{fontSize: "0.6rem"}}>Resist.</div>
-                    <div style={{fontWeight: "bold", color: "#d32f2f"}}>
+                    <div style={{fontSize: "0.8rem"}}>Resist.</div>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "1.1rem",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
+                      }}
+                    >
                       {toughnessBase +
                         (character.armadura_bonus || 0) +
                         armorDefenseBonus}
                     </div>
                   </Box>
                   <Box>
-                    <div style={{fontSize: "0.6rem"}}>Mov.</div>
-                    <div style={{fontWeight: "bold", color: "#d32f2f"}}>
+                    <div style={{fontSize: "0.8rem"}}>Mov.</div>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "1.1rem",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
+                      }}
+                    >
                       {character.movimento || 6}
                     </div>
                   </Box>
@@ -841,9 +866,9 @@ function SheetView({
                   >
                     <span
                       style={{
-                        fontSize: "0.6rem",
+                        fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: "#d97706",
+                        color: retroMode ? "#3e2723" : "#d97706",
                       }}
                     >
                       ABALADO
@@ -865,9 +890,9 @@ function SheetView({
                   >
                     <span
                       style={{
-                        fontSize: "0.6rem",
+                        fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: "#dc2626",
+                        color: retroMode ? "#3e2723" : "#dc2626",
                       }}
                     >
                       FERIMENTOS
@@ -900,9 +925,9 @@ function SheetView({
                   >
                     <span
                       style={{
-                        fontSize: "0.6rem",
+                        fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: "#7f1d1d",
+                        color: retroMode ? "#3e2723" : "#7f1d1d",
                       }}
                     >
                       FADIGA
@@ -949,18 +974,24 @@ function SheetView({
                       sx={{
                         display: "flex",
                         justifyContent: "space-between",
-                        fontSize: "0.75rem",
+                        fontSize: "0.9rem",
                         p: 0.5,
-                        background: "rgba(255,255,255,0.5)",
+                        background: retroMode
+                          ? "transparent"
+                          : "rgba(255,255,255,0.5)",
                         borderRadius: 1,
                       }}
                     >
                       <span>{s.name}</span>
-                      <strong style={{color: "#3f51b5"}}>{s.die}</strong>
+                      <strong
+                        style={{color: retroMode ? "#3e2723" : "#3f51b5"}}
+                      >
+                        {s.die}
+                      </strong>
                     </Box>
                   ))}
                   {(!character.pericias || character.pericias.length === 0) && (
-                    <span style={{fontSize: "0.7rem"}}>Nenhuma</span>
+                    <span style={{fontSize: "0.9rem"}}>Nenhuma</span>
                   )}
                 </Box>
               </GridCard>
@@ -978,7 +1009,7 @@ function SheetView({
                   <div
                     key={i}
                     style={{
-                      fontSize: "0.7rem",
+                      fontSize: "0.9rem",
                       display: "flex",
                       justifyContent: "space-between",
                     }}
@@ -999,7 +1030,7 @@ function SheetView({
                 retro={retroMode}
               >
                 {(character.armaduras || []).map((a, i) => (
-                  <div key={i} style={{fontSize: "0.7rem"}}>
+                  <div key={i} style={{fontSize: "0.9rem"}}>
                     {a.name} (+{a.defense || 0})
                   </div>
                 ))}
@@ -1025,7 +1056,7 @@ function SheetView({
               >
                 <Box sx={{display: "flex", flexDirection: "column", gap: 0.5}}>
                   {(character.vantagens || []).map((v, i) => (
-                    <div key={i} style={{fontSize: "0.7rem"}}>
+                    <div key={i} style={{fontSize: "0.9rem"}}>
                       • {v.name}
                     </div>
                   ))}
@@ -1039,7 +1070,7 @@ function SheetView({
                 sx={{height: "auto"}}
               >
                 {(character.complicacoes || []).map((c, i) => (
-                  <div key={i} style={{fontSize: "0.7rem"}}>
+                  <div key={i} style={{fontSize: "0.9rem"}}>
                     • {c.name}
                   </div>
                 ))}
@@ -1062,23 +1093,27 @@ function SheetView({
                     <div
                       style={{
                         fontWeight: "bold",
-                        fontSize: "0.75rem",
-                        color: "#6a1b9a",
+                        fontSize: "0.95rem",
+                        color: retroMode ? "#3e2723" : "#6a1b9a",
                       }}
                     >
                       {res.name} (Nv {res.nivel})
                     </div>
-                    <div style={{fontSize: "0.7rem"}}>PP: {res.custo}</div>
+                    <div style={{fontSize: "0.9rem"}}>PP: {res.custo}</div>
                     <div
-                      style={{fontSize: "0.65rem", color: "#555", marginTop: 2}}
+                      style={{
+                        fontSize: "0.8rem",
+                        color: retroMode ? "#5d4037" : "#555",
+                        marginTop: 2,
+                      }}
                     >
                       {res.descricao}
                     </div>
                     {res.limitacao && (
                       <div
                         style={{
-                          fontSize: "0.65rem",
-                          color: "#d32f2f",
+                          fontSize: "0.8rem",
+                          color: retroMode ? "#3e2723" : "#d32f2f",
                           marginTop: 1,
                         }}
                       >
@@ -1108,7 +1143,7 @@ function SheetView({
                 sx={{height: "auto"}}
               >
                 {(character.itens || []).map((item, i) => (
-                  <div key={i} style={{fontSize: "0.7rem"}}>
+                  <div key={i} style={{fontSize: "0.9rem"}}>
                     {item.name}
                   </div>
                 ))}
@@ -1121,7 +1156,7 @@ function SheetView({
                 sx={{height: "auto"}}
               >
                 {(character.espolios || []).map((item, i) => (
-                  <div key={i} style={{fontSize: "0.7rem"}}>
+                  <div key={i} style={{fontSize: "0.9rem"}}>
                     {item.name}
                   </div>
                 ))}
@@ -1174,21 +1209,28 @@ function SheetView({
                     <Box
                       key={i}
                       sx={{
-                        fontSize: "0.7rem",
+                        fontSize: "0.9rem",
                         p: 0.5,
-                        background: "rgba(255,255,255,0.5)",
+                        background: retroMode
+                          ? "transparent"
+                          : "rgba(255,255,255,0.5)",
                         borderRadius: 1,
                       }}
                     >
                       <div style={{fontWeight: "bold"}}>{m.name}</div>
-                      <div style={{fontSize: "0.65rem", color: "#555"}}>
+                      <div
+                        style={{
+                          fontSize: "0.8rem",
+                          color: retroMode ? "#5d4037" : "#555",
+                        }}
+                      >
                         PP: {m.pp} | {m.range}
                       </div>
                       {m.description && (
                         <div
                           style={{
-                            fontSize: "0.6rem",
-                            color: "#666",
+                            fontSize: "0.8rem",
+                            color: retroMode ? "#5d4037" : "#666",
                             fontStyle: "italic",
                             marginTop: "2px",
                             lineHeight: "1.1",
@@ -1200,7 +1242,7 @@ function SheetView({
                     </Box>
                   ))}
                   {(!character.magias || character.magias.length === 0) && (
-                    <span style={{fontSize: "0.7rem"}}>Nenhuma magia</span>
+                    <span style={{fontSize: "0.9rem"}}>Nenhuma magia</span>
                   )}
                 </Box>
               </GridCard>

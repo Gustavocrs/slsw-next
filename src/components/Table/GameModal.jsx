@@ -452,7 +452,7 @@ function GameModal() {
       <Dialog
         open={gameModalOpen}
         onClose={toggleGameModal}
-        fullScreen={isMobile}
+        fullScreen
         maxWidth="md"
         fullWidth
       >

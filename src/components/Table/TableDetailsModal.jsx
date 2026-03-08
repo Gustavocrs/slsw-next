@@ -320,7 +320,7 @@ function TableDetailsModal() {
     <Dialog
       open={tableDetailsModalOpen}
       onClose={toggleTableDetailsModal}
-      fullScreen={isMobile}
+      fullScreen
       maxWidth="sm"
       fullWidth
       PaperProps={{

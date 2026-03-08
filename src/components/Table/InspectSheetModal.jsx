@@ -52,7 +52,7 @@ function InspectSheetModal() {
 
   return (
     <Dialog
-      fullScreen={isMobile}
+      fullScreen
       fullWidth
       maxWidth="lg"
       open={inspectModalOpen}

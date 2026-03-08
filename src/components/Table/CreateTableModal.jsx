@@ -123,7 +123,7 @@ function CreateTableModal() {
     <Dialog
       open={tableCreateModalOpen}
       onClose={toggleTableCreateModal}
-      fullScreen={isMobile}
+      fullScreen
       maxWidth="sm"
       fullWidth
       PaperProps={{

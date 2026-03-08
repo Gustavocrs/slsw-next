@@ -129,7 +129,7 @@ function TableListModal() {
     <Dialog
       open={tableListModalOpen}
       onClose={toggleTableListModal}
-      fullScreen={isMobile}
+      fullScreen
       maxWidth="md"
       fullWidth
     >
