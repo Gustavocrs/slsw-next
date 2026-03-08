@@ -7,8 +7,8 @@
 
 import React from "react";
 import styled from "styled-components";
-import {Paper, IconButton} from "@mui/material";
-import {Menu as MenuIcon} from "@mui/icons-material";
+import {Paper, IconButton, TextField, InputAdornment, Box} from "@mui/material";
+import {Menu as MenuIcon, Search as SearchIcon} from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
 import {EDGES, RANKS} from "@/lib/rpgEngine";
 
@@ -141,6 +141,8 @@ const SectionContent = styled.div`
 `;
 
 function BookView({onOpenSidebar}) {
+  const [searchTerm, setSearchTerm] = React.useState("");
+
   return (
     <>
       <MenuButton onClick={onOpenSidebar}>
@@ -148,17 +150,59 @@ function BookView({onOpenSidebar}) {
       </MenuButton>
 
       <BookContainer>
+        <Box sx={{mb: 4}}>
+          <TextField
+            fullWidth
+            placeholder="Pesquisar no manual (regras, vantagens, itens)..."
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              backgroundColor: "#f9f9f9",
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+              },
+            }}
+          />
+        </Box>
+
         {/* SEÇÕES DO LIVRO - Carregadas do manualSections */}
         {manualSections.map((section) => {
+          const lowerTerm = searchTerm.toLowerCase();
+
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
           if (section.id === "vantagens-avancadas") {
-            const slEdges = EDGES.filter((e) => e.source === "SL").sort(
+            let slEdges = EDGES.filter((e) => e.source === "SL").sort(
               (a, b) => {
                 const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
                 if (rankDiff !== 0) return rankDiff;
                 return a.name.localeCompare(b.name);
               },
             );
+
+            // Filtro dinâmico para as vantagens
+            if (searchTerm) {
+              const filteredEdges = slEdges.filter(
+                (e) =>
+                  e.name.toLowerCase().includes(lowerTerm) ||
+                  e.description.toLowerCase().includes(lowerTerm) ||
+                  e.rank.toLowerCase().includes(lowerTerm),
+              );
+
+              if (filteredEdges.length > 0) {
+                slEdges = filteredEdges;
+              } else if (!section.title.toLowerCase().includes(lowerTerm)) {
+                // Se não achou vantagens e o título da seção não bate, esconde a seção
+                return null;
+              }
+            }
 
             const edgesHtml = `
               <p>As Vantagens Avançadas representam técnicas raras, mutações do Despertar ou domínio refinado da Mana. Elas são exclusivas do cenário <strong>SL Medieval</strong> e substituem vantagens genéricas do livro base.</p>
@@ -178,7 +222,7 @@ function BookView({onOpenSidebar}) {
                       .map(
                         (edge) => `
                       <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px; font-weight: bold; color: #00838f;">${edge.name}</td>
+                        <td style="padding: 10px; color: #333;">${edge.name}</td>
                         <td style="padding: 10px;">
                           <span style="font-size: 0.75em; background: #e0f7fa; padding: 2px 8px; border-radius: 12px; color: #006064; text-transform: uppercase; font-weight: bold; white-space: nowrap;">
                             ${edge.rank}
@@ -200,6 +244,16 @@ function BookView({onOpenSidebar}) {
                 <SectionContent dangerouslySetInnerHTML={{__html: edgesHtml}} />
               </section>
             );
+          }
+
+          // Filtro padrão para seções de texto
+          if (searchTerm) {
+            if (
+              !section.title.toLowerCase().includes(lowerTerm) &&
+              !section.content.toLowerCase().includes(lowerTerm)
+            ) {
+              return null;
+            }
           }
 
           return (

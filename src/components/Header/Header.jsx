@@ -22,7 +22,6 @@ import {
   Google as GoogleIcon,
   Menu as MenuIcon,
   SportsEsports as GameIcon,
-  Print as PrintIcon,
 } from "@mui/icons-material";
 import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
@@ -199,17 +198,6 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
 
                 {(currentView || viewMode) === "sheet" && (
                   <>
-                    <HeaderButton
-                      startIcon={<PrintIcon />}
-                      onClick={() => window.print()}
-                      sx={{
-                        mr: 1,
-                        background: "rgba(255, 255, 255, 0.2)",
-                        "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
-                      }}
-                    >
-                      PDF
-                    </HeaderButton>
                     <HeaderButton
                       startIcon={<SaveIcon />}
                       onClick={handleSave}

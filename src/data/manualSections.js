@@ -923,7 +923,7 @@ export const manualSections = [
       <p>
         O Berserker é risco e recompensa em forma humana. Ele entra em um estado de fúria onde seus golpes são mais mortíferos, mas mais previsíveis. Não é para os cautelosos, mas sim para quem quer destruir tudo rapidamente.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Força d10+, Vigor d6+</p>
+      <p><strong>Atributos Recomendados:</strong> Força d8+, Vigor d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Frenesi, Brutamontes, Duro de Matar, Golpe Cortante, Furor de Guerra</p>
       <p><strong>Perícias Chave:</strong> Lutar, Atletismo</p>
 
@@ -934,7 +934,7 @@ export const manualSections = [
       <p>
         O Espadachim flui como água. Ele esquiva, contra-ataca, aproveita momentum. Cada golpe é finamente calculado. Tecnicamente menos durável que o Guerreiro, mas infinitamente mais gracioso e mortífero no alcance próximo.
       </p>
-      <p><strong>Atributos Recomendados:</strong> Agilidade d10+, Força d6+</p>
+      <p><strong>Atributos Recomendados:</strong> Agilidade d8+, Força d6+</p>
       <p><strong>Vantagens Recomendadas:</strong> Reflexo Ancestral, Contra-Ataque, Lâmina Sombria, Arremesso Perfeito</p>
       <p><strong>Perícias Chave:</strong> Lutar, Atletismo</p>
 

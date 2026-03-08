@@ -17,7 +17,7 @@ import {
   useTheme,
   Button,
 } from "@mui/material";
-import {Close as CloseIcon, Print as PrintIcon} from "@mui/icons-material";
+import {Close as CloseIcon} from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import SheetView from "@/components/SheetView";
 
@@ -79,13 +79,6 @@ function InspectSheetModal() {
           <Typography sx={{ml: 2, flex: 1}} variant="h6" component="div">
             Ficha de {localChar.nome || "Personagem"}
           </Typography>
-          <Button
-            color="inherit"
-            startIcon={<PrintIcon />}
-            onClick={() => window.print()}
-          >
-            Imprimir
-          </Button>
         </Toolbar>
       </AppBar>
       <SheetView character={localChar} actions={actions} />
