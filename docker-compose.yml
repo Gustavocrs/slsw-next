@@ -1,11 +1,15 @@
 services:
   slsw:
+<<<<<<< Updated upstream
     build: .
     image: slsw
+=======
+>>>>>>> Stashed changes
     container_name: slsw
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     environment:
+<<<<<<< Updated upstream
       - PORT=${PORT:-3000}
       - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
       - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
@@ -23,3 +27,6 @@ services:
 networks:
   slsw-network:
     external: true
+=======
+      - NODE_ENV=production
+>>>>>>> Stashed changes
