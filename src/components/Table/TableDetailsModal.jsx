@@ -156,42 +156,44 @@ function TableDetailsModal() {
       const newInvites = invites.filter((email) => !oldInvites.includes(email));
 
       if (newInvites.length > 0) {
-        await Promise.all(
-          newInvites.map((email) =>
-            APIService.sendTableInvite(
-              selectedTable._id,
-              email,
-              selectedTable.gmName,
-              tableName,
-            ),
-          ),
-        );
+        // Enviar sequencialmente para evitar Rate Limit (429)
+        for (const email of newInvites) {
+          await APIService.sendTableInvite(
+            selectedTable._id,
+            email,
+            selectedTable.gmName,
+            tableName,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
       }
 
-      // Enviar e-mail de atualização para TODOS os participantes (Jogadores + Convidados)
+      // Enviar e-mail de atualização para TODOS os participantes (Jogadores + Convidados + GM)
       // se não for apenas uma adição de convite (já tratado acima)
       const allParticipants = [
         ...(selectedTable.players || []).map((p) => p.email),
         ...(selectedTable.invites || []),
+        user.email,
       ];
-      // Remove duplicatas e o próprio GM se estiver na lista
+      // Remove duplicatas
       const uniqueEmails = [...new Set(allParticipants)].filter(
-        (e) => e !== user.email && !newInvites.includes(e),
+        (e) => !newInvites.includes(e),
       );
 
       if (uniqueEmails.length > 0) {
         const updateDetails = `Novas instruções: ${description}<br/>Próxima Sessão: ${new Date(nextSession).toLocaleString()}`;
-        await Promise.all(
-          uniqueEmails.map((email) =>
-            APIService.sendTableUpdate(
-              selectedTable._id,
-              email,
-              selectedTable.gmName,
-              tableName,
-              updateDetails,
-            ),
-          ),
-        );
+
+        // Enviar sequencialmente para evitar Rate Limit (429)
+        for (const email of uniqueEmails) {
+          await APIService.sendTableUpdate(
+            selectedTable._id,
+            email,
+            selectedTable.gmName,
+            tableName,
+            updateDetails,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
       }
 
       // Atualizar a mesa selecionada no store para refletir as mudanças imediatamente

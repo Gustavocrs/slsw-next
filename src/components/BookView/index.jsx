@@ -10,6 +10,7 @@ import styled from "styled-components";
 import {Paper, IconButton} from "@mui/material";
 import {Menu as MenuIcon} from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
+import {EDGES} from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
@@ -148,14 +149,64 @@ function BookView({onOpenSidebar}) {
 
       <BookContainer>
         {/* SEÇÕES DO LIVRO - Carregadas do manualSections */}
-        {manualSections.map((section) => (
-          <section key={section.id} id={section.id}>
-            <SectionTitle>{section.title}</SectionTitle>
-            <SectionContent
-              dangerouslySetInnerHTML={{__html: section.content}}
-            />
-          </section>
-        ))}
+        {manualSections.map((section) => {
+          // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
+          if (section.id === "vantagens-avancadas") {
+            const slEdges = EDGES.filter((e) => e.source === "SL").sort(
+              (a, b) => a.name.localeCompare(b.name),
+            );
+
+            const edgesHtml = `
+              <p>As Vantagens Avançadas representam técnicas raras, mutações do Despertar ou domínio refinado da Mana. Elas são exclusivas do cenário <strong>SL Medieval</strong> e substituem vantagens genéricas do livro base.</p>
+              <p>Cada Vantagem possui um <strong>pré-requisito de Rank</strong>. O Mestre pode impor requisitos narrativos adicionais.</p>
+              
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 600px;">
+                  <thead>
+                    <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                      <th style="padding: 12px; text-align: left; color: #333;">Nome</th>
+                      <th style="padding: 12px; text-align: left; color: #333; width: 100px;">Rank</th>
+                      <th style="padding: 12px; text-align: left; color: #333;">Descrição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${slEdges
+                      .map(
+                        (edge) => `
+                      <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px; font-weight: bold; color: #00838f;">${edge.name}</td>
+                        <td style="padding: 10px;">
+                          <span style="font-size: 0.75em; background: #e0f7fa; padding: 2px 8px; border-radius: 12px; color: #006064; text-transform: uppercase; font-weight: bold; white-space: nowrap;">
+                            ${edge.rank}
+                          </span>
+                        </td>
+                        <td style="padding: 10px; font-size: 0.95rem; color: #555;">${edge.description}</td>
+                      </tr>
+                    `,
+                      )
+                      .join("")}
+                  </tbody>
+                </table>
+              </div>
+            `;
+
+            return (
+              <section key={section.id} id={section.id}>
+                <SectionTitle>{section.title}</SectionTitle>
+                <SectionContent dangerouslySetInnerHTML={{__html: edgesHtml}} />
+              </section>
+            );
+          }
+
+          return (
+            <section key={section.id} id={section.id}>
+              <SectionTitle>{section.title}</SectionTitle>
+              <SectionContent
+                dangerouslySetInnerHTML={{__html: section.content}}
+              />
+            </section>
+          );
+        })}
       </BookContainer>
     </>
   );

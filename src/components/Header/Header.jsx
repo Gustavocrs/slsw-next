@@ -22,6 +22,7 @@ import {
   Google as GoogleIcon,
   Menu as MenuIcon,
   SportsEsports as GameIcon,
+  Print as PrintIcon,
 } from "@mui/icons-material";
 import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
@@ -37,6 +38,9 @@ const StyledAppBar = styled(AppBar)(({theme}) => ({
   background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
   zIndex: 1200,
+  "@media print": {
+    display: "none",
+  },
 }));
 
 const HeaderContent = styled(Toolbar)(({theme}) => ({
@@ -194,18 +198,31 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                 </HeaderButton>
 
                 {(currentView || viewMode) === "sheet" && (
-                  <HeaderButton
-                    startIcon={<SaveIcon />}
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    color="secondary"
-                    sx={{
-                      background: "rgba(255, 255, 255, 0.2)",
-                      "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
-                    }}
-                  >
-                    {isSaving ? "..." : "Salvar"}
-                  </HeaderButton>
+                  <>
+                    <HeaderButton
+                      startIcon={<PrintIcon />}
+                      onClick={() => window.print()}
+                      sx={{
+                        mr: 1,
+                        background: "rgba(255, 255, 255, 0.2)",
+                        "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
+                      }}
+                    >
+                      PDF
+                    </HeaderButton>
+                    <HeaderButton
+                      startIcon={<SaveIcon />}
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      color="secondary"
+                      sx={{
+                        background: "rgba(255, 255, 255, 0.2)",
+                        "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
+                      }}
+                    >
+                      {isSaving ? "..." : "Salvar"}
+                    </HeaderButton>
+                  </>
                 )}
               </>
             )}

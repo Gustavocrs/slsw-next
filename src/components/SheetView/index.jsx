@@ -62,6 +62,9 @@ const TabsPaper = styled(Paper)(({theme}) => ({
   marginBottom: "12px",
   borderRadius: "12px",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+  "@media print": {
+    display: "none",
+  },
 }));
 
 const TabStyled = styled(Tab)(({theme}) => ({
@@ -144,6 +147,13 @@ const GridCard = ({
             pointerEvents: "none",
           }
         : {},
+      "@media print": {
+        overflow: "visible",
+        height: "auto",
+        boxShadow: "none",
+        border: "1px solid #000",
+        breakInside: "avoid",
+      },
       ...sx,
     }}
   >
@@ -612,6 +622,7 @@ function SheetView({
             )}
 
             <FormControlLabel
+              sx={{"@media print": {display: "none"}}}
               control={
                 <Switch
                   checked={retroMode}

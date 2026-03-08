@@ -12,7 +12,7 @@ export async function POST(request) {
           <h2 style="color: #667eea;">🏰 Nova Mesa: ${tableName}</h2>
           <p>O GM <strong>${gmName}</strong> convidou você para participar do jogo.</p>
           <p>Acesse o sistema Solo Leveling RPG para ver seus convites e vincular sua ficha:</p>
-          <p><a href="https://slsw.systechdev.com.br" style="color: #667eea; font-weight: bold;">https://slsw.systechdev.com.br</a></p>
+          <p><a href="https://slsw-next.vercel.app/" style="color: #667eea; font-weight: bold;">https://slsw.systechdev.com.br</a></p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;"><em>Solo Leveling System</em></p>
         </div>

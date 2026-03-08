@@ -22,6 +22,9 @@ const DrawerStyled = styled(Drawer)(({theme}) => ({
   "& .MuiDrawer-paper": {
     width: "280px",
     background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+    "@media print": {
+      display: "none",
+    },
   },
 }));
 

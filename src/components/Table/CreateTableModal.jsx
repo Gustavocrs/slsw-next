@@ -91,18 +91,20 @@ function CreateTableModal() {
 
       const newTable = await APIService.createTable(tableData);
 
-      // Enviar convites por email
-      if (invites.length > 0) {
-        await Promise.all(
-          invites.map((email) =>
-            APIService.sendTableInvite(
-              newTable._id,
-              email,
-              user.displayName,
-              tableName,
-            ),
-          ),
-        );
+      // Enviar convites por email (incluindo cópia para o GM)
+      const emailsToSend = [...new Set([...invites, user.email])];
+
+      if (emailsToSend.length > 0) {
+        // Enviar sequencialmente para evitar Rate Limit (429)
+        for (const email of emailsToSend) {
+          await APIService.sendTableInvite(
+            newTable._id,
+            email,
+            user.displayName,
+            tableName,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
       }
 
       // Limpar form e fechar
