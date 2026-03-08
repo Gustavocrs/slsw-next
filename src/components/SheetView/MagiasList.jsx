@@ -112,12 +112,21 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
           )}
           renderOption={(props, option) => {
             const {key, ...optionProps} = props;
+            console.log("Magia renderizada:", option);
             return (
               <li key={key} {...optionProps}>
                 <Box>
                   <Typography variant="body2" sx={{fontWeight: 600}}>
                     {option.name} ({option.rank})
                   </Typography>
+                  {option.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{fontSize: "0.8rem", color: "#555", my: 0.5}}
+                    >
+                      {option.description}
+                    </Typography>
+                  )}
                   <Typography
                     variant="caption"
                     color="text.secondary"

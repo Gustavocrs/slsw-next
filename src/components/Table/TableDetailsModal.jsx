@@ -30,6 +30,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -70,6 +72,9 @@ function TableDetailsModal() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [invites, setInvites] = useState([]);
   const [myCharacters, setMyCharacters] = useState([]);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const isGM = user && selectedTable && user.uid === selectedTable.gmId;
   const isPlayer = user && selectedTable?.playerIds?.includes(user.uid);
@@ -315,7 +320,7 @@ function TableDetailsModal() {
     <Dialog
       open={tableDetailsModalOpen}
       onClose={toggleTableDetailsModal}
-      fullScreen
+      fullScreen={isMobile}
       maxWidth="sm"
       fullWidth
       PaperProps={{

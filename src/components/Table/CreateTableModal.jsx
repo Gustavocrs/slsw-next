@@ -21,6 +21,8 @@ import {
   Switch,
   FormControlLabel,
   InputAdornment,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -54,6 +56,9 @@ function CreateTableModal() {
   // Invite System
   const [inviteEmail, setInviteEmail] = useState("gustavocrsilva.ti@gmail.com");
   const [invites, setInvites] = useState([]);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleAddInvite = () => {
     const email = inviteEmail.trim().toLowerCase();
@@ -118,7 +123,7 @@ function CreateTableModal() {
     <Dialog
       open={tableCreateModalOpen}
       onClose={toggleTableCreateModal}
-      fullScreen
+      fullScreen={isMobile}
       maxWidth="sm"
       fullWidth
       PaperProps={{

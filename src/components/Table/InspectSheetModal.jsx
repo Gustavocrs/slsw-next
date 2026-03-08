@@ -13,6 +13,8 @@ import {
   IconButton,
   Typography,
   Slide,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {Close as CloseIcon} from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
@@ -26,6 +28,9 @@ function InspectSheetModal() {
   const {inspectModalOpen, toggleInspectModal} = useUIStore();
   const {inspectedCharacter} = useCharacterStore();
   const [localChar, setLocalChar] = useState(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     if (inspectedCharacter) {
@@ -47,7 +52,9 @@ function InspectSheetModal() {
 
   return (
     <Dialog
-      fullScreen
+      fullScreen={isMobile}
+      fullWidth
+      maxWidth="lg"
       open={inspectModalOpen}
       onClose={toggleInspectModal}
       TransitionComponent={Transition}

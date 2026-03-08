@@ -30,6 +30,8 @@ import {
   Button,
   Badge,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -80,6 +82,9 @@ function GameModal() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [customFileName, setCustomFileName] = useState("");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const isGM = selectedTable?.gmId === user?.uid;
 
@@ -447,7 +452,7 @@ function GameModal() {
       <Dialog
         open={gameModalOpen}
         onClose={toggleGameModal}
-        fullScreen
+        fullScreen={isMobile}
         maxWidth="md"
         fullWidth
       >

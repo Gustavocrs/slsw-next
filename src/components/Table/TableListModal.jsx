@@ -20,6 +20,8 @@ import {
   Divider,
   CircularProgress,
   Fab,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -49,6 +51,9 @@ function TableListModal() {
 
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Carregar mesas ao abrir o modal
   useEffect(() => {
@@ -124,7 +129,7 @@ function TableListModal() {
     <Dialog
       open={tableListModalOpen}
       onClose={toggleTableListModal}
-      fullScreen
+      fullScreen={isMobile}
       maxWidth="md"
       fullWidth
     >
