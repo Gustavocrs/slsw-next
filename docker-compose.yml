@@ -1,13 +1,28 @@
+version: '3.8'
+
 services:
-  slsw-api:
+  slsw:
+    build: .
+    image: slsw
     container_name: slsw
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
     ports:
-      - "3000:3000"
-    env_file:
-      - .env.local
+      - "${PORT:-3000}:${PORT:-3000}"
     environment:
-      - NODE_ENV=production
+      - PORT=${PORT:-3000}
+      - API_URL=${API_URL}
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./public/uploads:/app/public/uploads
+      - ./uploads:/app/uploads
+    command: npm run dev
+    networks:
+      - slsw-network
+
+networks:
+  slsw-network:
+    external: true

@@ -1,57 +1,16 @@
-# Etapa 1: Dependências
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Base image para ambiente de desenvolvimento
+FROM node:20-slim
+
 WORKDIR /app
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+# Instala dependências primeiro para aproveitar o cache de camadas
+COPY package*.json ./
+RUN npm install
 
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Etapa 2: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# O restante do código é montado via volume no compose para dev,
+# mas o COPY garante que o build funcione de forma isolada se necessário.
 COPY . .
 
-ENV NEXT_TELEMETRY_DISABLED 1
+EXPOSE ${PORT}
 
-RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Etapa 3: Runner (Produção)
-FROM node:20-alpine AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copia o output standalone e arquivos estáticos
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# O standalone gera um server.js que substitui o comando "next start"
-CMD ["node", "server.js"]
+CMD ["npm", "run", "dev"]
