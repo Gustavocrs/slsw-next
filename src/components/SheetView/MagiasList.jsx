@@ -93,6 +93,7 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
         range: value.range || "",
         duration: value.duration || "",
         rank: value.rank || "",
+        description: value.description || "",
       });
       setValue(null);
     }
@@ -150,6 +151,18 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
               <div style={{fontSize: "0.75rem", color: "#666"}}>
                 PP: {item.pp} | Alcance: {item.range} | Duração: {item.duration}
               </div>
+              {item.description && (
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#555",
+                    fontStyle: "italic",
+                    marginTop: "2px",
+                  }}
+                >
+                  {item.description}
+                </div>
+              )}
             </Box>
             <IconButton
               size="small"

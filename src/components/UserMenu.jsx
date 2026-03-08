@@ -19,6 +19,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Logout,
@@ -37,6 +39,9 @@ export default function UserMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
   const [sheetManagerOpen, setSheetManagerOpen] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -179,6 +184,7 @@ export default function UserMenu() {
         onClose={() => setSheetManagerOpen(false)}
         fullWidth
         maxWidth="sm"
+        fullScreen={isMobile}
       >
         <DialogTitle
           sx={{

@@ -26,6 +26,10 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -65,8 +69,12 @@ function TableDetailsModal() {
   const [isPrivate, setIsPrivate] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [invites, setInvites] = useState([]);
+  const [myCharacters, setMyCharacters] = useState([]);
 
   const isGM = user && selectedTable && user.uid === selectedTable.gmId;
+  const isPlayer = user && selectedTable?.playerIds?.includes(user.uid);
+  // Permite que o GM também veja a seleção de personagem (para testes ou ficha própria)
+  const showCharacterSelection = isPlayer || isGM;
 
   useEffect(() => {
     if (selectedTable) {
@@ -79,6 +87,21 @@ function TableDetailsModal() {
       setIsEditing(false); // Reset edit mode on open
     }
   }, [selectedTable, tableDetailsModalOpen]);
+
+  // Buscar personagens do usuário se ele for jogador na mesa
+  useEffect(() => {
+    const fetchMyCharacters = async () => {
+      if (showCharacterSelection && user && tableDetailsModalOpen) {
+        try {
+          const chars = await APIService.getAllCharacters(user.uid);
+          setMyCharacters(chars);
+        } catch (error) {
+          console.error("Erro ao buscar personagens:", error);
+        }
+      }
+    };
+    fetchMyCharacters();
+  }, [showCharacterSelection, user, tableDetailsModalOpen]);
 
   const handleAddInvite = () => {
     const email = inviteEmail.trim().toLowerCase();
@@ -210,21 +233,62 @@ function TableDetailsModal() {
     }
   };
 
-  const handleOpenPlayerSheet = async (player) => {
-    if (!player.characterId) {
-      showNotification("Este jogador não possui ficha vinculada.", "warning");
-      return;
-    }
-
+  const handleCharacterChange = async (characterId) => {
+    if (!selectedTable || !user) return;
     setLoading(true);
     try {
-      const charData = await APIService.getCharacterById(player.characterId);
+      let isUserInPlayers = false;
+      const updatedPlayers = (selectedTable.players || []).map((p) => {
+        if (p.uid === user.uid) {
+          isUserInPlayers = true;
+          return {...p, characterId};
+        }
+        return p;
+      });
+
+      const updateData = {players: updatedPlayers};
+
+      // Se for GM e não estiver na lista de jogadores, salva em um campo específico
+      if (isGM && !isUserInPlayers) {
+        updateData.gmCharacterId = characterId;
+      }
+
+      await APIService.updateTable(selectedTable._id, updateData);
+
+      setSelectedTable({...selectedTable, ...updateData});
+      notifyTablesUpdated();
+      showNotification("Personagem vinculado com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao vincular personagem.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenPlayerSheet = async (player) => {
+    setLoading(true);
+    try {
+      let charData = null;
+
+      if (player.characterId) {
+        console.log(
+          `[TableDetails] Buscando ficha vinculada (ID: ${player.characterId})`,
+        );
+        charData = await APIService.getCharacterById(player.characterId);
+      } else if (player.uid) {
+        console.log(
+          `[TableDetails] Jogador sem vínculo. Buscando ficha principal (UID: ${player.uid})`,
+        );
+        charData = await APIService.getCharacter(player.uid);
+      }
+
       if (charData) {
         setInspectedCharacter(charData);
         toggleInspectModal();
         showNotification(`Visualizando ficha de ${player.name}`, "success");
       } else {
-        showNotification("Ficha não encontrada.", "error");
+        showNotification("Jogador sem ficha vinculada.", "warning");
       }
     } catch (error) {
       console.error(error);
@@ -235,6 +299,17 @@ function TableDetailsModal() {
   };
 
   if (!selectedTable) return null;
+
+  // Encontrar o personagem selecionado atualmente pelo jogador
+  let currentCharacterId = "";
+  if (isPlayer) {
+    const currentPlayer = selectedTable?.players?.find(
+      (p) => p.uid === user?.uid,
+    );
+    currentCharacterId = currentPlayer?.characterId || "";
+  } else if (isGM) {
+    currentCharacterId = selectedTable?.gmCharacterId || "";
+  }
 
   return (
     <Dialog
@@ -332,6 +407,43 @@ function TableDetailsModal() {
               />
             </Stack>
           </Box>
+
+          {/* Configuração do Jogador (Vincular Ficha) */}
+          {showCharacterSelection && (
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: "#e3f2fd",
+                borderRadius: 2,
+                border: "1px solid #90caf9",
+              }}
+            >
+              <Typography variant="subtitle2" color="primary" gutterBottom>
+                👤 Meu Personagem
+              </Typography>
+              <Typography variant="caption" color="text.secondary" paragraph>
+                Escolha qual ficha você usará nesta mesa. Isso permite que o GM
+                e outros jogadores vejam seus status.
+              </Typography>
+              <FormControl fullWidth size="small" sx={{bgcolor: "white"}}>
+                <InputLabel>Selecione seu Personagem</InputLabel>
+                <Select
+                  value={currentCharacterId}
+                  label="Selecione seu Personagem"
+                  onChange={(e) => handleCharacterChange(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em>Nenhum (Apenas espectador)</em>
+                  </MenuItem>
+                  {myCharacters.map((char) => (
+                    <MenuItem key={char._id} value={char._id}>
+                      {char.nome} ({char.rank} - {char.arquetipo})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           <Box>
             <Typography variant="subtitle2" color="primary" gutterBottom>

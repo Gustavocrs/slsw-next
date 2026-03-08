@@ -7,7 +7,7 @@
 
 import React, {useState, useMemo} from "react";
 import {styled} from "@mui/material/styles";
-import {Box, Select, MenuItem, IconButton} from "@mui/material";
+import {Box, Select, MenuItem, IconButton, Typography} from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
 import {SKILLS, DICE} from "@/lib/rpgEngine";
 
@@ -155,7 +155,18 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         ) : (
           sortedItems.map((item, index) => (
             <ListItem key={`${item.name}-${index}`} sx={item.style}>
-              <Box sx={{fontWeight: 500}}>{item.name}</Box>
+              <Box sx={{fontWeight: 500}}>
+                {item.name}
+                {item.attributeShort && (
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    sx={{ml: 1, color: "#888", fontWeight: "normal"}}
+                  >
+                    [{item.attributeShort}]
+                  </Typography>
+                )}
+              </Box>
               <Box sx={{fontWeight: 600, color: item.dieColor || "#667eea"}}>
                 {item.die}
               </Box>

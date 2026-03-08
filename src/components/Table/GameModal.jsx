@@ -41,6 +41,7 @@ import {
   CloudUpload as UploadIcon,
   Download as DownloadIcon,
   PersonRemove as PersonRemoveIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import {
   BsFiletypePdf,
@@ -122,10 +123,16 @@ function GameModal() {
   ]);
 
   const handlePlayerClick = (event, player) => {
-    // Lógica de Permissão de Clique
+    // 1. Permitir clicar em si mesmo (para ver ficha ou configurar)
+    if (player.uid === user?.uid) {
+      setAnchorEl(event.currentTarget);
+      setSelectedPlayer(player);
+      return;
+    }
+
+    // 2. Lógica de Permissão para outros
     if (isGM) {
-      // GM pode clicar em qualquer um (exceto ele mesmo, opcional)
-      if (player.uid === user.uid) return;
+      // GM pode clicar em qualquer um
       setAnchorEl(event.currentTarget);
       setSelectedPlayer(player);
     } else {
@@ -143,34 +150,44 @@ function GameModal() {
   };
 
   const handleViewSheet = async () => {
-    if (selectedPlayer && selectedPlayer.characterId) {
-      try {
-        const charData = await APIService.getCharacterById(
+    handleCloseMenu();
+    if (!selectedPlayer) return;
+
+    try {
+      showNotification("Buscando ficha do jogador...", "info");
+      let charData = null;
+
+      // 1. Prioridade: Buscar pelo ID da ficha vinculada à mesa
+      if (selectedPlayer.characterId) {
+        console.log(
+          `[GameModal] Buscando ficha vinculada (ID: ${selectedPlayer.characterId})`,
+        );
+        charData = await APIService.getCharacterById(
           selectedPlayer.characterId,
         );
-        if (charData) {
-          setInspectedCharacter(charData);
-          toggleInspectModal();
-          showNotification(
-            `Visualizando ficha de ${selectedPlayer.name}`,
-            "success",
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        if (error.code === "permission-denied") {
-          showNotification(
-            "Sem permissão para ver esta ficha. Atualize as regras do Firebase.",
-            "error",
-          );
-        } else {
-          showNotification("Erro ao carregar ficha.", "error");
-        }
       }
-    } else {
-      showNotification("Jogador sem ficha vinculada.", "warning");
+      // 2. Fallback: Apenas se não houver vínculo, busca a ficha principal do usuário
+      else if (selectedPlayer.uid) {
+        console.log(
+          `[GameModal] Jogador sem vínculo. Buscando ficha principal (UID: ${selectedPlayer.uid})`,
+        );
+        charData = await APIService.getCharacter(selectedPlayer.uid);
+      }
+
+      if (charData) {
+        setInspectedCharacter(charData);
+        toggleInspectModal();
+        showNotification(
+          `Visualizando ficha de ${selectedPlayer.name}`,
+          "success",
+        );
+      } else {
+        showNotification("Jogador sem ficha vinculada.", "warning");
+      }
+    } catch (error) {
+      console.error("Erro ao visualizar ficha:", error);
+      showNotification("Erro ao carregar ficha.", "error");
     }
-    handleCloseMenu();
   };
 
   const handleSendMessage = () => {
@@ -368,6 +385,12 @@ function GameModal() {
   };
 
   if (!selectedTable) return null;
+  const gmData = {
+    uid: selectedTable.gmId,
+    name: selectedTable.gmName,
+    isGM: true,
+    photoURL: selectedTable.gmPhotoURL || (isGM ? user?.photoURL : null),
+  };
 
   return (
     <>
@@ -655,24 +678,77 @@ function GameModal() {
                 overflowY: "auto",
               }}
             >
+              {/* Seção do Game Master */}
+              <Divider textAlign="left" sx={{mb: 2, mt: 1}}>
+                <Chip label="Game Master" size="small" color="secondary" />
+              </Divider>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: "#f5f7fa",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                  },
+                  border: "1px solid #e0e0e0",
+                  mb: 3,
+                }}
+                onClick={(e) => handlePlayerClick(e, gmData)}
+              >
+                <Badge
+                  overlap="circular"
+                  anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+                  badgeContent={
+                    <GmIcon
+                      sx={{
+                        width: 14,
+                        height: 14,
+                        color: "#f57c00",
+                        bgcolor: "white",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  }
+                >
+                  <Avatar
+                    src={
+                      gmData.photoURL?.includes("googleusercontent.com")
+                        ? gmData.photoURL.replace("=s96-c", "=s100-c")
+                        : gmData.photoURL
+                    }
+                    alt={gmData.name}
+                    sx={{width: 40, height: 40}}
+                    imgProps={{referrerPolicy: "no-referrer"}}
+                  />
+                </Badge>
+                <Box sx={{overflow: "hidden", ml: 1}}>
+                  <Typography variant="body2" fontWeight="bold" noWrap>
+                    {gmData.name}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    Game Master
+                  </Typography>
+                </Box>
+              </Paper>
+
+              {/* Seção dos Jogadores */}
               <Divider textAlign="left" sx={{mb: 2}}>
                 <Chip label="Jogadores" size="small" />
               </Divider>
 
-              {/* Lista Combinada: GM + Jogadores */}
               <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-                {[
-                  {
-                    uid: selectedTable.gmId,
-                    name: selectedTable.gmName,
-                    isGM: true,
-                    // Usa a foto salva na mesa, ou a do usuário atual se for o GM
-                    photoURL:
-                      selectedTable.gmPhotoURL ||
-                      (isGM ? user?.photoURL : null),
-                  },
-                  ...(selectedTable.players || []),
-                ].map((player) => {
+                {(selectedTable.players || []).map((player) => {
                   const safePhotoURL = player.photoURL?.includes(
                     "googleusercontent.com",
                   )
@@ -702,19 +778,6 @@ function GameModal() {
                       <Badge
                         overlap="circular"
                         anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-                        badgeContent={
-                          player.isGM ? (
-                            <GmIcon
-                              sx={{
-                                width: 14,
-                                height: 14,
-                                color: "#f57c00",
-                                bgcolor: "white",
-                                borderRadius: "50%",
-                              }}
-                            />
-                          ) : null
-                        }
                       >
                         <Avatar
                           src={safePhotoURL}
@@ -732,11 +795,7 @@ function GameModal() {
                           color="text.secondary"
                           display="block"
                         >
-                          {player.isGM
-                            ? "Game Master"
-                            : isGM
-                              ? "Ver opções"
-                              : "Jogador"}
+                          {isGM ? "Ver opções" : "Jogador"}
                         </Typography>
                       </Box>
                     </Paper>
@@ -756,6 +815,30 @@ function GameModal() {
               sx: {minWidth: 180},
             }}
           >
+            {/* Opções para o próprio usuário (Self) */}
+            {selectedPlayer?.uid === user?.uid && (
+              <div>
+                <MenuItem onClick={handleViewSheet}>
+                  <ListItemIcon>
+                    <SheetIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Ver Minha Ficha</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleCloseMenu();
+                    toggleTableDetailsModal();
+                  }}
+                >
+                  <ListItemIcon>
+                    <SettingsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Trocar Personagem</ListItemText>
+                </MenuItem>
+                <Divider />
+              </div>
+            )}
+
             {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
             {isGM &&
               !selectedPlayer?.isGM && [

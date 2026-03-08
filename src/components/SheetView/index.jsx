@@ -303,7 +303,8 @@ function SheetView({
     character.vigor,
   ]);
 
-  const availableAttributePoints = 5 - attributePointsSpent;
+  // Ajuste solicitado: 2 pontos a mais (Total 7)
+  const availableAttributePoints = 7 - attributePointsSpent;
 
   const availableEdges = useMemo(
     () => filterEdgesByRank(character.rank || "Novato"),
@@ -1333,14 +1334,14 @@ function SheetView({
                   }}
                 >
                   <h4 style={{margin: "0", fontSize: "0.95rem"}}>Atributos</h4>
-                  <Tooltip title="Cada d6 custa 1 ponto, d8 custa 2, d10 custa 3, d12 custa 4. Total: 5 pontos">
+                  <Tooltip title="Cada d6 custa 1 ponto, d8 custa 2, d10 custa 3, d12 custa 4. Total: 7 pontos">
                     <PointsBadge
                       style={{
                         background:
                           availableAttributePoints > 0 ? "#e8f5e9" : "#ffebee",
                       }}
                     >
-                      {availableAttributePoints}/5 restantes
+                      {availableAttributePoints}/7 restantes
                     </PointsBadge>
                   </Tooltip>
                 </Box>
@@ -1420,6 +1421,9 @@ function SheetView({
                   ...p,
                   style: isHigher ? {backgroundColor: "#fff3e0"} : undefined,
                   dieColor: isHigher ? "#d32f2f" : "#667eea",
+                  attributeShort: attrKey
+                    ? attrKey.substring(0, 3).toUpperCase()
+                    : "",
                 };
               })}
               onAdd={(item) => {
