@@ -419,6 +419,39 @@ class APIService {
     }
   }
 
+  // 16. ADICIONAR NPC À MESA (GM Only)
+  static async addNpcToTable(tableId, character) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+
+      // Cria um ID fictício para o NPC para não conflitar com o GM na lista de players
+      // e permitir que o mesmo GM adicione múltiplos NPCs
+      const npcId = `npc_${character._id}`;
+
+      const npcPlayer = {
+        uid: npcId,
+        email: "npc@slsw.system", // Email fictício para identificação
+        name: character.nome || "NPC",
+        photoURL: character.imagem_url || null,
+        joinedAt: new Date().toISOString(),
+        characterId: character._id,
+        isNpc: true,
+        gmId: character.userId, // Referência de quem controla
+      };
+
+      await updateDoc(tableRef, {
+        playerIds: arrayUnion(npcId),
+        players: arrayUnion(npcPlayer),
+        updatedAt: serverTimestamp(),
+      });
+
+      return npcPlayer;
+    } catch (error) {
+      console.error("Erro ao adicionar NPC:", error);
+      throw error;
+    }
+  }
+
   // 12. UPLOAD DE ANEXO DA MESA
   static async uploadTableAttachment(tableId, file) {
     try {

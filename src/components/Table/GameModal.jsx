@@ -25,6 +25,10 @@ import {
   Badge,
   useMediaQuery,
   useTheme,
+  Button,
+  List,
+  ListItem,
+  ListItemAvatar,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -34,6 +38,8 @@ import {
   Security as GmIcon,
   PersonRemove as PersonRemoveIcon,
   Settings as SettingsIcon,
+  PersonAdd as AddNpcIcon,
+  SwapHoriz as SwitchTableIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -57,6 +63,13 @@ function GameModal() {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+  // Estados para NPC e Troca de Mesa
+  const [npcModalOpen, setNpcModalOpen] = useState(false);
+  const [myCharacters, setMyCharacters] = useState([]);
+  const [loadingNpcs, setLoadingNpcs] = useState(false);
+  const [tablesMenuAnchor, setTablesMenuAnchor] = useState(null);
+  const [myTables, setMyTables] = useState([]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -212,6 +225,51 @@ function GameModal() {
     handleCloseMenu();
   };
 
+  // --- Lógica de Convocar NPC ---
+  const handleOpenNpcModal = async () => {
+    handleCloseMenu();
+    setNpcModalOpen(true);
+    setLoadingNpcs(true);
+    try {
+      const chars = await APIService.getAllCharacters(user.uid);
+      // Filtra personagens que já estão na mesa
+      const existingCharIds =
+        selectedTable?.players?.map((p) => p.characterId) || [];
+      const available = chars.filter((c) => !existingCharIds.includes(c._id));
+      setMyCharacters(available);
+    } catch (error) {
+      console.error("Erro ao carregar personagens para NPC:", error);
+    } finally {
+      setLoadingNpcs(false);
+    }
+  };
+
+  const handleAddNpc = async (character) => {
+    try {
+      await APIService.addNpcToTable(selectedTable._id, character);
+      setNpcModalOpen(false);
+      showNotification("NPC convocado com sucesso!", "success");
+    } catch (error) {
+      showNotification("Erro ao adicionar NPC: " + error.message, "error");
+    }
+  };
+
+  // --- Lógica de Trocar Mesa ---
+  const handleOpenTablesMenu = async (event) => {
+    setTablesMenuAnchor(event.currentTarget);
+    try {
+      const tables = await APIService.getTables(user.email, user.uid);
+      setMyTables(tables);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSwitchTable = (table) => {
+    setSelectedTable(table);
+    setTablesMenuAnchor(null);
+  };
+
   if (!selectedTable) return null;
   const gmData = {
     uid: selectedTable.gmId,
@@ -236,9 +294,18 @@ function GameModal() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" component="span" fontWeight="bold">
-            🎮 Painel de Jogo: {selectedTable.name}
-          </Typography>
+          <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+            <Typography variant="h6" component="span" fontWeight="bold">
+              🎮 Painel de Jogo: {selectedTable.name}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={handleOpenTablesMenu}
+              title="Trocar Mesa"
+            >
+              <SwitchTableIcon />
+            </IconButton>
+          </Box>
           <IconButton onClick={toggleGameModal} edge="end">
             <CloseIcon />
           </IconButton>
@@ -493,6 +560,14 @@ function GameModal() {
                   </ListItemIcon>
                   <ListItemText>Trocar Personagem</ListItemText>
                 </MenuItem>
+                {isGM && (
+                  <MenuItem onClick={handleOpenNpcModal}>
+                    <ListItemIcon>
+                      <AddNpcIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Convocar NPC</ListItemText>
+                  </MenuItem>
+                )}
                 <Divider />
               </div>
             )}
@@ -531,6 +606,78 @@ function GameModal() {
             </MenuItem>
           </Menu>
         </DialogContent>
+
+        {/* Menu de Troca de Mesa */}
+        <Menu
+          anchorEl={tablesMenuAnchor}
+          open={Boolean(tablesMenuAnchor)}
+          onClose={() => setTablesMenuAnchor(null)}
+        >
+          {myTables.length === 0 ? (
+            <MenuItem disabled>Carregando mesas...</MenuItem>
+          ) : (
+            myTables.map((table) => (
+              <MenuItem
+                key={table._id}
+                selected={table._id === selectedTable._id}
+                onClick={() => handleSwitchTable(table)}
+              >
+                {table.name}
+              </MenuItem>
+            ))
+          )}
+        </Menu>
+
+        {/* Modal de Convocar NPC */}
+        <Dialog
+          open={npcModalOpen}
+          onClose={() => setNpcModalOpen(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Convocar NPC para o Grupo</DialogTitle>
+          <DialogContent>
+            {loadingNpcs ? (
+              <Typography sx={{p: 2, textAlign: "center"}}>
+                Carregando seus personagens...
+              </Typography>
+            ) : myCharacters.length === 0 ? (
+              <Typography
+                sx={{p: 2, textAlign: "center", color: "text.secondary"}}
+              >
+                Você não tem personagens disponíveis ou todos já estão nesta
+                mesa.
+              </Typography>
+            ) : (
+              <List>
+                {myCharacters.map((char) => (
+                  <ListItem
+                    key={char._id}
+                    secondaryAction={
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleAddNpc(char)}
+                      >
+                        Adicionar
+                      </Button>
+                    }
+                  >
+                    <ListItemAvatar>
+                      <Avatar src={char.imagem_url} alt={char.nome}>
+                        {char.nome?.charAt(0)}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={char.nome}
+                      secondary={`${char.arquetipo || "Sem classe"} • Rank ${char.rank || "Novato"}`}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </DialogContent>
+        </Dialog>
       </Dialog>
     </>
   );

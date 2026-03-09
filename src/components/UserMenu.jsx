@@ -21,6 +21,11 @@ import {
   DialogContent,
   useMediaQuery,
   useTheme,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Button,
 } from "@mui/material";
 import {
   Logout,
@@ -34,7 +39,13 @@ import SheetManager from "@/components/SheetView/SheetManager";
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
   const {user, logoutUser} = useAuth();
-  const {toggleTableListModal, tablesUpdated, setSelectedTable} = useUIStore();
+  const {
+    toggleTableListModal,
+    tablesUpdated,
+    setSelectedTable,
+    selectedTable,
+    notifyTablesUpdated,
+  } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
@@ -156,6 +167,7 @@ export default function UserMenu() {
             {displayName}
           </Typography>
         </MenuItem>
+
         <MenuItem onClick={handleOpenSheets}>
           <SheetIcon fontSize="small" sx={{mr: 1}} />
           Minhas Fichas
