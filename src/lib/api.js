@@ -448,6 +448,35 @@ class APIService {
     }
   }
 
+  // 12.1 VINCULAR ANEXO À MESA (Firestore)
+  static async addAttachmentToTable(tableId, attachmentData) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+      await updateDoc(tableRef, {
+        attachments: arrayUnion(attachmentData),
+        updatedAt: serverTimestamp(),
+      });
+      return attachmentData;
+    } catch (error) {
+      console.error("Erro ao vincular anexo:", error);
+      throw error;
+    }
+  }
+
+  // 12.2 REMOVER ANEXO DA MESA
+  static async removeAttachmentFromTable(tableId, attachmentData) {
+    try {
+      const tableRef = doc(db, "tables", tableId);
+      await updateDoc(tableRef, {
+        attachments: arrayRemove(attachmentData),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Erro ao remover anexo:", error);
+      throw error;
+    }
+  }
+
   // 13. REMOVER JOGADOR DA MESA (KICK)
   static async removePlayer(tableId, playerId) {
     try {
