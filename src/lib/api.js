@@ -453,7 +453,7 @@ class APIService {
     try {
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
-        attachments: arrayUnion(attachmentData),
+        files: arrayUnion(attachmentData),
         updatedAt: serverTimestamp(),
       });
       return attachmentData;
@@ -468,7 +468,7 @@ class APIService {
     try {
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
-        attachments: arrayRemove(attachmentData),
+        files: arrayRemove(attachmentData),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {

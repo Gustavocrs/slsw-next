@@ -10,8 +10,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
   IconButton,
   Typography,
   Box,
@@ -24,12 +22,7 @@ import {
   Paper,
   Divider,
   Chip,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Button,
   Badge,
-  CircularProgress,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -39,26 +32,15 @@ import {
   Message as MessageIcon,
   AttachFile as FileIcon,
   Security as GmIcon,
-  Delete as DeleteIcon,
-  CloudUpload as UploadIcon,
-  Download as DownloadIcon,
   PersonRemove as PersonRemoveIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
-import {
-  BsFiletypePdf,
-  BsFiletypeXls,
-  BsFiletypeDoc,
-  BsFiletypePpt,
-  BsFiletypeTxt,
-  BsCardImage,
-  BsFileEarmark,
-} from "react-icons/bs";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {doc, onSnapshot} from "firebase/firestore";
 import {db} from "@/lib/firebase";
+import GameFileManager from "@/components/GameFileManager";
 
 function GameModal() {
   const {
@@ -75,13 +57,6 @@ function GameModal() {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxSrc, setLightboxSrc] = useState("");
-  const [lightboxLoading, setLightboxLoading] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [fileToUpload, setFileToUpload] = useState(null);
-  const [customFileName, setCustomFileName] = useState("");
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -237,158 +212,6 @@ function GameModal() {
     handleCloseMenu();
   };
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setFileToUpload(file);
-    setCustomFileName(file.name); // Sugere o nome original
-    setUploadModalOpen(true);
-    event.target.value = ""; // Limpa o input para permitir selecionar o mesmo arquivo novamente
-  };
-
-  const handleConfirmUpload = async () => {
-    if (!fileToUpload || !selectedTable) return;
-
-    setUploading(true);
-    try {
-      const attachment = await APIService.uploadTableAttachment(
-        selectedTable._id,
-        fileToUpload,
-      );
-
-      // Sobrescreve o nome com o escolhido pelo usuário
-      attachment.name = customFileName || attachment.name;
-
-      // Atualizar a mesa com o novo arquivo
-      const updatedFiles = [...(selectedTable.files || []), attachment];
-      await APIService.updateTable(selectedTable._id, {files: updatedFiles});
-
-      // Atualizar estado local
-      setSelectedTable({...selectedTable, files: updatedFiles});
-      showNotification("Arquivo anexado com sucesso!", "success");
-      setUploadModalOpen(false);
-      setFileToUpload(null);
-    } catch (error) {
-      console.error(error);
-      showNotification("Erro ao enviar arquivo.", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteFile = async (fileUrl) => {
-    if (!confirm("Remover este arquivo?")) return;
-    try {
-      const updatedFiles = selectedTable.files.filter((f) => f.url !== fileUrl);
-      await APIService.updateTable(selectedTable._id, {files: updatedFiles});
-      setSelectedTable({...selectedTable, files: updatedFiles});
-      showNotification("Arquivo removido.", "info");
-    } catch (error) {
-      showNotification("Erro ao remover arquivo.", "error");
-    }
-  };
-
-  const handleViewFile = async (file) => {
-    const isImg =
-      file.type?.startsWith("image/") ||
-      file.name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
-
-    if (isImg) {
-      setLightboxSrc(null);
-      setLightboxLoading(true);
-      setLightboxOpen(true);
-
-      try {
-        // Gera o Blob via fetch para evitar abrir nova aba/janela
-        const response = await fetch(file.url);
-        if (!response.ok) throw new Error("Erro ao carregar arquivo");
-
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        setLightboxSrc(objectUrl);
-      } catch (error) {
-        console.error("Erro ao gerar blob da imagem:", error);
-        showNotification("Erro ao carregar imagem.", "error");
-        setLightboxOpen(false);
-      } finally {
-        setLightboxLoading(false);
-      }
-    } else {
-      // Para outros arquivos, força o download direto
-      const link = document.createElement("a");
-      link.href = file.url;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  // Helper para renderizar ícone ou thumbnail baseado no tipo de arquivo
-  const getFileIcon = (file) => {
-    const type = file.type?.toLowerCase() || "";
-    const name = file.name?.toLowerCase() || "";
-    const size = 26;
-
-    // PDF
-    if (type.includes("pdf") || name.endsWith(".pdf")) {
-      return <BsFiletypePdf size={size} color="#d32f2f" />;
-    }
-
-    // Excel / Planilhas
-    if (
-      type.includes("sheet") ||
-      type.includes("excel") ||
-      name.endsWith(".xls") ||
-      name.endsWith(".xlsx") ||
-      name.endsWith(".csv")
-    ) {
-      return <BsFiletypeXls size={size} color="#2e7d32" />;
-    }
-
-    // Word / Documentos
-    if (
-      type.includes("word") ||
-      type.includes("document") ||
-      name.endsWith(".doc") ||
-      name.endsWith(".docx")
-    ) {
-      return <BsFiletypeDoc size={size} color="#1976d2" />;
-    }
-
-    // PowerPoint / Apresentações
-    if (
-      type.includes("presentation") ||
-      type.includes("powerpoint") ||
-      name.endsWith(".ppt") ||
-      name.endsWith(".pptx")
-    ) {
-      return <BsFiletypePpt size={size} color="#f57c00" />;
-    }
-
-    // Texto
-    if (type.includes("text") || name.endsWith(".txt")) {
-      return <BsFiletypeTxt size={size} color="#616161" />;
-    }
-
-    // Imagens
-    if (
-      type.startsWith("image/") ||
-      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/)
-    ) {
-      return <BsCardImage size={size} color="#7b1fa2" />;
-    }
-
-    // Genérico
-    return <BsFileEarmark size={size} color="#9e9e9e" />;
-  };
-
-  // Helper para nome amigável
-  const getFileDisplayName = (file) => {
-    return file.name || "Arquivo Anexado";
-  };
-
   if (!selectedTable) return null;
   const gmData = {
     uid: selectedTable.gmId,
@@ -399,56 +222,6 @@ function GameModal() {
 
   return (
     <>
-      {/* Lightbox para Imagens */}
-      <Dialog
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        maxWidth="xl"
-        PaperProps={{
-          sx: {
-            bgcolor: "transparent",
-            boxShadow: "none",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            position: "relative",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: 200,
-            minWidth: 300,
-          }}
-        >
-          <IconButton
-            onClick={() => setLightboxOpen(false)}
-            sx={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              color: "white",
-              bgcolor: "rgba(0,0,0,0.5)",
-              "&:hover": {bgcolor: "rgba(0,0,0,0.7)"},
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-          {lightboxLoading ? (
-            <CircularProgress sx={{color: "white"}} />
-          ) : (
-            lightboxSrc && (
-              <img
-                src={lightboxSrc}
-                alt="Visualização"
-                style={{maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8}}
-              />
-            )
-          )}
-        </Box>
-      </Dialog>
-
       <Dialog
         open={gameModalOpen}
         onClose={toggleGameModal}
@@ -544,131 +317,11 @@ function GameModal() {
               </Box>
 
               {/* Seção de Materiais e Anexos */}
-              <Box sx={{mb: 3}}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 1,
-                  }}
-                >
-                  <Typography variant="h6" color="primary" fontWeight="bold">
-                    Materiais & Anexos
-                  </Typography>
-                  {isGM && (
-                    <Button
-                      component="label"
-                      variant="contained"
-                      startIcon={<UploadIcon />}
-                      size="small"
-                      disabled={uploading}
-                      sx={{
-                        background:
-                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      }}
-                    >
-                      Anexar Arquivo
-                      <input type="file" hidden onChange={handleFileSelect} />
-                    </Button>
-                  )}
-                </Box>
-
-                <Paper sx={{borderRadius: 2, overflow: "hidden"}} elevation={0}>
-                  <List disablePadding>
-                    {selectedTable.files && selectedTable.files.length > 0 ? (
-                      selectedTable.files.map((file, index) => (
-                        <React.Fragment key={index}>
-                          {index > 0 && <Divider />}
-                          <ListItem
-                            secondaryAction={
-                              <Box sx={{display: "flex", gap: 1}}>
-                                <IconButton
-                                  edge="end"
-                                  aria-label="download"
-                                  href={file.url}
-                                  download
-                                  target="_blank"
-                                  title="Baixar"
-                                >
-                                  <DownloadIcon />
-                                </IconButton>
-                                {isGM && (
-                                  <IconButton
-                                    edge="end"
-                                    aria-label="delete"
-                                    onClick={() => handleDeleteFile(file.url)}
-                                    color="error"
-                                    title="Excluir"
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                )}
-                              </Box>
-                            }
-                          >
-                            <ListItemIcon
-                              sx={{
-                                minWidth: 40,
-                                cursor:
-                                  file.type?.startsWith("image/") ||
-                                  file.name?.match(
-                                    /\.(jpg|jpeg|png|gif|webp|svg)$/i,
-                                  )
-                                    ? "pointer"
-                                    : "default",
-                              }}
-                              onClick={() => handleViewFile(file)}
-                            >
-                              {getFileIcon(file)}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography
-                                  component="span"
-                                  variant="body1"
-                                  onClick={() => handleViewFile(file)}
-                                  sx={{
-                                    fontWeight: 600,
-                                    display: "block",
-                                    wordBreak: "break-word",
-                                    cursor: "pointer",
-                                    color: "primary.main",
-                                    textDecoration: "underline",
-                                    "&:hover": {
-                                      color: "primary.dark",
-                                    },
-                                  }}
-                                >
-                                  {getFileDisplayName(file)}
-                                </Typography>
-                              }
-                              secondary={new Date(
-                                file.uploadedAt,
-                              ).toLocaleDateString()}
-                            />
-                          </ListItem>
-                        </React.Fragment>
-                      ))
-                    ) : (
-                      <Box
-                        sx={{
-                          p: 3,
-                          textAlign: "center",
-                          color: "text.secondary",
-                        }}
-                      >
-                        <Typography variant="body2">
-                          Nenhum material anexado.{" "}
-                          {isGM
-                            ? "Faça upload de mapas, imagens ou PDFs."
-                            : "O GM ainda não disponibilizou arquivos."}
-                        </Typography>
-                      </Box>
-                    )}
-                  </List>
-                </Paper>
-              </Box>
+              <GameFileManager
+                tableId={selectedTable._id}
+                files={selectedTable.files || []}
+                isGM={isGM}
+              />
             </Grid>
 
             {/* Coluna Direita: Lista de Jogadores */}
@@ -878,45 +531,6 @@ function GameModal() {
             </MenuItem>
           </Menu>
         </DialogContent>
-      </Dialog>
-
-      {/* Modal de Confirmação de Upload */}
-      <Dialog
-        open={uploadModalOpen}
-        onClose={() => !uploading && setUploadModalOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Nomear Arquivo</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
-            Defina um nome para identificar este arquivo na lista de anexos.
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Nome do Arquivo"
-            fullWidth
-            variant="outlined"
-            value={customFileName}
-            onChange={(e) => setCustomFileName(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setUploadModalOpen(false)}
-            disabled={uploading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmUpload}
-            variant="contained"
-            disabled={uploading}
-          >
-            {uploading ? "Enviando..." : "Salvar Anexo"}
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );
