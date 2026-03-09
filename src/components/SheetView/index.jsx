@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, {useMemo} from "react";
+import React, {useMemo, useState} from "react";
 import {
   Box,
   Tabs,
@@ -23,12 +23,15 @@ import {
   Checkbox,
   Switch,
   FormControlLabel,
+  Typography,
 } from "@mui/material";
+import {CircularProgress} from "@mui/material";
 import {styled} from "@mui/material/styles";
 import {
   CheckCircle,
   CloudUpload,
   Error as ErrorIcon,
+  AutoAwesome as AiIcon,
 } from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
@@ -185,7 +188,7 @@ function SheetView({
   character: propCharacter,
   actions: propActions,
 }) {
-  const {sheetTab, setSheetTab} = useUIStore();
+  const {sheetTab, setSheetTab, selectedTable, showNotification} = useUIStore();
 
   // Se estiver inspecionando (propCharacter), usa estado local para não afetar a navegação principal
   const [localTab, setLocalTab] = React.useState(0);
@@ -244,6 +247,40 @@ function SheetView({
   }, [character, propCharacter, user]);
 
   const [retroMode, setRetroMode] = React.useState(true);
+  const [imgLoading, setImgLoading] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImgLoading(true);
+    try {
+      const url = await APIService.uploadFile(file);
+      updateAttribute("imagem_url", url);
+      showNotification("Imagem enviada com sucesso!", "success");
+    } catch (error) {
+      showNotification("Erro ao enviar imagem.", "error");
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    setImgLoading(true);
+    try {
+      const tableContext = selectedTable ? selectedTable.description : "";
+      const url = await APIService.generateCharacterImage(
+        character,
+        tableContext,
+      );
+      updateAttribute("imagem_url", url);
+      showNotification("Imagem gerada com sucesso!", "success");
+    } catch (error) {
+      showNotification("Erro ao gerar imagem: " + error.message, "error");
+    } finally {
+      setImgLoading(false);
+    }
+  };
 
   // Redirecionar para Visualizar após salvar
   React.useEffect(() => {
@@ -1371,14 +1408,89 @@ function SheetView({
             </Grid>
 
             <Grid item xs={12}>
-              <StyledTextField
-                fullWidth
-                label="URL da Imagem (Retrato)"
-                value={character.imagem_url || ""}
-                onChange={(e) => updateAttribute("imagem_url", e.target.value)}
-                placeholder="https://..."
-                size="small"
-              />
+              <Box
+                sx={{
+                  p: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: 2,
+                  textAlign: "center",
+                  bgcolor: "#f9f9f9",
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  color="textSecondary"
+                >
+                  Imagem do Personagem
+                </Typography>
+
+                {character.imagem_url && (
+                  <Box sx={{mb: 2, display: "flex", justifyContent: "center"}}>
+                    <img
+                      src={character.imagem_url}
+                      alt="Personagem"
+                      style={{
+                        maxHeight: 200,
+                        borderRadius: 8,
+                        maxWidth: "100%",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </Box>
+                )}
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    startIcon={
+                      imgLoading ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <CloudUpload />
+                      )
+                    }
+                    disabled={imgLoading}
+                  >
+                    Upload Normal
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={
+                      imgLoading ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <AiIcon />
+                      )
+                    }
+                    onClick={handleGenerateImage}
+                    disabled={imgLoading}
+                    sx={{
+                      background:
+                        "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
+                      color: "white",
+                    }}
+                  >
+                    Gerar com IA
+                  </Button>
+                </Box>
+              </Box>
             </Grid>
 
             <Grid item xs={12}>
