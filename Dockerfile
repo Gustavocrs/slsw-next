@@ -1,16 +1,19 @@
-# Base image para ambiente de desenvolvimento
-FROM node:20-slim
+FROM node:20-alphine
 
 WORKDIR /app
 
 # Instala dependências primeiro para aproveitar o cache de camadas
 COPY package*.json ./
-RUN npm install
+RUN npm install --frozen-lockfile
 
-# O restante do código é montado via volume no compose para dev,
-# mas o COPY garante que o build funcione de forma isolada se necessário.
+# Copia o restante dos arquivos
 COPY . .
 
-EXPOSE ${PORT}
+# Build da aplicação Next.js
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+# Expõe a porta interna
+EXPOSE 3000
+
+# Comando para iniciar em modo produção
+CMD ["npm", "run", "start"]
