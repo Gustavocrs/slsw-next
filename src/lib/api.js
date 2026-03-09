@@ -531,28 +531,6 @@ class APIService {
     }
   }
 
-  // 15. GERAR IMAGEM COM IA
-  static async generateCharacterImage(character, context = "") {
-    try {
-      const response = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({character, context}),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Erro ao gerar imagem");
-      }
-
-      const data = await response.json();
-      return data.url;
-    } catch (error) {
-      console.error("Erro na geração de imagem:", error);
-      throw error;
-    }
-  }
-
   // 13. REMOVER JOGADOR DA MESA (KICK)
   static async removePlayer(tableId, playerId) {
     try {
