@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Declaração de Argumentos de Build (Necessário para o Next.js Prerender)
+# Argumentos necessários para o Next.js Prerender (Build Time)
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -11,7 +11,7 @@ ARG NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ARG NEXT_PUBLIC_FIREBASE_APP_ID
 
-# Transforma ARGs em Variáveis de Ambiente de Build
+# Exporta para o ambiente de Build
 ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY
 ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -24,10 +24,10 @@ RUN npm install --frozen-lockfile
 
 COPY . .
 
-# Agora o build terá acesso às chaves
+# Agora o Prerendering do Next.js 16.1.6 encontrará as chaves
 RUN npm run build
 
-# Estágio 2: Runner
+# Estágio 2: Runner (Imagem leve para o GutsNote-LX)
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -39,4 +39,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 3000
+
+# Inicia em modo produção (Performance máxima)
 CMD ["npm", "run", "start"]
