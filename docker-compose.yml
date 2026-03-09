@@ -24,7 +24,6 @@ services:
     volumes:
       - ./public/uploads:/app/public/uploads
       - ./uploads:/app/uploads
-    # Removido command: npm run dev para usar o CMD do Dockerfile
     networks:
       - slsw-network
 
