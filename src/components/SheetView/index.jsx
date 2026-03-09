@@ -290,6 +290,8 @@ function SheetView({
     const prompt = `
 **Art Style:** Solo Leveling Manhwa Style, Anime, High Fantasy, 8k, Detailed, Cinematic Lighting.
 
+**Format:** Portrait Orientation (Vertical), 9:16 Aspect Ratio.
+
 **Character Identity:**
 - Name: ${character.nome || "Unknown Hunter"}
 - Rank: ${character.rank || "Novice"}
@@ -318,7 +320,9 @@ function SheetView({
 - Complications: ${complications || "None"}
 
 **Setting:** Medieval Fantasy World with magical Portals and Dungeons (Solo Leveling Universe).
-**Visual Context:** The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible.
+**Visual Context:** The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. IMPORTANT: Ensure the full character and all weapons are fully visible within the vertical frame, avoiding cropping on the sides.
+
+**Negative Prompt / Constraints:** No text, no watermarks, no signatures, no seals, no writing, no UI elements. Clean artwork only. No cropped weapons.
 `.trim();
 
     setGeneratedPrompt(prompt);
