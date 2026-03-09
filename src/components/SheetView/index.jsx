@@ -24,6 +24,10 @@ import {
   Switch,
   FormControlLabel,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {CircularProgress} from "@mui/material";
 import {styled} from "@mui/material/styles";
@@ -32,6 +36,7 @@ import {
   CloudUpload,
   Error as ErrorIcon,
   AutoAwesome as AiIcon,
+  ContentCopy as CopyIcon,
 } from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
@@ -248,6 +253,8 @@ function SheetView({
 
   const [retroMode, setRetroMode] = React.useState(true);
   const [imgLoading, setImgLoading] = useState(false);
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState("");
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -265,21 +272,63 @@ function SheetView({
     }
   };
 
-  const handleGenerateImage = async () => {
-    setImgLoading(true);
-    try {
-      const tableContext = selectedTable ? selectedTable.description : "";
-      const url = await APIService.generateCharacterImage(
-        character,
-        tableContext,
-      );
-      updateAttribute("imagem_url", url);
-      showNotification("Imagem gerada com sucesso!", "success");
-    } catch (error) {
-      showNotification("Erro ao gerar imagem: " + error.message, "error");
-    } finally {
-      setImgLoading(false);
-    }
+  const handleGeneratePrompt = () => {
+    const weapons = (character.armas || []).map((w) => w.name).join(", ");
+    const armor = (character.armaduras || []).map((a) => a.name).join(", ");
+    const items = (character.itens || []).map((i) => i.name).join(", ");
+    const loot = (character.espolios || []).map((e) => e.name).join(", ");
+    const advantages = (character.vantagens || [])
+      .map((v) => v.name)
+      .join(", ");
+    const complications = (character.complicacoes || [])
+      .map((c) => c.name)
+      .join(", ");
+    const awakeningResources = (character.recursos_despertar || [])
+      .map((r) => `${r.name} (Nv ${r.nivel})`)
+      .join(", ");
+
+    const prompt = `
+**Art Style:** Solo Leveling Manhwa Style, Anime, High Fantasy, 8k, Detailed, Cinematic Lighting.
+
+**Character Identity:**
+- Name: ${character.nome || "Unknown Hunter"}
+- Rank: ${character.rank || "Novice"}
+- Archetype: ${character.arquetipo || "Hunter"}
+- Concept: ${character.conceito || "Adventurer"}
+- Guild: ${character.guilda || "None"}
+
+**Awakening & Powers:**
+- Origin: ${character.despertar_origem || "Unknown"}
+- Sensation: ${character.despertar_sensacao || "Unknown"}
+- Mana Affinity: ${character.despertar_afinidade || "Blue"}
+- Awakening Mark: ${character.despertar_marca || "None"}
+- Unique Power Source: ${character.poder_unico_fonte || "Unknown"}
+- Unique Power Expression: ${character.poder_unico_expressao || "Unknown"}
+- Unique Power Trigger: ${character.poder_unico_gatilho || "Unknown"}
+- Awakening Skills: ${awakeningResources || "None"}
+
+**Equipment & Inventory:**
+- Weapons: ${weapons || "None"}
+- Armor: ${armor || "Standard Hunter Gear"}
+- Items: ${items || "None"}
+- Loot/Artifacts: ${loot || "None"}
+
+**Traits:**
+- Advantages: ${advantages || "None"}
+- Complications: ${complications || "None"}
+
+**Setting:** Medieval Fantasy World with magical Portals and Dungeons (Solo Leveling Universe).
+**Visual Context:** The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible.
+`.trim();
+
+    setGeneratedPrompt(prompt);
+    setPromptModalOpen(true);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedPrompt);
+    showNotification("Prompt copiado para a área de transferência!", "success");
+    setPromptModalOpen(false);
   };
 
   // Redirecionar para Visualizar após salvar
@@ -1532,22 +1581,15 @@ function SheetView({
                   <Button
                     variant="contained"
                     color="secondary"
-                    startIcon={
-                      imgLoading ? (
-                        <CircularProgress size={20} color="inherit" />
-                      ) : (
-                        <AiIcon />
-                      )
-                    }
-                    onClick={handleGenerateImage}
-                    disabled={imgLoading}
+                    startIcon={<AiIcon />}
+                    onClick={handleGeneratePrompt}
                     sx={{
                       background:
                         "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
                       color: "white",
                     }}
                   >
-                    Gerar com IA
+                    Gerar Prompt IA
                   </Button>
                 </Box>
               </Box>
@@ -1833,6 +1875,43 @@ function SheetView({
           />
         </Box>
       )}
+
+      {/* Modal de Prompt IA */}
+      <Dialog
+        open={promptModalOpen}
+        onClose={() => setPromptModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Prompt para IA (Solo Leveling)</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="textSecondary" paragraph>
+            Copie este prompt e use no Midjourney, DALL-E 3 ou Leonardo.ai para
+            gerar a imagem do seu personagem.
+          </Typography>
+          <Paper
+            sx={{
+              p: 2,
+              bgcolor: "#f5f5f5",
+              fontFamily: "monospace",
+              fontSize: "0.85rem",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {generatedPrompt}
+          </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPromptModalOpen(false)}>Fechar</Button>
+          <Button
+            onClick={copyToClipboard}
+            variant="contained"
+            startIcon={<CopyIcon />}
+          >
+            Copiar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
