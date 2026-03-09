@@ -22,14 +22,6 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "https://slsw-next.vercel.app/api/:path*",
-      },
-    ];
-  },
 };
 
 export default nextConfig;

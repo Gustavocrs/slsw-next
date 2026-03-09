@@ -1410,6 +1410,66 @@ function SheetView({
             <Grid item xs={12}>
               <Box
                 sx={{
+                  background: "#e3f2fd",
+                  p: 1.5,
+                  borderRadius: 1,
+                  borderLeft: "4px solid #2196f3",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                  }}
+                >
+                  <h4 style={{margin: "0", fontSize: "0.95rem"}}>Atributos</h4>
+                  <Tooltip title="Cada d6 custa 1 ponto, d8 custa 2, d10 custa 3, d12 custa 4. Total: 5 pontos">
+                    <PointsBadge
+                      style={{
+                        background:
+                          availableAttributePoints > 0 ? "#e8f5e9" : "#ffebee",
+                      }}
+                    >
+                      {availableAttributePoints}/5 restantes
+                    </PointsBadge>
+                  </Tooltip>
+                </Box>
+                <Grid container spacing={1}>
+                  {[
+                    {key: "agilidade", label: "Agi"},
+                    {key: "intelecto", label: "Int"},
+                    {key: "espirito", label: "Esp"},
+                    {key: "forca", label: "For"},
+                    {key: "vigor", label: "Vig"},
+                  ].map((attr) => (
+                    <Grid item xs={6} sm={4} md={2.4} key={attr.key}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>{attr.label}</InputLabel>
+                        <StyledSelect
+                          value={character[attr.key] || "d4"}
+                          label={attr.label}
+                          onChange={(e) =>
+                            updateAttribute(attr.key, e.target.value)
+                          }
+                        >
+                          {DICE.map((d) => (
+                            <MenuItem key={d} value={d}>
+                              {d}
+                            </MenuItem>
+                          ))}
+                        </StyledSelect>
+                      </FormControl>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box
+                sx={{
                   p: 2,
                   border: "1px dashed #ccc",
                   borderRadius: 2,
@@ -1490,66 +1550,6 @@ function SheetView({
                     Gerar com IA
                   </Button>
                 </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  background: "#e3f2fd",
-                  p: 1.5,
-                  borderRadius: 1,
-                  borderLeft: "4px solid #2196f3",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 1,
-                  }}
-                >
-                  <h4 style={{margin: "0", fontSize: "0.95rem"}}>Atributos</h4>
-                  <Tooltip title="Cada d6 custa 1 ponto, d8 custa 2, d10 custa 3, d12 custa 4. Total: 5 pontos">
-                    <PointsBadge
-                      style={{
-                        background:
-                          availableAttributePoints > 0 ? "#e8f5e9" : "#ffebee",
-                      }}
-                    >
-                      {availableAttributePoints}/5 restantes
-                    </PointsBadge>
-                  </Tooltip>
-                </Box>
-                <Grid container spacing={1}>
-                  {[
-                    {key: "agilidade", label: "Agi"},
-                    {key: "intelecto", label: "Int"},
-                    {key: "espirito", label: "Esp"},
-                    {key: "forca", label: "For"},
-                    {key: "vigor", label: "Vig"},
-                  ].map((attr) => (
-                    <Grid item xs={6} sm={4} md={2.4} key={attr.key}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>{attr.label}</InputLabel>
-                        <StyledSelect
-                          value={character[attr.key] || "d4"}
-                          label={attr.label}
-                          onChange={(e) =>
-                            updateAttribute(attr.key, e.target.value)
-                          }
-                        >
-                          {DICE.map((d) => (
-                            <MenuItem key={d} value={d}>
-                              {d}
-                            </MenuItem>
-                          ))}
-                        </StyledSelect>
-                      </FormControl>
-                    </Grid>
-                  ))}
-                </Grid>
               </Box>
             </Grid>
           </Grid>
