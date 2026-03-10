@@ -685,7 +685,7 @@ export const manualSections = [
   },
   {
     id: "evolucao-poder-unico",
-    title: "Evolução do Poder Único por Rank",
+    title: "Evolução do Poder Único",
     content: `
       <p>
         O Poder Único do Despertar não é estático. Assim como no universo de <em>Solo Leveling</em>, ele evolui conforme o Caçador sobrevive, enfrenta Dungeons mais perigosas e aprofunda sua conexão com a Mana.

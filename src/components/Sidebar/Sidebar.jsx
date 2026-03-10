@@ -21,7 +21,7 @@ import manualSections from "@/data/manualSections";
 const DrawerStyled = styled(Drawer)(({theme}) => ({
   "& .MuiDrawer-paper": {
     width: "280px",
-    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+    background: "linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)",
     "@media print": {
       display: "none",
     },
@@ -30,7 +30,7 @@ const DrawerStyled = styled(Drawer)(({theme}) => ({
 
 const SidebarHeader = styled(Box)(({theme}) => ({
   padding: "20px",
-  borderBottom: "2px solid rgba(102, 126, 234, 0.1)",
+  borderBottom: `1px solid ${theme.palette.primary.dark}`,
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -38,28 +38,28 @@ const SidebarHeader = styled(Box)(({theme}) => ({
   "& h2": {
     margin: 0,
     fontSize: "1.3rem",
-    color: "#333",
+    color: theme.palette.primary.light,
   },
 }));
 
 const SectionTitle = styled(ListItemText)(({theme}) => ({
   "& .MuiListItemText-primary": {
     fontWeight: 700,
-    color: "#667eea",
+    color: theme.palette.primary.main,
     fontSize: "0.95rem",
   },
 }));
 
 const NavItem = styled(ListItem)(({theme}) => ({
   paddingLeft: "20px",
-  color: "#666",
+  color: theme.palette.text.secondary,
   fontSize: "0.95rem",
   cursor: "pointer",
   transition: "all 0.2s ease",
 
   "&:hover": {
-    backgroundColor: "rgba(102, 126, 234, 0.15)",
-    color: "#667eea",
+    backgroundColor: "rgba(41, 182, 246, 0.1)",
+    color: theme.palette.primary.light,
     paddingLeft: "25px",
   },
 }));
