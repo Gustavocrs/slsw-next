@@ -170,7 +170,7 @@ export default function UserMenu() {
         onClose={handleClose}
       >
         <MenuItem disabled>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="black">
             {displayName}
           </Typography>
         </MenuItem>

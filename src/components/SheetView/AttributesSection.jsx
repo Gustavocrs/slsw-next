@@ -23,15 +23,15 @@ import {validateAttributes, DICE} from "@/lib/rpgEngine";
 const SectionContainer = styled(Paper)(({theme}) => ({
   padding: "24px",
   borderRadius: "12px",
-  background: "#1e293b",
+  background: "#e3f2fd",
   marginBottom: "24px",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-  borderLeft: "4px solid #29b6f6",
+  borderLeft: "4px solid #2196f3",
 }));
 
 const SectionTitle = styled("h2")(({theme}) => ({
   margin: "0 0 20px 0",
-  color: theme.palette.text.primary,
+  color: "#333",
   fontSize: "1.4rem",
   borderLeft: "4px solid #667eea",
   paddingLeft: "12px",
@@ -39,7 +39,7 @@ const SectionTitle = styled("h2")(({theme}) => ({
 
 const AttributeBox = styled(Box)(({theme}) => ({
   padding: "16px",
-  background: theme.palette.background.default,
+  background: "white",
   borderRadius: "8px",
   textAlign: "center",
   boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
@@ -56,7 +56,7 @@ const AttributeBox = styled(Box)(({theme}) => ({
     display: "block",
     fontSize: "0.85rem",
     fontWeight: 600,
-    color: theme.palette.text.secondary,
+    color: "#666",
     marginBottom: "8px",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
@@ -65,7 +65,7 @@ const AttributeBox = styled(Box)(({theme}) => ({
   "& .MuiSelect-root": {
     fontSize: "1.2rem",
     fontWeight: 700,
-    color: theme.palette.primary.main,
+    color: "#667eea",
   },
 }));
 

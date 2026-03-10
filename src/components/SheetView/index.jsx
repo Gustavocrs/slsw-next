@@ -126,7 +126,7 @@ const GridCard = ({
   title,
   children,
   color = "#667eea",
-  bg = "#1e293b",
+  bg = "#fff",
   retro = false,
   sx = {},
 }) => (
@@ -172,7 +172,7 @@ const GridCard = ({
           margin: "0 0 8px 0",
           fontSize: retro ? "1.1rem" : "1rem",
           fontWeight: retro ? 700 : 600,
-          color: retro ? "#3e2723" : "#e2e8f0",
+          color: retro ? "#3e2723" : "#444",
           fontFamily: retro ? '"Times New Roman", serif' : "inherit",
           textTransform: retro ? "uppercase" : "none",
           borderBottom: retro ? "1px solid rgba(93, 64, 55, 0.2)" : "none",
@@ -768,7 +768,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Atributos"
                 color="#2196f3"
-                bg="#172554"
+                bg="#e3f2fd"
                 retro={retroMode}
               >
                 <Box
@@ -791,7 +791,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         style={{
                           fontSize: "0.8rem",
                           fontWeight: 600,
-                          color: retroMode ? "#5d4037" : "#94a3b8",
+                          color: retroMode ? "#5d4037" : "#666",
                         }}
                       >
                         {a.l}
@@ -800,7 +800,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         style={{
                           fontSize: "1.2rem",
                           fontWeight: 700,
-                          color: retroMode ? "#3e2723" : "#60a5fa",
+                          color: retroMode ? "#3e2723" : "#2196f3",
                         }}
                       >
                         {a.v || "d4"}
@@ -832,14 +832,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <div
                         style={{
                           fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#94a3b8",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         XP
                       </div>
                       <strong
-                        style={{color: retroMode ? "#3e2723" : "#93c5fd"}}
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
                       >
                         {character.xp || 0}
                       </strong>
@@ -848,14 +848,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <div
                         style={{
                           fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#94a3b8",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         Riqueza ($)
                       </div>
                       <strong
-                        style={{color: retroMode ? "#3e2723" : "#93c5fd"}}
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
                       >
                         ${character.riqueza || 0}
                       </strong>
@@ -864,14 +864,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <div
                         style={{
                           fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#94a3b8",
+                          color: retroMode ? "#5d4037" : "#666",
                           marginBottom: "2px",
                         }}
                       >
                         Bênçãos
                       </div>
                       <strong
-                        style={{color: retroMode ? "#3e2723" : "#93c5fd"}}
+                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
                       >
                         {character.bencaos ?? 3}
                       </strong>
@@ -886,7 +886,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Combate"
                 color="#ef5350"
-                bg="#450a0a"
+                bg="#ffebee"
                 retro={retroMode}
               >
                 <Box
@@ -903,7 +903,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontWeight: "bold",
                         fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#fca5a5",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
                       }}
                     >
                       {parryBase +
@@ -917,7 +917,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontWeight: "bold",
                         fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#fca5a5",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
                       }}
                     >
                       {toughnessBase +
@@ -931,7 +931,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontWeight: "bold",
                         fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#fca5a5",
+                        color: retroMode ? "#3e2723" : "#d32f2f",
                       }}
                     >
                       {character.movimento || 6}
@@ -960,7 +960,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#fbbf24",
+                        color: retroMode ? "#3e2723" : "#d97706",
                       }}
                     >
                       ABALADO
@@ -984,7 +984,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#f87171",
+                        color: retroMode ? "#3e2723" : "#dc2626",
                       }}
                     >
                       FERIMENTOS
@@ -1019,7 +1019,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontSize: "0.8rem",
                         fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#f87171",
+                        color: retroMode ? "#3e2723" : "#7f1d1d",
                       }}
                     >
                       FADIGA
@@ -1049,7 +1049,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Perícias"
                 color="#3f51b5"
-                bg="#1e1b4b"
+                bg="#e8eaf6"
                 retro={retroMode}
               >
                 <Box
@@ -1070,13 +1070,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                         p: 0.5,
                         background: retroMode
                           ? "transparent"
-                          : "rgba(0,0,0,0.2)",
+                          : "rgba(255,255,255,0.5)",
                         borderRadius: 1,
                       }}
                     >
                       <span>{s.name}</span>
                       <strong
-                        style={{color: retroMode ? "#3e2723" : "#818cf8"}}
+                        style={{color: retroMode ? "#3e2723" : "#3f51b5"}}
                       >
                         {s.die}
                       </strong>
@@ -1094,7 +1094,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Armas"
                 color="#e53e3e"
-                bg="#450a0a"
+                bg="#fff5f5"
                 retro={retroMode}
               >
                 {(character.armas || []).map((w, i) => (
@@ -1118,7 +1118,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Armaduras"
                 color="#48bb78"
-                bg="#064e3b"
+                bg="#f0fff4"
                 retro={retroMode}
               >
                 {(character.armaduras || []).map((a, i) => (
@@ -1142,7 +1142,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Vantagens"
                 color="#667eea"
-                bg="#14532d"
+                bg="#f0fff4"
                 retro={retroMode}
                 sx={{height: "auto"}}
               >
@@ -1157,7 +1157,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Complicações"
                 color="#ff9800"
-                bg="#431407"
+                bg="#fffbf0"
                 retro={retroMode}
                 sx={{height: "auto"}}
               >
@@ -1174,7 +1174,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Recursos do Despertar"
                 color="#9c27b0"
-                bg="#3b0764"
+                bg="#f3e5f5"
                 retro={retroMode}
               >
                 {(character.recursos_despertar || []).map((res, idx) => (
@@ -1186,7 +1186,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       style={{
                         fontWeight: "bold",
                         fontSize: "0.95rem",
-                        color: retroMode ? "#3e2723" : "#e879f9",
+                        color: retroMode ? "#3e2723" : "#6a1b9a",
                       }}
                     >
                       {res.name} (Nv {res.nivel})
@@ -1195,7 +1195,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     <div
                       style={{
                         fontSize: "0.8rem",
-                        color: retroMode ? "#5d4037" : "#d1d5db",
+                        color: retroMode ? "#5d4037" : "#555",
                         marginTop: 2,
                       }}
                     >
@@ -1205,7 +1205,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <div
                         style={{
                           fontSize: "0.8rem",
-                          color: retroMode ? "#3e2723" : "#fca5a5",
+                          color: retroMode ? "#3e2723" : "#d32f2f",
                           marginTop: 1,
                         }}
                       >
@@ -1230,7 +1230,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Itens"
                 color="#607d8b"
-                bg="#262626"
+                bg="#eceff1"
                 retro={retroMode}
                 sx={{height: "auto"}}
               >
@@ -1243,7 +1243,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Espólios"
                 color="#009688"
-                bg="#064e3b"
+                bg="#e0f2f1"
                 retro={retroMode}
                 sx={{height: "auto"}}
               >
@@ -1260,7 +1260,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Notas"
                 color="#ffd700"
-                bg="#422006"
+                bg="#fffde7"
                 retro={retroMode}
               >
                 <textarea
@@ -1271,7 +1271,6 @@ Negative Prompt: ${promptData.negativePrompt}.
                     background: "transparent",
                     resize: "vertical",
                     fontFamily: "monospace",
-                    color: retroMode ? "inherit" : "#e2e8f0",
                     fontSize: "0.85rem",
                     outline: "none",
                   }}
@@ -1287,7 +1286,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               <GridCard
                 title="Magias"
                 color="#7e57c2"
-                bg="#312e81"
+                bg="#f3e5f5"
                 retro={retroMode}
               >
                 <Box
@@ -1306,7 +1305,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         p: 0.5,
                         background: retroMode
                           ? "transparent"
-                          : "rgba(0,0,0,0.2)",
+                          : "rgba(255,255,255,0.5)",
                         borderRadius: 1,
                       }}
                     >
@@ -1314,7 +1313,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <div
                         style={{
                           fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#cbd5e1",
+                          color: retroMode ? "#5d4037" : "#555",
                         }}
                       >
                         PP: {m.pp} | {m.range}
@@ -1323,7 +1322,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         <div
                           style={{
                             fontSize: "0.8rem",
-                            color: retroMode ? "#5d4037" : "#94a3b8",
+                            color: retroMode ? "#5d4037" : "#666",
                             fontStyle: "italic",
                             marginTop: "2px",
                             lineHeight: "1.1",
@@ -1346,7 +1345,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 1: IDENTIFICAÇÃO */}
       {tabValue === 1 && (
-        <Box sx={{background: "#1e293b", borderRadius: 2, p: 2, pb: 10}}>
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Stack spacing={3}>
             {/* Seção 1: Dados Principais */}
             <Box>
@@ -1552,10 +1551,10 @@ Negative Prompt: ${promptData.negativePrompt}.
               </Typography>
               <Box
                 sx={{
-                  background: "rgba(41, 182, 246, 0.1)",
+                  background: "#e3f2fd",
                   p: 1.5,
                   borderRadius: 1,
-                  borderLeft: "4px solid #29b6f6",
+                  borderLeft: "4px solid #2196f3",
                 }}
               >
                 <Box
@@ -1663,7 +1662,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     border: "1px dashed #ccc",
                     borderRadius: 2,
                     textAlign: "center",
-                    bgcolor: "rgba(0,0,0,0.2)",
+                    bgcolor: "#f9f9f9",
                     display: "flex",
                     flexDirection: {xs: "column", sm: "row"},
                     alignItems: "center",
