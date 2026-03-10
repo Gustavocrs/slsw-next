@@ -29,6 +29,8 @@ import {
   List,
   ListItem,
   ListItemAvatar,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -40,6 +42,8 @@ import {
   Settings as SettingsIcon,
   PersonAdd as AddNpcIcon,
   SwapHoriz as SwitchTableIcon,
+  Info as InfoIcon,
+  Group as GroupIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -70,6 +74,7 @@ function GameModal() {
   const [loadingNpcs, setLoadingNpcs] = useState(false);
   const [tablesMenuAnchor, setTablesMenuAnchor] = useState(null);
   const [myTables, setMyTables] = useState([]);
+  const [mobileTab, setMobileTab] = useState(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -310,10 +315,44 @@ function GameModal() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{bgcolor: "#f5f7fa", p: 0}}>
+        <DialogContent
+          dividers
+          sx={{
+            bgcolor: "#f5f7fa",
+            p: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {isMobile && (
+            <Paper
+              square
+              elevation={1}
+              sx={{position: "sticky", top: 0, zIndex: 10}}
+            >
+              <Tabs
+                value={mobileTab}
+                onChange={(e, v) => setMobileTab(v)}
+                variant="fullWidth"
+                indicatorColor="primary"
+                textColor="primary"
+              >
+                <Tab icon={<InfoIcon />} label="Mesa" />
+                <Tab icon={<GroupIcon />} label="Jogadores" />
+              </Tabs>
+            </Paper>
+          )}
           <Grid container sx={{minHeight: "100%"}}>
             {/* Coluna Esquerda: Configurações */}
-            <Grid item xs={12} md={9} sx={{p: 3}}>
+            <Grid
+              item
+              xs={12}
+              md={9}
+              sx={{
+                p: {xs: 2, md: 3},
+                display: {xs: mobileTab === 0 ? "block" : "none", md: "block"},
+              }}
+            >
               <Box sx={{mb: 3}}>
                 <Typography
                   variant="h6"
@@ -401,6 +440,7 @@ function GameModal() {
                 borderLeft: {md: "1px solid #e0e0e0"},
                 p: 2,
                 overflowY: "auto",
+                display: {xs: mobileTab === 1 ? "block" : "none", md: "block"},
               }}
             >
               {/* Seção do Game Master */}
@@ -543,23 +583,27 @@ function GameModal() {
             {/* Opções para o próprio usuário (Self) */}
             {selectedPlayer?.uid === user?.uid && (
               <div>
-                <MenuItem onClick={handleViewSheet}>
-                  <ListItemIcon>
-                    <SheetIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Ver Minha Ficha</ListItemText>
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    handleCloseMenu();
-                    toggleTableDetailsModal();
-                  }}
-                >
-                  <ListItemIcon>
-                    <SettingsIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Trocar Personagem</ListItemText>
-                </MenuItem>
+                {!isGM && (
+                  <>
+                    <MenuItem onClick={handleViewSheet}>
+                      <ListItemIcon>
+                        <SheetIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Ver Minha Ficha</ListItemText>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleCloseMenu();
+                        toggleTableDetailsModal();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <SettingsIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Trocar Personagem</ListItemText>
+                    </MenuItem>
+                  </>
+                )}
                 {isGM && (
                   <MenuItem onClick={handleOpenNpcModal}>
                     <ListItemIcon>

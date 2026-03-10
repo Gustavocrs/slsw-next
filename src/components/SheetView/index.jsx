@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Stack,
 } from "@mui/material";
 import {CircularProgress} from "@mui/material";
 import {styled} from "@mui/material/styles";
@@ -254,7 +255,7 @@ function SheetView({
   const [retroMode, setRetroMode] = React.useState(true);
   const [imgLoading, setImgLoading] = useState(false);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
+  const [promptData, setPromptData] = useState(null);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -287,50 +288,39 @@ function SheetView({
       .map((r) => `${r.name} (Nv ${r.nivel})`)
       .join(", ");
 
-    const prompt = `
-**Art Style:** Solo Leveling Manhwa Style, Anime, High Fantasy, 8k, Detailed, Cinematic Lighting.
+    const data = {
+      artStyle:
+        "Solo Leveling Manhwa Style, Anime, High Fantasy, 8k, Detailed, Cinematic Lighting, Portrait Orientation (9:16)",
+      characterDetails: `Name: ${character.nome || "Unknown Hunter"}, Rank: ${character.rank || "Novice"}, Archetype: ${character.arquetipo || "Hunter"}, Concept: ${character.conceito || "Adventurer"}, Guild: ${character.guilda || "None"}, Age: ${character.idade || "Unknown"}, Height: ${character.altura || "Unknown"}, Weight: ${character.peso || "Unknown"}, Hair: ${character.cabelos || "Unknown"}, Eyes: ${character.olhos || "Unknown"}, Skin: ${character.pele || "Unknown"}`,
+      awakeningDetails: `Awakening Origin: ${character.despertar_origem || "Unknown"}, Sensation: ${character.despertar_sensacao || "Unknown"}, Mana Affinity: ${character.despertar_afinidade || "Blue"}, Mark: ${character.despertar_marca || "None"}, Unique Power: ${awakeningResources || "None"}`,
+      equipmentDetails: `Weapons: ${weapons || "None"}, Armor: ${armor || "Standard Hunter Gear"}, Items: ${items || "None"}, Loot/Artifacts: ${loot || "None"}`,
+      traits: `Advantages: ${advantages || "None"}, Complications: ${complications || "None"}`,
+      visualContext: `The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. IMPORTANT: Ensure the full character and all weapons are fully visible within the vertical frame, avoiding cropping on the sides.`,
+      negativePrompt:
+        "No text, no watermarks, no signatures, no seals, no writing, no UI elements. Clean artwork only. No cropped weapons.",
+    };
 
-**Format:** Portrait Orientation (Vertical), 9:16 Aspect Ratio.
-
-**Character Identity:**
-- Name: ${character.nome || "Unknown Hunter"}
-- Rank: ${character.rank || "Novice"}
-- Archetype: ${character.arquetipo || "Hunter"}
-- Concept: ${character.conceito || "Adventurer"}
-- Guild: ${character.guilda || "None"}
-
-**Awakening & Powers:**
-- Origin: ${character.despertar_origem || "Unknown"}
-- Sensation: ${character.despertar_sensacao || "Unknown"}
-- Mana Affinity: ${character.despertar_afinidade || "Blue"}
-- Awakening Mark: ${character.despertar_marca || "None"}
-- Unique Power Source: ${character.poder_unico_fonte || "Unknown"}
-- Unique Power Expression: ${character.poder_unico_expressao || "Unknown"}
-- Unique Power Trigger: ${character.poder_unico_gatilho || "Unknown"}
-- Awakening Skills: ${awakeningResources || "None"}
-
-**Equipment & Inventory:**
-- Weapons: ${weapons || "None"}
-- Armor: ${armor || "Standard Hunter Gear"}
-- Items: ${items || "None"}
-- Loot/Artifacts: ${loot || "None"}
-
-**Traits:**
-- Advantages: ${advantages || "None"}
-- Complications: ${complications || "None"}
-
-**Setting:** Medieval Fantasy World with magical Portals and Dungeons (Solo Leveling Universe).
-**Visual Context:** The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. IMPORTANT: Ensure the full character and all weapons are fully visible within the vertical frame, avoiding cropping on the sides.
-
-**Negative Prompt / Constraints:** No text, no watermarks, no signatures, no seals, no writing, no UI elements. Clean artwork only. No cropped weapons.
-`.trim();
-
-    setGeneratedPrompt(prompt);
+    setPromptData(data);
     setPromptModalOpen(true);
   };
 
+  const handlePromptDataChange = (field, value) => {
+    setPromptData((prev) => ({...prev, [field]: value}));
+  };
+
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedPrompt);
+    if (!promptData) return;
+
+    const finalPrompt = `Art Style: ${promptData.artStyle}.
+Character: ${promptData.characterDetails}.
+Awakening: ${promptData.awakeningDetails}.
+Equipment: ${promptData.equipmentDetails}.
+Traits: ${promptData.traits}.
+Visuals: ${promptData.visualContext}.
+Negative Prompt: ${promptData.negativePrompt}.
+`.replace(/\n/g, " ");
+
+    navigator.clipboard.writeText(finalPrompt);
     showNotification("Prompt copiado para a área de transferência!", "success");
     setPromptModalOpen(false);
   };
@@ -711,7 +701,7 @@ function SheetView({
               </Box>
             )}
 
-            <FormControlLabel
+            {/* <FormControlLabel
               sx={{"@media print": {display: "none"}}}
               control={
                 <Switch
@@ -721,7 +711,7 @@ function SheetView({
                 />
               }
               label={retroMode ? "📜 Pergaminho" : "🎨 Moderno"}
-            />
+            /> */}
           </Box>
 
           <Box
@@ -1355,112 +1345,209 @@ function SheetView({
       {/* TAB 1: IDENTIFICAÇÃO */}
       {tabValue === 1 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                fullWidth
-                label="Nome do Personagem"
-                value={character.nome || ""}
-                onChange={(e) => updateAttribute("nome", e.target.value)}
-                placeholder="Ex: Sung Jinwoo"
-                size="small"
-              />
-            </Grid>
+          <Stack spacing={3}>
+            {/* Seção 1: Dados Principais */}
+            <Box>
+              <Typography
+                variant="h6"
+                color="primary"
+                gutterBottom
+                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+              >
+                Dados Principais
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <StyledTextField
+                    fullWidth
+                    label="Nome do Personagem"
+                    value={character.nome || ""}
+                    onChange={(e) => updateAttribute("nome", e.target.value)}
+                    placeholder="Ex: Sung Jinwoo"
+                    size="small"
+                  />
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                fullWidth
-                label="Jogador"
-                value={character.jogador || ""}
-                onChange={(e) => updateAttribute("jogador", e.target.value)}
-                placeholder="Nome do jogador"
-                size="small"
-              />
-            </Grid>
+                <Grid item xs={12} sm={6}>
+                  <StyledTextField
+                    fullWidth
+                    label="Jogador"
+                    value={character.jogador || ""}
+                    onChange={(e) => updateAttribute("jogador", e.target.value)}
+                    placeholder="Nome do jogador"
+                    size="small"
+                  />
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                fullWidth
-                label="Conceito"
-                value={character.conceito || ""}
-                onChange={(e) => updateAttribute("conceito", e.target.value)}
-                placeholder="Ex: Guerreiro prudente"
-                size="small"
-              />
-            </Grid>
+                <Grid item xs={12} sm={4}>
+                  <StyledTextField
+                    fullWidth
+                    label="Conceito"
+                    value={character.conceito || ""}
+                    onChange={(e) =>
+                      updateAttribute("conceito", e.target.value)
+                    }
+                    placeholder="Ex: Guerreiro prudente"
+                    size="small"
+                  />
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Arquétipo</InputLabel>
-                <StyledSelect
-                  value={character.arquetipo || ""}
-                  label="Arquétipo"
-                  onChange={(e) => updateAttribute("arquetipo", e.target.value)}
-                >
-                  <MenuItem value="">Selecione...</MenuItem>
-                  <MenuItem value="Assaulter">⚡ Assaulter</MenuItem>
-                  <MenuItem value="Tank">🛡️ Tank</MenuItem>
-                  <MenuItem value="Healer">✨ Healer</MenuItem>
-                  <MenuItem value="Caster">🔮 Caster</MenuItem>
-                </StyledSelect>
-              </FormControl>
-            </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Arquétipo</InputLabel>
+                    <StyledSelect
+                      value={character.arquetipo || ""}
+                      label="Arquétipo"
+                      onChange={(e) =>
+                        updateAttribute("arquetipo", e.target.value)
+                      }
+                    >
+                      <MenuItem value="">Selecione...</MenuItem>
+                      <MenuItem value="Assaulter">⚡ Assaulter</MenuItem>
+                      <MenuItem value="Tank">🛡️ Tank</MenuItem>
+                      <MenuItem value="Healer">✨ Healer</MenuItem>
+                      <MenuItem value="Caster">🔮 Caster</MenuItem>
+                    </StyledSelect>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                fullWidth
-                label="Guilda"
-                value={character.guilda || ""}
-                onChange={(e) => updateAttribute("guilda", e.target.value)}
-                placeholder="Ex: Hunter's Association"
-                size="small"
-              />
-            </Grid>
+                <Grid item xs={12} sm={4}>
+                  <StyledTextField
+                    fullWidth
+                    label="Guilda"
+                    value={character.guilda || ""}
+                    onChange={(e) => updateAttribute("guilda", e.target.value)}
+                    placeholder="Ex: Hunter's Association"
+                    size="small"
+                  />
+                </Grid>
 
-            <Grid item xs={12} sm={3}>
-              <StyledTextField
-                fullWidth
-                type="number"
-                label="XP"
-                value={character.xp || 0}
-                onChange={(e) =>
-                  updateAttribute("xp", parseInt(e.target.value) || 0)
-                }
-                size="small"
-              />
-            </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Rank</InputLabel>
+                    <StyledSelect
+                      value={character.rank || "Novato"}
+                      label="Rank"
+                      onChange={(e) => updateAttribute("rank", e.target.value)}
+                    >
+                      {RANKS.map((r) => (
+                        <MenuItem key={r} value={r}>
+                          {r}
+                        </MenuItem>
+                      ))}
+                    </StyledSelect>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Rank</InputLabel>
-                <StyledSelect
-                  value={character.rank || "Novato"}
-                  label="Rank"
-                  onChange={(e) => updateAttribute("rank", e.target.value)}
-                >
-                  {RANKS.map((r) => (
-                    <MenuItem key={r} value={r}>
-                      {r}
-                    </MenuItem>
-                  ))}
-                </StyledSelect>
-              </FormControl>
-            </Grid>
+                <Grid item xs={6} sm={4}>
+                  <StyledTextField
+                    fullWidth
+                    type="number"
+                    label="XP"
+                    value={character.xp || 0}
+                    onChange={(e) =>
+                      updateAttribute("xp", parseInt(e.target.value) || 0)
+                    }
+                    size="small"
+                  />
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                fullWidth
-                type="number"
-                label="Riqueza ($)"
-                value={character.riqueza || 0}
-                onChange={(e) =>
-                  updateAttribute("riqueza", parseInt(e.target.value) || 0)
-                }
-                size="small"
-              />
-            </Grid>
+                <Grid item xs={6} sm={4}>
+                  <StyledTextField
+                    fullWidth
+                    type="number"
+                    label="Riqueza ($)"
+                    value={character.riqueza || 0}
+                    onChange={(e) =>
+                      updateAttribute("riqueza", parseInt(e.target.value) || 0)
+                    }
+                    size="small"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
-            <Grid item xs={12}>
+            {/* Características Físicas */}
+            <Box>
+              <Typography
+                variant="h6"
+                color="primary"
+                gutterBottom
+                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+              >
+                Aparência Física
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Idade"
+                    value={character.idade || ""}
+                    onChange={(e) => updateAttribute("idade", e.target.value)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Altura"
+                    value={character.altura || ""}
+                    onChange={(e) => updateAttribute("altura", e.target.value)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Peso"
+                    value={character.peso || ""}
+                    onChange={(e) => updateAttribute("peso", e.target.value)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Cabelos"
+                    value={character.cabelos || ""}
+                    onChange={(e) => updateAttribute("cabelos", e.target.value)}
+                    size="small"
+                    placeholder="Curto / Castanho"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Olhos"
+                    value={character.olhos || ""}
+                    onChange={(e) => updateAttribute("olhos", e.target.value)}
+                    size="small"
+                    placeholder="Brilhantes"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <StyledTextField
+                    fullWidth
+                    label="Pele"
+                    value={character.pele || ""}
+                    onChange={(e) => updateAttribute("pele", e.target.value)}
+                    size="small"
+                    placeholder="Negra / Parda / Outras"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Atributos */}
+            <Box>
+              <Typography
+                variant="h6"
+                color="primary"
+                gutterBottom
+                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+              >
+                Atributos Base
+              </Typography>
               <Box
                 sx={{
                   background: "#e3f2fd",
@@ -1518,87 +1605,134 @@ function SheetView({
                   ))}
                 </Grid>
               </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  p: 2,
-                  border: "1px dashed #ccc",
-                  borderRadius: 2,
-                  textAlign: "center",
-                  bgcolor: "#f9f9f9",
-                }}
-              >
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: {xs: "column", md: "row"},
+                gap: 4,
+                width: "100%",
+                alignItems: "flex-start",
+              }}
+            >
+              {/* Descrição */}
+              <Box sx={{flex: 2, width: "100%"}}>
                 <Typography
-                  variant="subtitle2"
+                  variant="h6"
+                  color="primary"
                   gutterBottom
-                  color="textSecondary"
-                >
-                  Imagem do Personagem
-                </Typography>
-
-                {character.imagem_url && (
-                  <Box sx={{mb: 2, display: "flex", justifyContent: "center"}}>
-                    <img
-                      src={character.imagem_url}
-                      alt="Personagem"
-                      style={{
-                        maxHeight: 200,
-                        borderRadius: 8,
-                        maxWidth: "100%",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                  </Box>
-                )}
-
-                <Box
                   sx={{
-                    display: "flex",
-                    gap: 2,
-                    justifyContent: "center",
-                    flexWrap: "wrap",
+                    borderBottom: "1px solid #eee",
+                    pb: 1,
+                    mb: 2,
                   }}
                 >
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    startIcon={
-                      imgLoading ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <CloudUpload />
-                      )
-                    }
-                    disabled={imgLoading}
-                  >
-                    Upload Normal
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleImageUpload}
+                  Histórico & Personalidade
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <StyledTextField
+                      fullWidth
+                      label="Descrição & Histórico"
+                      value={character.descricao || ""}
+                      onChange={(e) =>
+                        updateAttribute("descricao", e.target.value)
+                      }
+                      placeholder="Descreva a personalidade e um breve histórico do personagem..."
+                      multiline
+                      rows={9}
                     />
-                  </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+              {/* Imagem */}
+              <Box sx={{flex: 1, width: "100%"}}>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  gutterBottom
+                  sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2, gap: 2}}
+                >
+                  Retrato do Personagem
+                </Typography>
+                <Box
+                  sx={{
+                    p: 2,
+                    border: "1px dashed #ccc",
+                    borderRadius: 2,
+                    textAlign: "center",
+                    bgcolor: "#f9f9f9",
+                    display: "flex",
+                    flexDirection: {xs: "column", sm: "row"},
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  {character.imagem_url && (
+                    <Box
+                      sx={{mb: 2, display: "flex", justifyContent: "center"}}
+                    >
+                      <img
+                        src={character.imagem_url}
+                        alt="Personagem"
+                        style={{
+                          maxHeight: 200,
+                          borderRadius: 8,
+                          maxWidth: "100%",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                      />
+                    </Box>
+                  )}
 
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<AiIcon />}
-                    onClick={handleGeneratePrompt}
+                  <Box
+                    className="flex flex-col"
                     sx={{
-                      background:
-                        "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
-                      color: "white",
+                      display: "flex",
+                      gap: 2,
+                      justifyContent: "center",
+                      flexWrap: "wrap",
                     }}
                   >
-                    Gerar Prompt IA
-                  </Button>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={
+                        imgLoading ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <CloudUpload />
+                        )
+                      }
+                      disabled={imgLoading}
+                    >
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                      Upload
+                    </Button>
+
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      startIcon={<AiIcon />}
+                      onClick={handleGeneratePrompt}
+                      sx={{
+                        background:
+                          "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
+                        color: "white",
+                      }}
+                    >
+                      Prompt
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Box>
       )}
 
@@ -1884,26 +2018,79 @@ function SheetView({
       <Dialog
         open={promptModalOpen}
         onClose={() => setPromptModalOpen(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Prompt para IA (Solo Leveling)</DialogTitle>
+        <DialogTitle>Gerador de Prompt para IA</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="textSecondary" paragraph>
-            Copie este prompt e use no Midjourney, DALL-E 3 ou Leonardo.ai para
-            gerar a imagem do seu personagem.
+            Ajuste os detalhes abaixo para refinar a imagem que será gerada.
+            Depois, copie o prompt final.
           </Typography>
-          <Paper
-            sx={{
-              p: 2,
-              bgcolor: "#f5f5f5",
-              fontFamily: "monospace",
-              fontSize: "0.85rem",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {generatedPrompt}
-          </Paper>
+          {promptData && (
+            <Stack spacing={2} sx={{mt: 2}}>
+              <TextField
+                label="Estilo de Arte & Formato"
+                value={promptData.artStyle}
+                onChange={(e) =>
+                  handlePromptDataChange("artStyle", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+              <TextField
+                label="Identidade do Personagem"
+                value={promptData.characterDetails}
+                onChange={(e) =>
+                  handlePromptDataChange("characterDetails", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+              <TextField
+                label="Despertar & Poderes"
+                value={promptData.awakeningDetails}
+                onChange={(e) =>
+                  handlePromptDataChange("awakeningDetails", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+              <TextField
+                label="Equipamentos & Inventário"
+                value={promptData.equipmentDetails}
+                onChange={(e) =>
+                  handlePromptDataChange("equipmentDetails", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+              <TextField
+                label="Contexto Visual & Pose"
+                value={promptData.visualContext}
+                onChange={(e) =>
+                  handlePromptDataChange("visualContext", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+              <TextField
+                label="Prompt Negativo (O que evitar)"
+                value={promptData.negativePrompt}
+                onChange={(e) =>
+                  handlePromptDataChange("negativePrompt", e.target.value)
+                }
+                multiline
+                fullWidth
+                variant="outlined"
+              />
+            </Stack>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPromptModalOpen(false)}>Fechar</Button>
@@ -1912,7 +2099,7 @@ function SheetView({
             variant="contained"
             startIcon={<CopyIcon />}
           >
-            Copiar
+            Copiar Prompt Final
           </Button>
         </DialogActions>
       </Dialog>

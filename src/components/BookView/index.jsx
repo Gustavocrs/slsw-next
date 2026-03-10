@@ -24,6 +24,7 @@ const BookContainer = styled(Paper)`
 
     @media (max-width: 900px) {
       padding: 20px;
+      padding-top: 80px;
       padding-bottom: 100px;
       width: 100%;
       border-radius: 0;
@@ -140,6 +141,38 @@ const SectionContent = styled.div`
   }
 `;
 
+const highlight = (text, term) => {
+  if (!term || !term.trim() || !text) {
+    return text;
+  }
+  const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const regex = new RegExp(`(${escapedTerm})`, "gi");
+  return text.replace(
+    regex,
+    `<mark style="background-color: #fff59d;">$1</mark>`,
+  );
+};
+
+const safeHighlightHtml = (html, term) => {
+  if (!term || !term.trim() || !html) {
+    return html;
+  }
+  const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const regex = new RegExp(`(${escapedTerm})`, "gi");
+  const parts = html.split(/(<[^>]*>)/g);
+
+  return parts
+    .map((part) => {
+      return /<[^>]*>/.test(part)
+        ? part
+        : part.replace(
+            regex,
+            `<mark style="background-color: #fff59d;">$1</mark>`,
+          );
+    })
+    .join("");
+};
+
 function BookView({onOpenSidebar}) {
   const [searchTerm, setSearchTerm] = React.useState("");
 
@@ -179,41 +212,41 @@ function BookView({onOpenSidebar}) {
 
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
           if (section.id === "vantagens-avancadas") {
-            let slEdges = EDGES.filter((e) => e.source === "SL").sort(
+            const initialEdges = EDGES.filter((e) => e.source === "SL").sort(
               (a, b) => {
                 const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
                 if (rankDiff !== 0) return rankDiff;
                 return a.name.localeCompare(b.name);
               },
             );
+            let slEdges = initialEdges;
 
             // Filtro dinâmico para as vantagens
             if (searchTerm) {
-              const filteredEdges = slEdges.filter(
+              slEdges = initialEdges.filter(
                 (e) =>
-                  e.name.toLowerCase().includes(lowerTerm) ||
-                  e.description.toLowerCase().includes(lowerTerm) ||
-                  e.rank.toLowerCase().includes(lowerTerm),
+                  e.name?.toLowerCase().includes(lowerTerm) ||
+                  e.description?.toLowerCase().includes(lowerTerm) ||
+                  e.rank?.toLowerCase().includes(lowerTerm),
               );
 
-              if (filteredEdges.length > 0) {
-                slEdges = filteredEdges;
-              } else if (!section.title.toLowerCase().includes(lowerTerm)) {
-                // Se não achou vantagens e o título da seção não bate, esconde a seção
+              if (
+                slEdges.length === 0 &&
+                !section.title?.toLowerCase().includes(lowerTerm)
+              ) {
                 return null;
               }
             }
 
             const edgesHtml = `
-              <p>As Vantagens Avançadas representam técnicas raras, mutações do Despertar ou domínio refinado da Mana. Elas são exclusivas do cenário <strong>SL Medieval</strong> e substituem vantagens genéricas do livro base.</p>
-              <p>Cada Vantagem possui um <strong>pré-requisito de Rank</strong>. O Mestre pode impor requisitos narrativos adicionais.</p>
+              ${safeHighlightHtml(section.content, searchTerm)}
               
               <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 600px;">
                   <thead>
                     <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
                       <th style="padding: 12px; text-align: left; color: #333;">Nome</th>
-                      <th style="padding: 12px; text-align: left; color: #333; width: 100px;">Rank</th>
+                      <th style="padding: 12px; text-align: left; color: #333; width: 120px;">Rank</th>
                       <th style="padding: 12px; text-align: left; color: #333;">Descrição</th>
                     </tr>
                   </thead>
@@ -222,13 +255,13 @@ function BookView({onOpenSidebar}) {
                       .map(
                         (edge) => `
                       <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px; color: #333;">${edge.name}</td>
+                        <td style="padding: 10px; color: #333;">${highlight(edge.name, searchTerm)}</td>
                         <td style="padding: 10px;">
                           <span style="font-size: 0.75em; background: #e0f7fa; padding: 2px 8px; border-radius: 12px; color: #006064; text-transform: uppercase; font-weight: bold; white-space: nowrap;">
-                            ${edge.rank}
+                            ${highlight(edge.rank, searchTerm)}
                           </span>
                         </td>
-                        <td style="padding: 10px; font-size: 0.95rem; color: #555;">${edge.description}</td>
+                        <td style="padding: 10px; font-size: 0.95rem; color: #555;">${highlight(edge.description, searchTerm)}</td>
                       </tr>
                     `,
                       )
@@ -240,7 +273,11 @@ function BookView({onOpenSidebar}) {
 
             return (
               <section key={section.id} id={section.id}>
-                <SectionTitle>{section.title}</SectionTitle>
+                <SectionTitle
+                  dangerouslySetInnerHTML={{
+                    __html: highlight(section.title, searchTerm),
+                  }}
+                />
                 <SectionContent dangerouslySetInnerHTML={{__html: edgesHtml}} />
               </section>
             );
@@ -248,19 +285,24 @@ function BookView({onOpenSidebar}) {
 
           // Filtro padrão para seções de texto
           if (searchTerm) {
-            if (
-              !section.title.toLowerCase().includes(lowerTerm) &&
-              !section.content.toLowerCase().includes(lowerTerm)
-            ) {
+            const titleMatch = section.title?.toLowerCase().includes(lowerTerm);
+            const contentMatch = section.content
+              ?.toLowerCase()
+              .includes(lowerTerm);
+
+            if (!titleMatch && !contentMatch) {
               return null;
             }
           }
 
+          const finalTitle = highlight(section.title, searchTerm);
+          const finalContent = safeHighlightHtml(section.content, searchTerm);
+
           return (
             <section key={section.id} id={section.id}>
-              <SectionTitle>{section.title}</SectionTitle>
+              <SectionTitle dangerouslySetInnerHTML={{__html: finalTitle}} />
               <SectionContent
-                dangerouslySetInnerHTML={{__html: section.content}}
+                dangerouslySetInnerHTML={{__html: finalContent}}
               />
             </section>
           );

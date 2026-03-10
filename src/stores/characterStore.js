@@ -30,6 +30,13 @@ const initialCharacter = {
   poder_unico_expressao: "",
   poder_unico_gatilho: "",
   notas: "",
+  // Características Físicas
+  idade: "",
+  altura: "",
+  peso: "",
+  cabelos: "",
+  olhos: "",
+  pele: "",
 };
 
 export const useCharacterStore = create((set) => ({

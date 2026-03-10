@@ -14,6 +14,8 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Assignment as AssignmentIcon,
@@ -80,6 +82,15 @@ const HeaderButton = styled(Button)(({theme}) => ({
   "&.Mui-disabled": {
     color: "rgba(255, 255, 255, 0.5)",
   },
+
+  [theme.breakpoints.down("sm")]: {
+    minWidth: "auto",
+    padding: "8px",
+    borderRadius: "50%",
+    "& .MuiButton-startIcon": {
+      margin: 0,
+    },
+  },
 }));
 
 function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
@@ -97,6 +108,9 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     setSelectedTable,
   } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Sincronização Prop -> Store: Quando a página muda a view, atualiza o store
   useEffect(() => {
@@ -169,7 +183,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
               <CircularProgress size={24} color="inherit" />
             ) : !user ? (
               <HeaderButton startIcon={<GoogleIcon />} onClick={handleLogin}>
-                Login
+                {isMobile ? "" : "Login"}
               </HeaderButton>
             ) : (
               <>
@@ -179,7 +193,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                     onClick={toggleGameModal}
                     sx={{mr: 1}}
                   >
-                    Jogo
+                    {isMobile ? "" : "Jogo"}
                   </HeaderButton>
                 )}
 
@@ -193,7 +207,11 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                   }
                   onClick={handleToggleView}
                 >
-                  {(currentView || viewMode) === "book" ? "Ficha" : "Livro"}
+                  {isMobile
+                    ? ""
+                    : (currentView || viewMode) === "book"
+                      ? "Ficha"
+                      : "Livro"}
                 </HeaderButton>
 
                 {(currentView || viewMode) === "sheet" && (
@@ -208,7 +226,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                         "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
                       }}
                     >
-                      {isSaving ? "..." : "Salvar"}
+                      {isMobile ? "" : isSaving ? "..." : "Salvar"}
                     </HeaderButton>
                   </>
                 )}
