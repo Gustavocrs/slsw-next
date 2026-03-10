@@ -31,6 +31,7 @@ import TableListModal from "../Table/TableListModal";
 import TableDetailsModal from "../Table/TableDetailsModal";
 import GameModal from "../Table/GameModal";
 import InspectSheetModal from "../Table/InspectSheetModal";
+import MessagesDashboard from "../Messages/MessagesDashboard";
 
 const StyledAppBar = styled(AppBar)(({theme}) => ({
   position: "fixed",
@@ -242,6 +243,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       <TableDetailsModal />
       <GameModal />
       <InspectSheetModal />
+      <MessagesDashboard />
 
       {/* Notificações Globais */}
       <Snackbar

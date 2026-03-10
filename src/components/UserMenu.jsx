@@ -46,7 +46,7 @@ export default function UserMenu() {
     setSelectedTable,
     selectedTable,
     notifyTablesUpdated,
-    openChatWith,
+    toggleMessagesDashboard,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -83,7 +83,7 @@ export default function UserMenu() {
 
   const handleOpenChat = () => {
     handleClose();
-    openChatWith(null); // Abre o chat global
+    toggleMessagesDashboard();
   };
 
   // Verifica convites pendentes

@@ -117,6 +117,7 @@ export const useUIStore = create(
       gameModalOpen: false, // Modal de Jogo (Novo)
       selectedTable: null, // Mesa selecionada para ver detalhes
       tablesUpdated: 0, // Timestamp para forçar refresh da lista
+      messagesDashboardOpen: false, // O novo dashboard de mensagens
 
       toggleView: () =>
         set((state) => ({
@@ -135,6 +136,8 @@ export const useUIStore = create(
         set((state) => ({gameModalOpen: !state.gameModalOpen})),
       toggleInspectModal: () =>
         set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
+      toggleMessagesDashboard: () =>
+        set((state) => ({messagesDashboardOpen: !state.messagesDashboardOpen})),
 
       // Sistema de Chat
       chatOpen: false,
