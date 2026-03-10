@@ -14,7 +14,7 @@ LOG_TAIL=50
 # ==============================================================================
 set -e
 
-echo "--- Iniciando Deploy Full: $SERVICE_NAME ---"
+echo "--- [FULL DEPLOY] Iniciando Build Standalone: $SERVICE_NAME ---"
 
 if [ ! -d "$DIR_PROJETO" ]; then
     echo "Erro: Diretório $DIR_PROJETO não encontrado."
@@ -23,21 +23,17 @@ fi
 
 cd "$DIR_PROJETO"
 
-echo "1. Atualizando repositório..."
+echo "1. Sincronizando repositório..."
 git fetch $REMOTE $BRANCH
 git pull $REMOTE $BRANCH
 
-echo "2. Mudanças detectadas:"
-git diff --name-only HEAD@{1} HEAD
-
-echo "3. Iniciando Build e Up (Recreation)..."
-# O --build força a recriação da imagem antes de subir
+echo "2. Iniciando Build e Up (Aproveitando cache de camadas)..."
 docker compose up -d --build $SERVICE_NAME
 
-echo "4. Limpeza de imagens 'dangling' (órfãs)..."
+echo "3. Limpeza de imagens órfãs..."
 docker image prune -f
 
-echo "--- Logs de Verificação ---"
+echo "--- Logs de Inicialização ---"
 docker compose logs --tail=$LOG_TAIL $SERVICE_NAME
 
-echo "--- Deploy Concluído com Sucesso ---"
+echo "--- Deploy Full Concluído ---"
