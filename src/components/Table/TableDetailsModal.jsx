@@ -430,7 +430,7 @@ function TableDetailsModal() {
               </Typography>
               <Typography variant="caption" color="text.secondary" paragraph>
                 Escolha qual ficha você usará nesta mesa. Isso permite que o GM
-                e outros jogadores vejam seus status.
+                veja seu status.
               </Typography>
               <FormControl fullWidth size="small" sx={{bgcolor: "white"}}>
                 <InputLabel>Selecione seu Personagem</InputLabel>

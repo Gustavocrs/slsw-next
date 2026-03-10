@@ -22,7 +22,7 @@ import {RANKS} from "@/lib/rpgEngine";
 const SectionContainer = styled(Paper)(({theme}) => ({
   padding: "24px",
   borderRadius: "12px",
-  background: "#e0f7fa",
+  background: "#1e293b",
   marginBottom: "24px",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
   borderLeft: "4px solid #00bcd4",

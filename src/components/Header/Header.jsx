@@ -39,8 +39,9 @@ const StyledAppBar = styled(AppBar)(({theme}) => ({
   position: "fixed",
   bottom: 0,
   top: "auto",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
+  background: "linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
+  borderTop: "1px solid #334155",
+  boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.5)",
   zIndex: 1200,
   "@media print": {
     display: "none",

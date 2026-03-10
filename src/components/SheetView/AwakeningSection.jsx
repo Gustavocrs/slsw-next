@@ -26,7 +26,7 @@ const SectionContainer = styled(Paper)`
     padding: 24px;
     margin-bottom: 24px;
     height: 100%;
-    background-color: #fff;
+    background-color: #1e293b;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border-left: 4px solid ${({$borderColor}) => $borderColor || "#ccc"};

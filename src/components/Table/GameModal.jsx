@@ -643,6 +643,12 @@ function GameModal() {
                   </ListItemIcon>
                   <ListItemText>Ver Ficha</ListItemText>
                 </MenuItem>,
+                <MenuItem key="send-msg" onClick={handleSendMessage}>
+                  <ListItemIcon>
+                    <MessageIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Enviar Msg</ListItemText>
+                </MenuItem>,
                 <MenuItem key="req-file" onClick={handleRequestFile}>
                   <ListItemIcon>
                     <FileIcon fontSize="small" />
@@ -661,14 +667,15 @@ function GameModal() {
               ]}
 
             {/* A opção de enviar mensagem só aparece se não for o próprio usuário */}
-            {selectedPlayer?.uid !== user?.uid && (
-              <MenuItem onClick={handleSendMessage}>
-                <ListItemIcon>
-                  <MessageIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Enviar Msg</ListItemText>
-              </MenuItem>
-            )}
+            {selectedPlayer?.uid !== user?.uid &&
+              !(isGM && !selectedPlayer?.isGM) && (
+                <MenuItem onClick={handleSendMessage}>
+                  <ListItemIcon>
+                    <MessageIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Enviar Msg</ListItemText>
+                </MenuItem>
+              )}
           </Menu>
         </DialogContent>
 
