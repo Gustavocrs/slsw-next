@@ -7,31 +7,28 @@ DIR_PROJETO="/root/projetos/slsw"
 SERVICE_NAME="slsw"
 REMOTE="origin"
 BRANCH="main"
-LOG_TAIL=50
 
 # ==============================================================================
 # EXECUÇÃO
 # ==============================================================================
 set -e
-
-echo "--- Restart rápido: $SERVICE_NAME ---"
-
-# Valida diretório
-if [ ! -d "$DIR_PROJETO" ]; then
-    echo "Erro: Diretório $DIR_PROJETO não existe."
-    exit 1
-fi
-
 cd "$DIR_PROJETO"
 
-echo "Sincronizando código ($REMOTE/$BRANCH)..."
+echo "--- [SMART UPDATE] Verificando melhor caminho de deploy ---"
+
 git fetch $REMOTE $BRANCH
+
+# Verifica se o package.json ou Dockerfile mudaram
+NEEDS_BUILD=$(git diff --name-only HEAD $REMOTE/$BRANCH | grep -E "package.json|package-lock.json|Dockerfile" || true)
+
 git pull $REMOTE $BRANCH
 
-echo "Reiniciando serviço Docker..."
-docker compose restart $SERVICE_NAME
+if [ -n "$NEEDS_BUILD" ]; then
+    echo "⚠️  Detectadas mudanças em dependências ou infra. Iniciando Build Full..."
+    docker compose up -d --build $SERVICE_NAME
+else
+    echo "🚀 Apenas mudanças de código. Usando Restart Rápido (Hot Reload)..."
+    docker compose restart $SERVICE_NAME
+fi
 
-echo "--- Logs Recentes ($LOG_TAIL linhas) ---"
-docker compose logs --tail=$LOG_TAIL $SERVICE_NAME
-
-echo "--- Processo Finalizado ---"
+echo "--- Processo Concluído ---"
