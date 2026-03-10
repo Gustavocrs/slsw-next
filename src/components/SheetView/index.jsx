@@ -29,6 +29,7 @@ import {
   DialogContent,
   DialogActions,
   Stack,
+  IconButton,
 } from "@mui/material";
 import {CircularProgress} from "@mui/material";
 import {styled} from "@mui/material/styles";
@@ -38,6 +39,9 @@ import {
   Error as ErrorIcon,
   AutoAwesome as AiIcon,
   ContentCopy as CopyIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
+  Bolt as BoltIcon,
 } from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
@@ -65,6 +69,7 @@ import {
   calculateTotalSkillPoints,
   calculateTotalEdgePoints,
   calculateTotalHindrancePoints,
+  calculateMaxMana,
 } from "@/lib/rpgEngine";
 
 const TabsPaper = styled(Paper)(({theme}) => ({
@@ -323,6 +328,24 @@ Negative Prompt: ${promptData.negativePrompt}.
     navigator.clipboard.writeText(finalPrompt);
     showNotification("Prompt copiado para a área de transferência!", "success");
     setPromptModalOpen(false);
+  };
+
+  // Mana Logic
+  const maxMana = useMemo(() => calculateMaxMana(character), [character]);
+  const currentMana =
+    character.mana_atual !== undefined ? character.mana_atual : maxMana;
+
+  const handleUpdateMana = (newValue) => {
+    updateAttribute("mana_atual", Math.min(newValue, maxMana)); // Cap at max? Or allow overflow? Usually cap.
+  };
+
+  const handleCastSpell = (spell) => {
+    const cost = parseInt(spell.pp, 10) || 0;
+    if (cost > 0) {
+      const newValue = currentMana - cost;
+      updateAttribute("mana_atual", newValue);
+      showNotification(`Magia usada! -${cost} Mana`, "info");
+    }
   };
 
   // Redirecionar para Visualizar após salvar
@@ -626,39 +649,119 @@ Negative Prompt: ${promptData.negativePrompt}.
             }}
           >
             <Box>
-              <h2 style={{margin: 0, color: "#333"}}>
-                {character.nome || "Sem Nome"}
-              </h2>
-              <div style={{fontSize: "0.9rem", color: "#666"}}>
-                {character.rank} • {character.arquetipo || "—"} (
-                {character.conceito || "—"})
-                {character.guilda && ` • ${character.guilda}`}
-              </div>
-              {(character.xp !== undefined ||
-                character.riqueza !== undefined) && (
-                <div
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "#555",
-                    marginTop: "4px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {character.xp !== undefined && (
-                    <span style={{marginRight: "12px"}}>
-                      XP: {character.xp}
-                    </span>
+              <Grid container spacing={2}>
+                {/* Coluna Esquerda: Dados Atuais */}
+                <Grid item xs={12} md={8}>
+                  <h2 style={{margin: 0, color: "#333"}}>
+                    {character.nome || "Sem Nome"}
+                  </h2>
+                  <div style={{fontSize: "0.9rem", color: "#666"}}>
+                    {character.rank} • {character.arquetipo || "—"} (
+                    {character.conceito || "—"})
+                    {character.guilda && ` • ${character.guilda}`}
+                  </div>
+                  {(character.xp !== undefined ||
+                    character.riqueza !== undefined) && (
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#555",
+                        marginTop: "4px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {character.xp !== undefined && (
+                        <span style={{marginRight: "12px"}}>
+                          XP: {character.xp}
+                        </span>
+                      )}
+                      {character.riqueza !== undefined && (
+                        <span>Riqueza: ${character.riqueza}</span>
+                      )}
+                    </div>
                   )}
-                  {character.riqueza !== undefined && (
-                    <span>Riqueza: ${character.riqueza}</span>
-                  )}
-                </div>
-              )}
+                </Grid>
+
+                {/* Coluna Direita: Espaço para Mana */}
+                <Grid item xs={12} md={4}>
+                  <Box
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                      borderRadius: 2,
+                      p: 1.5,
+                      color: "white",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <BoltIcon fontSize="small" />
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        MANA
+                      </Typography>
+                    </Box>
+                    <Typography
+                      variant="h4"
+                      fontWeight="bold"
+                      sx={{lineHeight: 1}}
+                    >
+                      {currentMana}{" "}
+                      <span style={{fontSize: "1rem", opacity: 0.8}}>
+                        / {maxMana}
+                      </span>
+                    </Typography>
+                    <Box sx={{display: "flex", gap: 1, mt: 1}}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleUpdateMana(currentMana - 1)}
+                        sx={{
+                          color: "white",
+                          bgcolor: "rgba(255,255,255,0.2)",
+                          "&:hover": {bgcolor: "rgba(255,255,255,0.3)"},
+                        }}
+                      >
+                        <RemoveIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleUpdateMana(currentMana + 1)}
+                        sx={{
+                          color: "white",
+                          bgcolor: "rgba(255,255,255,0.2)",
+                          "&:hover": {bgcolor: "rgba(255,255,255,0.3)"},
+                        }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
             </Box>
 
             {/* Status do Auto-Save */}
             {!propCharacter && (
-              <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                }}
+              >
                 {autoSaveStatus === "saving" && (
                   <Box
                     sx={{
@@ -1331,6 +1434,15 @@ Negative Prompt: ${promptData.negativePrompt}.
                           {m.description}
                         </div>
                       )}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        sx={{mt: 1, fontSize: "0.7rem", py: 0}}
+                        onClick={() => handleCastSpell(m)}
+                      >
+                        Usar ({parseInt(m.pp) || 0})
+                      </Button>
                     </Box>
                   ))}
                   {(!character.magias || character.magias.length === 0) && (
