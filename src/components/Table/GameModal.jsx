@@ -51,6 +51,7 @@ import APIService from "@/lib/api";
 import {doc, onSnapshot} from "firebase/firestore";
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
+import ChatModal from "./ChatModal";
 
 function GameModal() {
   const {
@@ -61,6 +62,8 @@ function GameModal() {
     toggleTableDetailsModal,
     setSelectedTable,
     toggleInspectModal,
+    toggleChat,
+    openChatWith,
   } = useUIStore();
   const {loadCharacter, setInspectedCharacter} = useCharacterStore();
   const {user} = useAuth();
@@ -189,10 +192,8 @@ function GameModal() {
   };
 
   const handleSendMessage = () => {
-    showNotification(
-      `Enviar mensagem para ${selectedPlayer?.name || "Jogador"} (Em breve)`,
-      "info",
-    );
+    // Abre o chat definindo o destinatário (Sussurro)
+    openChatWith(selectedPlayer);
     handleCloseMenu();
   };
 
@@ -303,6 +304,13 @@ function GameModal() {
             <Typography variant="h6" component="span" fontWeight="bold">
               🎮 Painel de Jogo: {selectedTable.name}
             </Typography>
+            <IconButton
+              size="small"
+              onClick={() => toggleChat()}
+              title="Chat Global"
+            >
+              <MessageIcon />
+            </IconButton>
             <IconButton
               size="small"
               onClick={handleOpenTablesMenu}
@@ -722,6 +730,9 @@ function GameModal() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Componente de Chat */}
+        <ChatModal />
       </Dialog>
     </>
   );

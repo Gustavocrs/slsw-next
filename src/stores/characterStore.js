@@ -136,6 +136,13 @@ export const useUIStore = create(
       toggleInspectModal: () =>
         set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
 
+      // Sistema de Chat
+      chatOpen: false,
+      chatRecipient: null, // null = Global, objeto = Privado
+      toggleChat: () => set((state) => ({chatOpen: !state.chatOpen})),
+      openChatWith: (recipient) =>
+        set({chatOpen: true, chatRecipient: recipient}),
+
       setSelectedTable: (table) => set({selectedTable: table}),
       notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
 

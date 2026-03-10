@@ -561,6 +561,27 @@ class APIService {
       throw error;
     }
   }
+
+  // =================================================================
+  // MÉTODOS DE CHAT
+  // =================================================================
+
+  // 15. ENVIAR MENSAGEM
+  static async sendMessage(tableId, messageData) {
+    try {
+      const payload = this._cleanData({
+        ...messageData,
+        timestamp: serverTimestamp(),
+      });
+
+      const messagesRef = collection(db, "tables", tableId, "messages");
+      await addDoc(messagesRef, payload);
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      throw error;
+    }
+  }
 }
 
 export default APIService;
