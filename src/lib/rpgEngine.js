@@ -1795,6 +1795,21 @@ export function calculateParry(fightingDie, bonus = 0) {
   return 2 + Math.floor(fightingVal / 2) + bonus;
 }
 
+export function calculateMaxMana(character) {
+  const vigorDie = character.vigor || "d4";
+  const vigorVal = parseInt(vigorDie.replace("d", ""), 10) || 4;
+
+  const hasArcaneBackground = (character.vantagens || []).some(
+    (v) => v.name === "Antecedente Arcano",
+  );
+
+  const base = vigorVal;
+  const arcaneBonus = hasArcaneBackground ? 10 : 0;
+  const tempBonus = parseInt(character.mana_bonus || 0, 10);
+
+  return base + arcaneBonus + tempBonus;
+}
+
 export function calculateStats(character) {
   const vigorDie = character.vigor || "d4";
   const fightingDie = character.lutar || "d4";
@@ -1883,6 +1898,7 @@ export default {
   calculateDefense,
   calculateParry,
   calculateStats,
+  calculateMaxMana,
   getSkillAttribute,
   filterEdgesByRank,
   filterEdgesBySource,

@@ -37,6 +37,9 @@ const initialCharacter = {
   cabelos: "",
   olhos: "",
   pele: "",
+  // Mana System
+  mana_atual: undefined, // Se undefined, considera cheio
+  mana_bonus: 0,
 };
 
 export const useCharacterStore = create((set) => ({
