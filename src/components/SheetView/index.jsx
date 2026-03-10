@@ -42,6 +42,7 @@ import {
   Add as AddIcon,
   Remove as RemoveIcon,
   Bolt as BoltIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import {CombatList} from "./CombatList";
 import SkillsList from "./SkillsList";
@@ -342,6 +343,13 @@ Negative Prompt: ${promptData.negativePrompt}.
   const handleCastSpell = (spell) => {
     const cost = parseInt(spell.pp, 10) || 0;
     if (cost > 0) {
+      if (currentMana < cost) {
+        showNotification(
+          `Mana insuficiente! Necessário: ${cost} PP`,
+          "warning",
+        );
+        return;
+      }
       const newValue = currentMana - cost;
       updateAttribute("mana_atual", newValue);
       showNotification(`Magia usada! -${cost} Mana`, "info");
@@ -686,65 +694,54 @@ Negative Prompt: ${promptData.negativePrompt}.
                 <Grid item xs={12} md={4}>
                   <Box
                     sx={{
-                      background:
-                        "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                      background: "rgba(33, 150, 243, 0.1)",
                       borderRadius: 2,
-                      p: 1.5,
-                      color: "white",
+                      p: 1,
+                      px: 2,
+                      color: "#1565c0",
+                      border: "1px solid rgba(33, 150, 243, 0.3)",
                       display: "flex",
-                      flexDirection: "column",
                       alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
+                    <Box sx={{display: "flex", alignItems: "center", gap: 1.5}}>
                       <BoltIcon fontSize="small" />
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        MANA
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          sx={{fontWeight: "bold", opacity: 0.8, lineHeight: 1}}
+                        >
+                          MANA
+                        </Typography>
+                        <Typography
+                          variant="h5"
+                          fontWeight="bold"
+                          sx={{lineHeight: 1}}
+                        >
+                          {currentMana}{" "}
+                          <span
+                            style={{
+                              fontSize: "0.9rem",
+                              opacity: 0.7,
+                              fontWeight: "normal",
+                            }}
+                          >
+                            / {maxMana}
+                          </span>
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Typography
-                      variant="h4"
-                      fontWeight="bold"
-                      sx={{lineHeight: 1}}
-                    >
-                      {currentMana}{" "}
-                      <span style={{fontSize: "1rem", opacity: 0.8}}>
-                        / {maxMana}
-                      </span>
-                    </Typography>
-                    <Box sx={{display: "flex", gap: 1, mt: 1}}>
+                    <Tooltip title="Restaurar Mana">
                       <IconButton
                         size="small"
-                        onClick={() => handleUpdateMana(currentMana - 1)}
-                        sx={{
-                          color: "white",
-                          bgcolor: "rgba(255,255,255,0.2)",
-                          "&:hover": {bgcolor: "rgba(255,255,255,0.3)"},
-                        }}
+                        onClick={() => handleUpdateMana(maxMana)}
+                        color="primary"
                       >
-                        <RemoveIcon fontSize="small" />
+                        <RefreshIcon />
                       </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleUpdateMana(currentMana + 1)}
-                        sx={{
-                          color: "white",
-                          bgcolor: "rgba(255,255,255,0.2)",
-                          "&:hover": {bgcolor: "rgba(255,255,255,0.3)"},
-                        }}
-                      >
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
+                    </Tooltip>
                   </Box>
                 </Grid>
               </Grid>
@@ -1437,11 +1434,21 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <Button
                         size="small"
                         variant="outlined"
-                        color="primary"
-                        sx={{mt: 1, fontSize: "0.7rem", py: 0}}
+                        color={
+                          currentMana >= (parseInt(m.pp) || 0)
+                            ? "primary"
+                            : "error"
+                        }
+                        disabled={currentMana < (parseInt(m.pp) || 0)}
+                        sx={{
+                          mt: 1,
+                          fontSize: "0.75rem",
+                          py: 0.5,
+                          width: "100%",
+                        }}
                         onClick={() => handleCastSpell(m)}
                       >
-                        Usar ({parseInt(m.pp) || 0})
+                        Usar ({parseInt(m.pp) || 0} PP)
                       </Button>
                     </Box>
                   ))}

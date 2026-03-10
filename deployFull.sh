@@ -5,33 +5,35 @@
 # ==============================================================================
 DIR_PROJETO="/root/projetos/slsw"
 SERVICE_NAME="slsw"
+REMOTE="origin"
 BRANCH="main"
+LOG_TAIL=50
 
 # ==============================================================================
 # EXECUÇÃO
 # ==============================================================================
 set -e
 
-echo "--- Iniciando Deploy Otimizado: $SERVICE_NAME ---"
+echo "--- [FULL DEPLOY] Iniciando Build Standalone: $SERVICE_NAME ---"
 
-cd "$DIR_PROJETO" || { echo "Erro: Pasta não encontrada"; exit 1; }
+if [ ! -d "$DIR_PROJETO" ]; then
+    echo "Erro: Diretório $DIR_PROJETO não encontrado."
+    exit 1
+fi
 
-echo "Sincronizando código..."
-git fetch origin $BRANCH
-git reset --hard origin/$BRANCH
+cd "$DIR_PROJETO"
 
-echo "--- Diferenças para este deploy ---"
-git diff --name-only HEAD@{1} HEAD
-echo "-----------------------------------"
+echo "1. Sincronizando repositório..."
+git fetch $REMOTE $BRANCH
+git pull $REMOTE $BRANCH
 
-echo "Construindo aplicação (Cache Layering)..."
-# O uso de --build com o novo Dockerfile ignorará o install se o package.json for igual
+echo "2. Iniciando Build e Up (Aproveitando cache de camadas)..."
 docker compose up -d --build $SERVICE_NAME
 
-echo "Limpando lixo de imagens..."
+echo "3. Limpeza de imagens órfãs..."
 docker image prune -f
 
-echo "--- Logs de inicialização ---"
-docker compose logs --tail=30 $SERVICE_NAME
+echo "--- Logs de Inicialização ---"
+docker compose logs --tail=$LOG_TAIL $SERVICE_NAME
 
-echo "--- Deploy Concluído com Sucesso ---"
+echo "--- Deploy Full Concluído ---"
