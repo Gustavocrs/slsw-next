@@ -25,6 +25,7 @@ import {
   Button,
   useTheme,
   useMediaQuery,
+  Badge,
 } from "@mui/material";
 import {Close as CloseIcon, Send as SendIcon} from "@mui/icons-material";
 import {useUIStore} from "@/stores/characterStore";
@@ -149,9 +150,7 @@ function ChatView({recipient, table, user, onBack}) {
         {onBack && <Button onClick={onBack}>Voltar</Button>}
         <Box>
           <Typography variant="h6">
-            {recipient
-              ? `Conversa com ${recipient.name}`
-              : "Chat Global da Mesa"}
+            {recipient ? recipient.name : "Todos"}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Mesa: {table?.name || "Nenhuma mesa selecionada"}
@@ -177,6 +176,7 @@ function ChatView({recipient, table, user, onBack}) {
                   <Avatar
                     src={msg.senderPhoto}
                     sx={{width: 28, height: 28, mt: 0.5}}
+                    imgProps={{referrerPolicy: "no-referrer"}}
                   />
                 )}
                 <Paper
@@ -240,10 +240,21 @@ function ChatView({recipient, table, user, onBack}) {
 }
 
 export default function MessagesDashboard() {
-  const {messagesDashboardOpen, toggleMessagesDashboard, selectedTable} =
-    useUIStore();
+  const {
+    messagesDashboardOpen,
+    toggleMessagesDashboard,
+    selectedTable,
+    notifications,
+  } = useUIStore();
   const {user} = useAuth();
   const [activeRecipient, setActiveRecipient] = useState(undefined); // undefined para tela inicial, null para global
+
+  const unreadCountsByConversation = React.useMemo(() => {
+    return (notifications || []).reduce((acc, notif) => {
+      acc[notif.conversationId] = (acc[notif.conversationId] || 0) + 1;
+      return acc;
+    }, {});
+  }, [notifications]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -348,13 +359,19 @@ export default function MessagesDashboard() {
             </Box>
             <Divider />
             <List>
+              {/* Chat Global */}
               <ListItem
                 button
                 selected={activeRecipient === null}
                 onClick={() => handleSelectContact(null)}
               >
                 <ListItemAvatar>
-                  <Avatar>#</Avatar>
+                  <Badge
+                    badgeContent={unreadCountsByConversation["global"] || 0}
+                    color="error"
+                  >
+                    <Avatar>#</Avatar>
+                  </Badge>
                 </ListItemAvatar>
                 <ListItemText
                   primary="Chat Global"
@@ -362,6 +379,8 @@ export default function MessagesDashboard() {
                 />
               </ListItem>
               <Divider component="li" />
+
+              {/* Contatos Privados */}
               {contacts.length > 0 ? (
                 contacts.map((contact) => (
                   <ListItem
@@ -371,7 +390,20 @@ export default function MessagesDashboard() {
                     onClick={() => handleSelectContact(contact)}
                   >
                     <ListItemAvatar>
-                      <Avatar src={contact.photoURL} alt={contact.name} />
+                      <Badge
+                        badgeContent={
+                          unreadCountsByConversation[
+                            generatePrivateConversationId(user.uid, contact.uid)
+                          ] || 0
+                        }
+                        color="error"
+                      >
+                        <Avatar
+                          src={contact.photoURL}
+                          alt={contact.name}
+                          imgProps={{referrerPolicy: "no-referrer"}}
+                        />
+                      </Badge>
                     </ListItemAvatar>
                     <ListItemText
                       primary={contact.name}

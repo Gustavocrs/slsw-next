@@ -94,37 +94,64 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Regras para Usuários (necessário para notificações)
+    // Regras para Usuários (Notificações de Chat)
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId;
+      // O usuário pode ler e atualizar seu próprio perfil (ex: lastLogin)
+      allow read, write: if request.auth.uid == userId;
 
+      // Subcoleção de notificações
       match /notifications/{notificationId} {
         // O dono pode ler e apagar suas notificações
         allow read, list, delete: if request.auth.uid == userId;
-        // Qualquer usuário autenticado pode criar uma notificação (enviar msg)
+        // Qualquer usuário autenticado pode criar uma notificação para outro (enviar msg)
         allow create: if request.auth != null;
       }
     }
 
-    // Regras para Personagens
+    // Regras para Fichas de Personagem
     match /characters/{charId} {
-      allow read, write: if request.auth != null;
+      // O dono da ficha pode atualizar ou deletar
+      allow update, delete: if request.auth.uid == resource.data.userId;
+      // Um usuário autenticado pode criar uma ficha para si mesmo
+      allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
+      // Qualquer usuário autenticado pode ler uma ficha (a UI controla o acesso)
+      // Isso é necessário para o GM poder ver a ficha dos jogadores.
+      allow read: if request.auth != null;
     }
 
-    // Regras para Mesas
+    // Regras para Mesas de Jogo
     match /tables/{tableId} {
-      allow read: if resource.data.gmId == request.auth.uid || request.auth.uid in resource.data.playerIds;
-      allow create: if request.auth != null;
-      allow update, delete: if resource.data.gmId == request.auth.uid;
+      // O GM ou um jogador da mesa pode ler os dados da mesa
+      allow read: if resource.data.gmId == request.auth.uid
+                  || request.auth.uid in resource.data.playerIds
+                  || (resource.data.invites != null && request.auth.token.email in resource.data.invites);
 
-      // Regras para o Chat (Conversas)
+      // Apenas o GM pode deletar a mesa
+      allow delete: if resource.data.gmId == request.auth.uid;
+
+      // Um usuário pode criar uma mesa se ele for o GM dela
+      allow create: if request.auth.uid != null && request.resource.data.gmId == request.auth.uid;
+
+      // O GM pode atualizar qualquer campo.
+      // Um jogador convidado (pelo email) pode se adicionar à lista de jogadores (aceitar convite).
+      // Um jogador que já está na mesa pode atualizar dados (ex: vincular personagem).
+      allow update: if resource.data.gmId == request.auth.uid
+                    || request.auth.token.email in resource.data.invites
+                    || request.auth.uid in resource.data.playerIds;
+
+      // Regras para o Chat da Mesa
       match /conversations/{conversationId}/messages/{messageId} {
-         allow read, list: if get(/databases/$(database)/documents/tables/$(tableId)).data.gmId == request.auth.uid
+        // Apenas membros da mesa podem ler as mensagens
+        allow read, list: if get(/databases/$(database)/documents/tables/$(tableId)).data.gmId == request.auth.uid
                        || request.auth.uid in get(/databases/$(database)/documents/tables/$(tableId)).data.playerIds;
 
-         allow create: if (get(/databases/$(database)/documents/tables/$(tableId)).data.gmId == request.auth.uid
+        // Apenas membros da mesa podem enviar mensagens, e apenas em seu próprio nome
+        allow create: if (get(/databases/$(database)/documents/tables/$(tableId)).data.gmId == request.auth.uid
                          || request.auth.uid in get(/databases/$(database)/documents/tables/$(tableId)).data.playerIds)
                          && request.resource.data.senderId == request.auth.uid;
+
+        // Ninguém pode alterar ou deletar mensagens depois de enviadas
+        allow update, delete: if false;
       }
     }
   }

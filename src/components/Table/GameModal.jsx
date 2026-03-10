@@ -660,12 +660,15 @@ function GameModal() {
                 </MenuItem>,
               ]}
 
-            <MenuItem onClick={handleSendMessage}>
-              <ListItemIcon>
-                <MessageIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Enviar Msg</ListItemText>
-            </MenuItem>
+            {/* A opção de enviar mensagem só aparece se não for o próprio usuário */}
+            {selectedPlayer?.uid !== user?.uid && (
+              <MenuItem onClick={handleSendMessage}>
+                <ListItemIcon>
+                  <MessageIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Enviar Msg</ListItemText>
+              </MenuItem>
+            )}
           </Menu>
         </DialogContent>
 

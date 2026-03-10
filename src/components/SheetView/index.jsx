@@ -734,6 +734,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               {character.imagem_url && (
                 <img
                   src={character.imagem_url}
+                  referrerPolicy="no-referrer"
                   alt="Personagem"
                   style={{
                     width: "100%",

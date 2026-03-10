@@ -110,7 +110,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     toggleGameModal,
     setSelectedTable,
   } = useUIStore();
-  const setUnreadCount = useUIStore((state) => state.setUnreadCount);
+  const setNotifications = useUIStore((state) => state.setNotifications);
   const [isSaving, setIsSaving] = useState(false);
 
   const theme = useTheme();
@@ -144,17 +144,18 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   // Listener de notificações de mensagens não lidas
   useEffect(() => {
     if (!user?.uid) {
-      setUnreadCount(0);
+      setNotifications([]);
       return;
     }
 
     const q = query(collection(db, "users", user.uid, "notifications"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setUnreadCount(snapshot.size);
+      const notifs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+      setNotifications(notifs);
     });
 
     return () => unsubscribe();
-  }, [user?.uid, setUnreadCount]);
+  }, [user?.uid, setNotifications]);
 
   const handleLogin = async () => {
     try {

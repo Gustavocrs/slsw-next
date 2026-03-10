@@ -22,9 +22,7 @@ import {
   DialogContent,
   useMediaQuery,
   useTheme,
-  List,
-  ListItem,
-  Button,
+  ListItemIcon,
 } from "@mui/material";
 import {
   Logout,
@@ -32,7 +30,6 @@ import {
   Description as SheetIcon,
   Close as CloseIcon,
   Message as MessageIcon,
-  ListItemIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
@@ -47,7 +44,7 @@ export default function UserMenu() {
     selectedTable,
     notifyTablesUpdated,
     toggleMessagesDashboard,
-    unreadCount,
+    notifications,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -56,6 +53,8 @@ export default function UserMenu() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const unreadCount = notifications?.length || 0;
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -139,7 +138,7 @@ export default function UserMenu() {
         sx={{p: 0}}
       >
         <Badge
-          badgeContent={pendingInvites}
+          badgeContent={pendingInvites + unreadCount}
           color="error"
           overlap="circular"
           anchorOrigin={{vertical: "bottom", horizontal: "right"}}

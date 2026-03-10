@@ -118,7 +118,7 @@ export const useUIStore = create(
       selectedTable: null, // Mesa selecionada para ver detalhes
       tablesUpdated: 0, // Timestamp para forçar refresh da lista
       messagesDashboardOpen: false, // O novo dashboard de mensagens
-      unreadCount: 0, // Contagem de mensagens não lidas
+      notifications: [], // Lista de notificações não lidas
 
       toggleView: () =>
         set((state) => ({
@@ -147,7 +147,7 @@ export const useUIStore = create(
       openChatWith: (recipient) =>
         set({chatOpen: true, chatRecipient: recipient}),
 
-      setUnreadCount: (count) => set({unreadCount: count}),
+      setNotifications: (notifications) => set({notifications}),
       setSelectedTable: (table) => set({selectedTable: table}),
       notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
 
