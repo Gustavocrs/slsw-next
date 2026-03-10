@@ -32,6 +32,7 @@ import {
   TableRestaurant,
   Description as SheetIcon,
   Close as CloseIcon,
+  Message as MessageIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
@@ -45,6 +46,7 @@ export default function UserMenu() {
     setSelectedTable,
     selectedTable,
     notifyTablesUpdated,
+    openChatWith,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -77,6 +79,11 @@ export default function UserMenu() {
   const handleOpenSheets = () => {
     handleClose();
     setSheetManagerOpen(true);
+  };
+
+  const handleOpenChat = () => {
+    handleClose();
+    openChatWith(null); // Abre o chat global
   };
 
   // Verifica convites pendentes
@@ -168,6 +175,10 @@ export default function UserMenu() {
           </Typography>
         </MenuItem>
 
+        <MenuItem onClick={handleOpenChat}>
+          <MessageIcon fontSize="small" sx={{mr: 1}} />
+          Mensagens
+        </MenuItem>
         <MenuItem onClick={handleOpenSheets}>
           <SheetIcon fontSize="small" sx={{mr: 1}} />
           Minhas Fichas

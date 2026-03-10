@@ -34,7 +34,13 @@ import {
 import {db} from "@/lib/firebase";
 
 export default function ChatModal() {
-  const {chatOpen, toggleChat, chatRecipient, selectedTable} = useUIStore();
+  // Helper para criar um ID único e consistente para conversas privadas
+  const generatePrivateConversationId = (uid1, uid2) => {
+    return [uid1, uid2].sort().join("_");
+  };
+
+  const {chatOpen, toggleChat, chatRecipient, selectedTable, showNotification} =
+    useUIStore();
   const {user} = useAuth();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -53,22 +59,55 @@ export default function ChatModal() {
   useEffect(() => {
     if (!chatOpen || !selectedTable?._id) return;
 
+    // Determina o ID da conversa (global ou privada)
+    let conversationId;
+    if (chatRecipient) {
+      conversationId = generatePrivateConversationId(
+        user.uid,
+        chatRecipient.uid,
+      );
+    } else {
+      conversationId = "global";
+    }
+
+    if (!conversationId) return;
+
     const q = query(
-      collection(db, "tables", selectedTable._id, "messages"),
+      collection(
+        db,
+        "tables",
+        selectedTable._id,
+        "conversations",
+        conversationId,
+        "messages",
+      ),
       orderBy("timestamp", "asc"),
       limit(100),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMessages(msgs);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const msgs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setMessages(msgs);
+      },
+      (error) => {
+        console.error("Erro no chat:", error);
+        if (error.code === "permission-denied") {
+          // Não fecha o chat para não frustrar, mas avisa
+          showNotification(
+            "Erro de permissão: Atualize as regras do Firestore.",
+            "error",
+          );
+        }
+      },
+    );
 
     return () => unsubscribe();
-  }, [chatOpen, selectedTable?._id]);
+  }, [chatOpen, selectedTable?._id, chatRecipient, user?.uid]);
 
   const handleSend = async () => {
     if (!message.trim() || !user) return;
@@ -97,19 +136,6 @@ export default function ChatModal() {
       handleSend();
     }
   };
-
-  // Filtra mensagens relevantes (Globais ou Privadas envolvendo o usuário)
-  const filteredMessages = messages.filter((msg) => {
-    // Mensagem Global
-    if (!msg.recipientId) return true;
-
-    // Mensagem Privada: Eu sou o remetente OU Eu sou o destinatário
-    const isMeSender = msg.senderId === user?.uid;
-    const isMeRecipient = msg.recipientId === user?.uid;
-
-    // Se for GM, talvez queira ver tudo (opcional, por enquanto segue regra estrita)
-    return isMeSender || isMeRecipient;
-  });
 
   return (
     <Dialog
@@ -156,7 +182,7 @@ export default function ChatModal() {
         sx={{flex: 1, p: 2, bgcolor: "#f5f7fa", overflowY: "auto"}}
       >
         <Box sx={{display: "flex", flexDirection: "column", gap: 1.5}}>
-          {filteredMessages.map((msg) => {
+          {messages.map((msg) => {
             const isMe = msg.senderId === user?.uid;
             const isPrivate = !!msg.recipientId;
 

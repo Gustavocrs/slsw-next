@@ -568,13 +568,30 @@ class APIService {
 
   // 15. ENVIAR MENSAGEM
   static async sendMessage(tableId, messageData) {
+    const {senderId, recipientId} = messageData;
+
+    // Define o ID da conversa: 'global' ou um ID combinado para chat privado
+    let conversationId;
+    if (recipientId) {
+      conversationId = [senderId, recipientId].sort().join("_");
+    } else {
+      conversationId = "global";
+    }
+
     try {
       const payload = this._cleanData({
         ...messageData,
         timestamp: serverTimestamp(),
       });
 
-      const messagesRef = collection(db, "tables", tableId, "messages");
+      const messagesRef = collection(
+        db,
+        "tables",
+        tableId,
+        "conversations",
+        conversationId,
+        "messages",
+      );
       await addDoc(messagesRef, payload);
       return {success: true};
     } catch (error) {

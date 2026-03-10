@@ -90,28 +90,38 @@ function GameModal() {
 
     const tableRef = doc(db, "tables", selectedTable._id);
 
-    const unsubscribe = onSnapshot(tableRef, (docSnap) => {
-      if (!docSnap.exists()) {
-        toggleGameModal();
-        showNotification("Esta mesa foi excluída.", "warning");
-        return;
-      }
+    const unsubscribe = onSnapshot(
+      tableRef,
+      (docSnap) => {
+        if (!docSnap.exists()) {
+          toggleGameModal();
+          showNotification("Esta mesa foi excluída.", "warning");
+          return;
+        }
 
-      const data = {_id: docSnap.id, ...docSnap.data()};
+        const data = {_id: docSnap.id, ...docSnap.data()};
 
-      // VERIFICAÇÃO: O usuário ainda tem permissão para ver a mesa?
-      const isUserGM = data.gmId === user.uid;
-      const isUserPlayer = data.playerIds?.includes(user.uid);
+        // VERIFICAÇÃO: O usuário ainda tem permissão para ver a mesa?
+        const isUserGM = data.gmId === user.uid;
+        const isUserPlayer = data.playerIds?.includes(user.uid);
 
-      if (!isUserGM && !isUserPlayer) {
-        toggleGameModal();
-        showNotification("Você não faz mais parte desta mesa.", "error");
-        return;
-      }
+        if (!isUserGM && !isUserPlayer) {
+          toggleGameModal();
+          showNotification("Você não faz mais parte desta mesa.", "error");
+          return;
+        }
 
-      // Atualiza os dados da mesa em tempo real (jogadores, arquivos, etc)
-      setSelectedTable(data);
-    });
+        // Atualiza os dados da mesa em tempo real (jogadores, arquivos, etc)
+        setSelectedTable(data);
+      },
+      (error) => {
+        console.error("Erro ao sincronizar mesa:", error);
+        if (error.code === "permission-denied") {
+          showNotification("Sem permissão para acessar esta mesa.", "error");
+          toggleGameModal();
+        }
+      },
+    );
 
     return () => unsubscribe();
   }, [
