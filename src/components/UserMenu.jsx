@@ -1,6 +1,6 @@
 /**
  * UserMenu Component
- * Exibe avatar do usuário e menu de logout
+ * Exibe avatar do usuário e menu de ações
  */
 
 "use client";
@@ -14,6 +14,7 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  ListItemText,
   Typography,
   Badge,
   Dialog,
@@ -23,8 +24,6 @@ import {
   useTheme,
   List,
   ListItem,
-  ListItemAvatar,
-  ListItemText,
   Button,
 } from "@mui/material";
 import {
@@ -33,6 +32,7 @@ import {
   Description as SheetIcon,
   Close as CloseIcon,
   Message as MessageIcon,
+  ListItemIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
@@ -47,6 +47,7 @@ export default function UserMenu() {
     selectedTable,
     notifyTablesUpdated,
     toggleMessagesDashboard,
+    unreadCount,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -176,28 +177,32 @@ export default function UserMenu() {
         </MenuItem>
 
         <MenuItem onClick={handleOpenChat}>
-          <MessageIcon fontSize="small" sx={{mr: 1}} />
-          Mensagens
+          <ListItemIcon>
+            <Badge badgeContent={unreadCount} color="error">
+              <MessageIcon fontSize="small" />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText>Mensagens</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleOpenSheets}>
-          <SheetIcon fontSize="small" sx={{mr: 1}} />
-          Minhas Fichas
+          <ListItemIcon>
+            <SheetIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Minhas Fichas</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleOpenTables}>
-          <Badge
-            badgeContent={pendingInvites}
-            color="error"
-            variant="dot"
-            invisible={pendingInvites === 0}
-            sx={{mr: 1}}
-          >
-            <TableRestaurant fontSize="small" />
-          </Badge>
-          Minhas Mesas
+          <ListItemIcon>
+            <Badge badgeContent={pendingInvites} color="error">
+              <TableRestaurant fontSize="small" />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText>Minhas Mesas</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleLogout}>
-          <Logout fontSize="small" sx={{mr: 1}} />
-          Sair
+          <ListItemIcon>
+            <Logout fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Sair</ListItemText>
         </MenuItem>
       </Menu>
 

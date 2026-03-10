@@ -94,6 +94,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Regras para Usuários (necessário para notificações)
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+
+      match /notifications/{notificationId} {
+        // O dono pode ler e apagar suas notificações
+        allow read, list, delete: if request.auth.uid == userId;
+        // Qualquer usuário autenticado pode criar uma notificação (enviar msg)
+        allow create: if request.auth != null;
+      }
+    }
+
     // Regras para Personagens
     match /characters/{charId} {
       allow read, write: if request.auth != null;

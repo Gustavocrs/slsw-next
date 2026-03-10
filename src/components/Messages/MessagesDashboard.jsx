@@ -67,6 +67,9 @@ function ChatView({recipient, table, user, onBack}) {
       return;
     }
 
+    // Limpa as notificações para esta conversa ao abri-la
+    APIService.clearConversationNotifications(user.uid, conversationId);
+
     const q = query(
       collection(
         db,

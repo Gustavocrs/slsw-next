@@ -2,6 +2,7 @@
 
 import React, {useState, useEffect} from "react";
 import {styled} from "@mui/material/styles";
+import {collection, onSnapshot, query} from "firebase/firestore";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
 import APIService from "@/lib/api";
@@ -31,6 +32,7 @@ import TableListModal from "../Table/TableListModal";
 import TableDetailsModal from "../Table/TableDetailsModal";
 import GameModal from "../Table/GameModal";
 import InspectSheetModal from "../Table/InspectSheetModal";
+import {db} from "@/lib/firebase";
 import MessagesDashboard from "../Messages/MessagesDashboard";
 
 const StyledAppBar = styled(AppBar)(({theme}) => ({
@@ -108,6 +110,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     toggleGameModal,
     setSelectedTable,
   } = useUIStore();
+  const setUnreadCount = useUIStore((state) => state.setUnreadCount);
   const [isSaving, setIsSaving] = useState(false);
 
   const theme = useTheme();
@@ -137,6 +140,21 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     };
     autoSelectTable();
   }, [user, selectedTable, setSelectedTable]);
+
+  // Listener de notificações de mensagens não lidas
+  useEffect(() => {
+    if (!user?.uid) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const q = query(collection(db, "users", user.uid, "notifications"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadCount(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid, setUnreadCount]);
 
   const handleLogin = async () => {
     try {

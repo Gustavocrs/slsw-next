@@ -10,8 +10,9 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import {auth} from "@/lib/firebase";
+import {auth, db} from "@/lib/firebase";
 import {useAuthStore} from "@/stores/characterStore";
+import {doc, setDoc, serverTimestamp} from "firebase/firestore";
 
 const provider = new GoogleAuthProvider();
 
@@ -19,14 +20,23 @@ export function useAuth() {
   const {user, loading, setUser, setLoading, logout} = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        setUser({
+        const userData = {
           uid: currentUser.uid,
           email: currentUser.email,
           displayName: currentUser.displayName,
           photoURL: currentUser.photoURL,
-        });
+        };
+        setUser(userData);
+
+        // Garante que o documento do usuário exista no Firestore
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(
+          userRef,
+          {...userData, lastLogin: serverTimestamp()},
+          {merge: true},
+        );
       } else {
         setUser(null);
       }

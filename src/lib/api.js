@@ -17,6 +17,7 @@ import {
   or,
   arrayUnion,
   arrayRemove,
+  writeBatch,
 } from "firebase/firestore";
 import {useUIStore} from "@/stores/characterStore";
 
@@ -593,10 +594,76 @@ class APIService {
         "messages",
       );
       await addDoc(messagesRef, payload);
+
+      // --- Lógica de Notificação ---
+      const notificationPayload = {
+        tableId,
+        conversationId,
+        senderName: messageData.senderName,
+        timestamp: serverTimestamp(),
+      };
+
+      if (recipientId) {
+        // Mensagem privada: notifica apenas o destinatário
+        const notificationRef = collection(
+          db,
+          "users",
+          recipientId,
+          "notifications",
+        );
+        await addDoc(notificationRef, notificationPayload);
+      } else {
+        // Mensagem global: notifica todos na mesa (exceto o remetente)
+        const tableRef = doc(db, "tables", tableId);
+        const tableSnap = await getDoc(tableRef);
+        if (tableSnap.exists()) {
+          const playerIds = tableSnap.data().playerIds || [];
+          const gmId = tableSnap.data().gmId;
+          const allMemberIds = [...new Set([...playerIds, gmId])];
+
+          const batch = writeBatch(db);
+          allMemberIds.forEach((memberId) => {
+            if (memberId !== senderId) {
+              const userNotifRef = doc(
+                collection(db, "users", memberId, "notifications"),
+              );
+              batch.set(userNotifRef, notificationPayload);
+            }
+          });
+          await batch.commit();
+        }
+      }
+
       return {success: true};
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       throw error;
+    }
+  }
+
+  // 16. LIMPAR NOTIFICAÇÕES DE MENSAGEM
+  static async clearConversationNotifications(userId, conversationId) {
+    if (!userId || !conversationId) return;
+
+    try {
+      const notificationsRef = collection(db, "users", userId, "notifications");
+      const q = query(
+        notificationsRef,
+        where("conversationId", "==", conversationId),
+      );
+
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return;
+
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+    } catch (error) {
+      // Não lançar erro para o usuário, apenas logar
+      console.warn("Falha ao limpar notificações:", error);
     }
   }
 }
