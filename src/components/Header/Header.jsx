@@ -124,18 +124,20 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     }
   }, [currentView, viewMode, setViewMode]);
 
-  // Auto-selecionar mesa se o usuário for GM ao logar
+  // Auto-selecionar mesa ao logar (GM ou Jogador)
   useEffect(() => {
     const autoSelectTable = async () => {
       if (user && !selectedTable) {
         try {
           const tables = await APIService.getTables(user.email, user.uid);
-          const gmTable = tables.find((t) => t.gmId === user.uid);
-          if (gmTable) {
-            setSelectedTable(gmTable);
+          // Prioriza mesa onde é GM, senão pega a primeira disponível
+          const tableToSelect =
+            tables.find((t) => t.gmId === user.uid) || tables[0];
+          if (tableToSelect) {
+            setSelectedTable(tableToSelect);
           }
         } catch (error) {
-          console.error("Erro ao carregar mesas do GM:", error);
+          console.error("Erro ao carregar mesas:", error);
         }
       }
     };
