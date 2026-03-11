@@ -2446,32 +2446,27 @@ Negative Prompt: ${promptData.negativePrompt}.
                   items={character?.pericias?.map((p) => {
                     const attrKey = getSkillAttribute(p.name);
                     const attrDie = character[attrKey] || "d4";
-                    const pVal = parseInt(
-                      (p.die || "d4").replace("d", ""),
-                      10,
-                    );
+                    const pVal = parseInt((p.die || "d4").replace("d", ""), 10);
                     const aVal = parseInt(attrDie.replace("d", ""), 10);
                     const isHigher = pVal > aVal;
                     return {
                       ...p,
-                      style: isHigher ? {backgroundColor: "#fff3e0"} : undefined,
+                      style: isHigher
+                        ? {backgroundColor: "#fff3e0"}
+                        : undefined,
                       dieColor: isHigher ? "#d32f2f" : "#667eea",
                       attributeShort: attrKey
                         ? attrKey.substring(0, 3).toUpperCase()
                         : "",
                     };
                   })}
-                  onAdd={(item) =>
+                  onAdd={(item) => {
                     if (isFieldLocked("pericias")) return;
                     const idx = (character.pericias || []).findIndex(
                       (p) => p.name === item.name,
                     );
                     if (idx >= 0) {
-                      removeItemFromListIfAllowed(
-                        "pericias",
-                        "pericias",
-                        idx,
-                      );
+                      removeItemFromListIfAllowed("pericias", "pericias", idx);
                     }
                     addItemToListIfAllowed("pericias", "pericias", item);
                   }}
