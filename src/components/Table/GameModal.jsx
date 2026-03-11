@@ -44,6 +44,11 @@ import {
   SwapHoriz as SwitchTableIcon,
   Info as InfoIcon,
   Group as GroupIcon,
+  Bed as RestIcon,
+  Hotel as SleepIcon,
+  FlashOn as StunIcon,
+  LocalHospital as DamageIcon,
+  VisibilityOff as FaintIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -52,6 +57,7 @@ import {doc, onSnapshot} from "firebase/firestore";
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
 import ChatModal from "./ChatModal";
+import {calculateMaxMana} from "@/lib/rpgEngine";
 
 function GameModal() {
   const {
@@ -239,6 +245,87 @@ function GameModal() {
       showNotification("Erro ao remover jogador.", "error");
     }
     handleCloseMenu();
+  };
+
+  // --- Ações do GM (Refletem na Ficha) ---
+  const handleGMAction = async (actionType) => {
+    if (!selectedPlayer) return;
+    handleCloseMenu();
+
+    // Identificar ID da ficha
+    const charId = selectedPlayer.characterId;
+    const userId = selectedPlayer.uid;
+
+    if (!charId && !userId) {
+      showNotification("Jogador sem ficha vinculada.", "warning");
+      return;
+    }
+
+    try {
+      showNotification("Aplicando ação...", "info");
+      // Buscar ficha atualizada
+      const charData = charId
+        ? await APIService.getCharacterById(charId)
+        : await APIService.getCharacter(userId);
+
+      if (!charData) throw new Error("Ficha não encontrada.");
+
+      const updates = {};
+      const maxMana = calculateMaxMana(charData);
+
+      switch (actionType) {
+        case "short_rest": // Recupera um pouco de Mana e Fadiga
+          updates.mana_atual = Math.min(
+            (charData.mana_atual || 0) + 5,
+            maxMana,
+          );
+          updates.fadiga = Math.max((charData.fadiga || 0) - 1, 0);
+          showNotification(
+            `Descanso Curto aplicado em ${selectedPlayer.name}.`,
+            "success",
+          );
+          break;
+        case "long_rest": // Recupera tudo
+          updates.mana_atual = maxMana;
+          updates.fadiga = 0;
+          updates.ferimentos = 0;
+          updates.abalado = false;
+          showNotification(
+            `Descanso Longo aplicado em ${selectedPlayer.name}.`,
+            "success",
+          );
+          break;
+        case "stun": // Atordoar (Abalado)
+          updates.abalado = true;
+          showNotification(`${selectedPlayer.name} está Atordoado.`, "warning");
+          break;
+        case "damage": // Causar Dano (Simplificado: +1 Ferimento + Abalado)
+          updates.ferimentos = (charData.ferimentos || 0) + 1;
+          updates.abalado = true;
+          showNotification(`Dano aplicado em ${selectedPlayer.name}.`, "error");
+          break;
+        case "faint": // Desmaiar (Simulado com Fadiga Max ou apenas narrativo)
+          updates.abalado = true;
+          updates.fadiga = 2; // Exausto
+          showNotification(`${selectedPlayer.name} desmaiou!`, "error");
+          break;
+      }
+
+      await APIService.saveCharacter(charData.userId, {
+        ...charData,
+        ...updates,
+      });
+    } catch (error) {
+      console.error("Erro na ação do GM:", error);
+      if (error.code === "permission-denied") {
+        showNotification(
+          "Sem permissão. Atualize as regras do Firestore.",
+          "error",
+        );
+      } else {
+        showNotification("Erro ao aplicar ação na ficha.", "error");
+      }
+    }
   };
 
   // --- Lógica de Convocar NPC ---
@@ -654,6 +741,63 @@ function GameModal() {
                     <FileIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Solicitar Arquivo</ListItemText>
+                </MenuItem>,
+                <Divider key="div-actions" />,
+                <Typography
+                  key="title-actions"
+                  variant="caption"
+                  sx={{
+                    px: 2,
+                    py: 0.5,
+                    color: "text.secondary",
+                    display: "block",
+                  }}
+                >
+                  Ações
+                </Typography>,
+                <MenuItem
+                  key="act-short"
+                  onClick={() => handleGMAction("short_rest")}
+                >
+                  <ListItemIcon>
+                    <RestIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Descanso Curto</ListItemText>
+                </MenuItem>,
+                <MenuItem
+                  key="act-long"
+                  onClick={() => handleGMAction("long_rest")}
+                >
+                  <ListItemIcon>
+                    <SleepIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Descanso Longo</ListItemText>
+                </MenuItem>,
+                <MenuItem key="act-stun" onClick={() => handleGMAction("stun")}>
+                  <ListItemIcon>
+                    <StunIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Atordoar</ListItemText>
+                </MenuItem>,
+                <MenuItem
+                  key="act-dmg"
+                  onClick={() => handleGMAction("damage")}
+                >
+                  <ListItemIcon>
+                    <DamageIcon fontSize="small" color="error" />
+                  </ListItemIcon>
+                  <ListItemText sx={{color: "error.main"}}>
+                    Causar Dano
+                  </ListItemText>
+                </MenuItem>,
+                <MenuItem
+                  key="act-faint"
+                  onClick={() => handleGMAction("faint")}
+                >
+                  <ListItemIcon>
+                    <FaintIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Desmaiar</ListItemText>
                 </MenuItem>,
                 <Divider key="divider-kick" />,
                 <MenuItem key="remove-player" onClick={handleRemovePlayer}>

@@ -110,8 +110,9 @@ service cloud.firestore {
 
     // Regras para Fichas de Personagem
     match /characters/{charId} {
-      // O dono da ficha pode atualizar ou deletar
-      allow update, delete: if request.auth.uid == resource.data.userId;
+      // O dono pode deletar. Atualização aberta para autenticados (para GM poder editar)
+      allow delete: if request.auth.uid == resource.data.userId;
+      allow update: if request.auth != null;
       // Um usuário autenticado pode criar uma ficha para si mesmo
       allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
       // Qualquer usuário autenticado pode ler uma ficha (a UI controla o acesso)

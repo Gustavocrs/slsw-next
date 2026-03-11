@@ -694,54 +694,31 @@ Negative Prompt: ${promptData.negativePrompt}.
                 <Grid item xs={12} md={4}>
                   <Box
                     sx={{
-                      background: "rgba(33, 150, 243, 0.1)",
-                      borderRadius: 2,
-                      p: 1,
-                      px: 2,
-                      color: "#1565c0",
-                      border: "1px solid rgba(33, 150, 243, 0.3)",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                      justifyContent: {xs: "flex-start", md: "flex-end"},
+                      gap: 1,
+                      flexWrap: "wrap",
                     }}
                   >
-                    <Box sx={{display: "flex", alignItems: "center", gap: 1.5}}>
-                      <BoltIcon fontSize="small" />
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          sx={{fontWeight: "bold", opacity: 0.8, lineHeight: 1}}
-                        >
-                          MANA
-                        </Typography>
-                        <Typography
-                          variant="h5"
-                          fontWeight="bold"
-                          sx={{lineHeight: 1}}
-                        >
-                          {currentMana}{" "}
-                          <span
-                            style={{
-                              fontSize: "0.9rem",
-                              opacity: 0.7,
-                              fontWeight: "normal",
-                            }}
-                          >
-                            / {maxMana}
-                          </span>
-                        </Typography>
-                      </Box>
+                    {/* Widget de Mana */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        px: 2,
+                        py: 1,
+                        borderRadius: "20px",
+                        background: "rgba(33, 150, 243, 0.1)",
+                        color: "#1565c0",
+                        border: "1px solid rgba(33, 150, 243, 0.3)",
+                        fontWeight: "bold",
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      <AiIcon fontSize="small" />
+                      {currentMana}/{maxMana}
                     </Box>
-                    <Tooltip title="Restaurar Mana">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleUpdateMana(maxMana)}
-                        color="primary"
-                      >
-                        <RefreshIcon />
-                      </IconButton>
-                    </Tooltip>
                   </Box>
                 </Grid>
               </Grid>
@@ -1391,9 +1368,8 @@ Negative Prompt: ${promptData.negativePrompt}.
               >
                 <Box
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(140px, 1fr))",
+                    display: "flex",
+                    flexDirection: "column",
                     gap: 1,
                   }}
                 >
@@ -1401,36 +1377,42 @@ Negative Prompt: ${promptData.negativePrompt}.
                     <Box
                       key={i}
                       sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         fontSize: "0.9rem",
                         p: 0.5,
                         background: retroMode
                           ? "transparent"
                           : "rgba(255,255,255,0.5)",
                         borderRadius: 1,
+                        borderBottom: retroMode
+                          ? "1px dashed rgba(93, 64, 55, 0.2)"
+                          : "none",
                       }}
                     >
-                      <div style={{fontWeight: "bold"}}>{m.name}</div>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#555",
-                        }}
-                      >
-                        PP: {m.pp} | {m.range}
-                      </div>
-                      {m.description && (
+                      <Box sx={{flex: 1, mr: 1}}>
+                        <div style={{fontWeight: "bold"}}>
+                          {m.name}{" "}
+                          <span
+                            style={{
+                              fontSize: "0.8rem",
+                              fontWeight: "normal",
+                              opacity: 0.8,
+                            }}
+                          >
+                            ({m.pp} PP)
+                          </span>
+                        </div>
                         <div
                           style={{
                             fontSize: "0.8rem",
-                            color: retroMode ? "#5d4037" : "#666",
-                            fontStyle: "italic",
-                            marginTop: "2px",
-                            lineHeight: "1.1",
+                            color: retroMode ? "#5d4037" : "#555",
                           }}
                         >
-                          {m.description}
+                          {m.range} {m.duration && `• ${m.duration}`}
                         </div>
-                      )}
+                      </Box>
                       <Button
                         size="small"
                         variant="outlined"
@@ -1441,14 +1423,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                         }
                         disabled={currentMana < (parseInt(m.pp) || 0)}
                         sx={{
-                          mt: 1,
                           fontSize: "0.75rem",
                           py: 0.5,
-                          width: "100%",
+                          minWidth: "60px",
                         }}
                         onClick={() => handleCastSpell(m)}
                       >
-                        Usar ({parseInt(m.pp) || 0} PP)
+                        Usar
                       </Button>
                     </Box>
                   ))}
