@@ -14,21 +14,21 @@ LOG_TAIL=50
 # ==============================================================================
 set -e
 
-echo "--- [HOT RESTART] Atualização rápida de código: $SERVICE_NAME ---"
-
-if [ ! -d "$DIR_PROJETO" ]; then
-    echo "Erro: Diretório $DIR_PROJETO não encontrado."
-    exit 1
-fi
+echo "--- [UPDATE & APPLY] Atualizando e aplicando mudanças: $SERVICE_NAME ---"
 
 cd "$DIR_PROJETO"
 
-echo "1. Puxando mudanças do Git..."
+echo "1. Sincronizando Git..."
 git fetch $REMOTE $BRANCH
-git pull $REMOTE $BRANCH
+git reset --hard $REMOTE/$BRANCH
+git clean -fd
 
-echo "2. Reiniciando serviço (Sem rebuild)..."
-docker compose restart $SERVICE_NAME
+echo "2. Reconstruindo apenas o necessário..."
+# O segredo: 'up -d --build' aplica as mudanças de código que você baixou
+docker compose up -d --build $SERVICE_NAME
+
+echo "3. Limpando imagens antigas..."
+docker image prune -f
 
 echo "--- Logs Recentes ---"
 docker compose logs --tail=$LOG_TAIL $SERVICE_NAME
