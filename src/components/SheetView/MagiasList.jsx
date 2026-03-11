@@ -68,9 +68,20 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
+function MagiasList({
+  items = [],
+  onAdd,
+  onRemove,
+  availableOptions,
+  disabled = false,
+}) {
   const [value, setValue] = useState(null);
 
   const optionsMap = availableOptions || POWERS;
@@ -104,6 +115,7 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
       <InputRow>
         <Autocomplete
           value={value}
+          disabled={disabled}
           onChange={(event, newValue) => setValue(newValue)}
           options={optionsArray}
           getOptionLabel={(option) => option.name}
@@ -143,7 +155,9 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
           size="small"
           sx={{background: "#fff", borderRadius: "6px"}}
         />
-        <Button onClick={handleAdd}>+</Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          +
+        </Button>
       </InputRow>
 
       {items.length === 0 ? (
@@ -176,6 +190,7 @@ function MagiasList({items = [], onAdd, onRemove, availableOptions}) {
             <IconButton
               size="small"
               color="error"
+              disabled={disabled}
               onClick={() => onRemove?.(index)}
               sx={{padding: "4px"}}
             >

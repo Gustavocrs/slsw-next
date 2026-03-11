@@ -24,7 +24,12 @@ const FullWidthField = styled(Box)(({theme}) => ({
   marginBottom: "12px",
 }));
 
-function RecursosDespertarList({items = [], onAdd, onUpdate}) {
+function RecursosDespertarList({
+  items = [],
+  onAdd,
+  onUpdate,
+  disabled = false,
+}) {
   const item = items.length > 0 ? items[0] : {};
   const [editName, setEditName] = React.useState(item.name || "");
   const [editCusto, setEditCusto] = React.useState(item.custo || "");
@@ -79,9 +84,11 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
 
   // Auto-save após 500ms de inatividade
   React.useEffect(() => {
+    if (disabled) return;
     const timer = setTimeout(handleSave, 500);
     return () => clearTimeout(timer);
   }, [
+    disabled,
     editName,
     editCusto,
     editNivel,
@@ -103,6 +110,7 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
           label="Nome"
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
+          disabled={disabled}
           size="small"
           fullWidth
         />
@@ -110,6 +118,7 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
           label="Custo"
           value={editCusto}
           onChange={(e) => setEditCusto(e.target.value)}
+          disabled={disabled}
           size="small"
           type="number"
         />
@@ -117,6 +126,7 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
           label="Nível"
           value={editNivel}
           onChange={(e) => setEditNivel(e.target.value)}
+          disabled={disabled}
           size="small"
           type="number"
         />
@@ -127,6 +137,7 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
           label="Descrição"
           value={editDescricao}
           onChange={(e) => setEditDescricao(e.target.value)}
+          disabled={disabled}
           size="small"
           fullWidth
           multiline
@@ -139,6 +150,7 @@ function RecursosDespertarList({items = [], onAdd, onUpdate}) {
           label="Limitação"
           value={editLimitacao}
           onChange={(e) => setEditLimitacao(e.target.value)}
+          disabled={disabled}
           size="small"
           fullWidth
           multiline

@@ -64,9 +64,20 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function VantagesList({items = [], onAdd, onRemove, availableOptions}) {
+function VantagesList({
+  items = [],
+  onAdd,
+  onRemove,
+  availableOptions,
+  disabled = false,
+}) {
   const [value, setValue] = React.useState(null);
 
   const options = availableOptions || EDGES;
@@ -88,6 +99,7 @@ function VantagesList({items = [], onAdd, onRemove, availableOptions}) {
       <InputRow>
         <Autocomplete
           value={value}
+          disabled={disabled}
           onChange={(event, newValue) => setValue(newValue)}
           options={options}
           getOptionLabel={(option) => option.name}
@@ -125,7 +137,9 @@ function VantagesList({items = [], onAdd, onRemove, availableOptions}) {
           }}
         />
 
-        <Button onClick={handleAdd}>+ </Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          +{" "}
+        </Button>
       </InputRow>
 
       {/* List */}
@@ -147,6 +161,7 @@ function VantagesList({items = [], onAdd, onRemove, availableOptions}) {
             <IconButton
               size="small"
               color="error"
+              disabled={disabled}
               onClick={() => handleRemove(index)}
               sx={{padding: "4px"}}
             >

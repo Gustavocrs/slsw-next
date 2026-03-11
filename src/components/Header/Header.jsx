@@ -2,7 +2,7 @@
 
 import React, {useState, useEffect} from "react";
 import {styled} from "@mui/material/styles";
-import {collection, onSnapshot, query} from "firebase/firestore";
+import {collection, doc, onSnapshot, query} from "firebase/firestore";
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
 import APIService from "@/lib/api";
@@ -142,6 +142,40 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     };
     autoSelectTable();
   }, [user, selectedTable, setSelectedTable]);
+
+  useEffect(() => {
+    if (!user?.uid || !selectedTable?._id) return;
+
+    const unsubscribe = onSnapshot(
+      doc(db, "tables", selectedTable._id),
+      (docSnap) => {
+        if (!docSnap.exists()) {
+          setSelectedTable(null);
+          return;
+        }
+
+        const data = {_id: docSnap.id, ...docSnap.data()};
+        const userEmail = user.email?.toLowerCase();
+        const isUserGM = data.gmId === user.uid;
+        const isUserPlayer = data.playerIds?.includes(user.uid);
+        const isUserInvited = data.invites?.some(
+          (invite) => invite.toLowerCase() === userEmail,
+        );
+
+        if (!isUserGM && !isUserPlayer && !isUserInvited) {
+          setSelectedTable(null);
+          return;
+        }
+
+        setSelectedTable(data);
+      },
+      (error) => {
+        console.error("Erro ao sincronizar mesa selecionada:", error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [selectedTable?._id, setSelectedTable, user?.email, user?.uid]);
 
   // Listener de notificações de mensagens não lidas
   useEffect(() => {

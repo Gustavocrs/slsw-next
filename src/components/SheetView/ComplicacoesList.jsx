@@ -64,9 +64,14 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function ComplicacoesList({items = [], onAdd, onRemove}) {
+function ComplicacoesList({items = [], onAdd, onRemove, disabled = false}) {
   const [value, setValue] = React.useState(null);
 
   const handleAdd = () => {
@@ -86,6 +91,7 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
       <InputRow>
         <Autocomplete
           value={value}
+          disabled={disabled}
           onChange={(event, newValue) => setValue(newValue)}
           options={HINDRANCES}
           getOptionLabel={(option) => option.name}
@@ -126,7 +132,9 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
           }}
         />
 
-        <Button onClick={handleAdd}>+ </Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          +{" "}
+        </Button>
       </InputRow>
 
       {/* List */}
@@ -151,6 +159,7 @@ function ComplicacoesList({items = [], onAdd, onRemove}) {
             <IconButton
               size="small"
               color="error"
+              disabled={disabled}
               onClick={() => handleRemove(index)}
               sx={{padding: "4px"}}
             >

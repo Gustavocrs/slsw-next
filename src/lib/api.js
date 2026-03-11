@@ -3,6 +3,7 @@
  * Versão SERVERLESS (Firebase Firestore direto)
  */
 import {db} from "./firebase";
+import {DEFAULT_GAME_SESSION} from "@/lib/sheetLocks";
 import {
   collection,
   query,
@@ -191,6 +192,7 @@ class APIService {
         ...tableData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        gameSession: DEFAULT_GAME_SESSION,
         players: [], // Lista de jogadores que aceitaram (uid, charId)
         playerIds: [], // Lista auxiliar de UIDs para consultas
       });

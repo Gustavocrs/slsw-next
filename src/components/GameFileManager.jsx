@@ -37,7 +37,16 @@ import {
 import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 
-export default function GameFileManager({tableId, files = [], isGM}) {
+export default function GameFileManager({
+  tableId,
+  files = [],
+  isGM,
+  hideList = false,
+  hideUpload = false,
+  onlySecret = false, // Mostrar apenas arquivos secretos
+  excludeSecret = false, // Esconder arquivos secretos
+  forceSecretUpload = false, // Forçar upload como secreto
+}) {
   const {showNotification} = useUIStore();
   const [uploading, setUploading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -48,6 +57,12 @@ export default function GameFileManager({tableId, files = [], isGM}) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState("");
   const [lightboxLoading, setLightboxLoading] = useState(false);
+
+  const filteredFiles = files.filter((file) => {
+    if (onlySecret && !file.secret) return false;
+    if (excludeSecret && file.secret) return false;
+    return true;
+  });
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -72,6 +87,7 @@ export default function GameFileManager({tableId, files = [], isGM}) {
 
       // 2. Ajuste de nome e vínculo no Firestore
       attachment.name = customFileName || attachment.name;
+      if (forceSecretUpload) attachment.secret = true;
       await APIService.addAttachmentToTable(tableId, attachment);
 
       showNotification("Arquivo anexado com sucesso!", "success");
@@ -162,105 +178,105 @@ export default function GameFileManager({tableId, files = [], isGM}) {
 
   return (
     <Box sx={{mb: 3}}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 1,
-        }}
-      >
-        <Typography variant="h6" color="primary" fontWeight="bold">
-          Materiais & Anexos
-        </Typography>
-        {isGM && (
-          <Button
-            component="label"
-            variant="contained"
-            startIcon={<UploadIcon />}
-            size="small"
-            disabled={uploading}
-            sx={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            Anexar Arquivo
-            <input type="file" hidden onChange={handleFileSelect} />
-          </Button>
-        )}
-      </Box>
+      {!hideUpload && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          {isGM && (
+            <Button
+              component="label"
+              variant="contained"
+              startIcon={<UploadIcon />}
+              size="small"
+              disabled={uploading}
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              {forceSecretUpload ? "Anexar Secreto" : "Anexar Arquivo"}
+              <input type="file" hidden onChange={handleFileSelect} />
+            </Button>
+          )}
+        </Box>
+      )}
 
-      <Paper sx={{borderRadius: 2, overflow: "hidden"}} elevation={0}>
-        <List disablePadding>
-          {files.length > 0 ? (
-            files.map((file, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <Divider />}
-                <ListItem
-                  secondaryAction={
-                    <Box sx={{display: "flex", gap: 1}}>
-                      <IconButton
-                        edge="end"
-                        href={file.url}
-                        download
-                        target="_blank"
-                        title="Baixar"
-                      >
-                        <DownloadIcon />
-                      </IconButton>
-                      {isGM && (
+      {!hideList && (
+        <Paper sx={{borderRadius: 2, overflow: "hidden"}} elevation={0}>
+          <List disablePadding>
+            {filteredFiles.length > 0 ? (
+              filteredFiles.map((file, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <Divider />}
+                  <ListItem
+                    secondaryAction={
+                      <Box sx={{display: "flex", gap: 1}}>
                         <IconButton
                           edge="end"
-                          onClick={() => handleDeleteFile(file)}
-                          color="error"
-                          title="Excluir"
+                          href={file.url}
+                          download
+                          target="_blank"
+                          title="Baixar"
                         >
-                          <DeleteIcon />
+                          <DownloadIcon />
                         </IconButton>
-                      )}
-                    </Box>
-                  }
-                >
-                  <ListItemIcon
-                    sx={{minWidth: 40, cursor: "pointer"}}
-                    onClick={() => handleViewFile(file)}
-                  >
-                    {getFileIcon(file)}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography
-                        component="span"
-                        variant="body1"
-                        onClick={() => handleViewFile(file)}
-                        sx={{
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          color: "primary.main",
-                          textDecoration: "underline",
-                          "&:hover": {color: "primary.dark"},
-                        }}
-                      >
-                        {file.name}
-                      </Typography>
+                        {isGM && (
+                          <IconButton
+                            edge="end"
+                            onClick={() => handleDeleteFile(file)}
+                            color="error"
+                            title="Excluir"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        )}
+                      </Box>
                     }
-                    secondary={new Date(file.uploadedAt).toLocaleDateString()}
-                  />
-                </ListItem>
-              </React.Fragment>
-            ))
-          ) : (
-            <Box sx={{p: 3, textAlign: "center", color: "text.secondary"}}>
-              <Typography variant="body2">
-                Nenhum material anexado.{" "}
-                {isGM
-                  ? "Faça upload de mapas ou PDFs."
-                  : "O GM ainda não disponibilizou arquivos."}
-              </Typography>
-            </Box>
-          )}
-        </List>
-      </Paper>
+                  >
+                    <ListItemIcon
+                      sx={{minWidth: 40, cursor: "pointer"}}
+                      onClick={() => handleViewFile(file)}
+                    >
+                      {getFileIcon(file)}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          component="span"
+                          variant="body1"
+                          onClick={() => handleViewFile(file)}
+                          sx={{
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            color: "primary.main",
+                            textDecoration: "underline",
+                            "&:hover": {color: "primary.dark"},
+                          }}
+                        >
+                          {file.name}
+                        </Typography>
+                      }
+                      secondary={new Date(file.uploadedAt).toLocaleDateString()}
+                    />
+                  </ListItem>
+                </React.Fragment>
+              ))
+            ) : (
+              <Box sx={{p: 3, textAlign: "center", color: "text.secondary"}}>
+                <Typography variant="body2">
+                  {forceSecretUpload
+                    ? "Nenhum arquivo secreto."
+                    : "Nenhum material público anexado."}
+                </Typography>
+              </Box>
+            )}
+          </List>
+        </Paper>
+      )}
 
       {/* Modal de Upload */}
       <Dialog

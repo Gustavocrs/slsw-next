@@ -40,18 +40,27 @@ const initialCharacter = {
   // Mana System
   mana_atual: undefined, // Se undefined, considera cheio
   mana_bonus: 0,
+  status_efeitos: [],
+  envenenado: false,
+  paralisado: false,
+  congelado: false,
 };
 
 export const useCharacterStore = create((set) => ({
   character: initialCharacter,
 
   loadCharacter: (data) =>
-    set((state) => ({
+    set(() => ({
+      character: {...initialCharacter, ...data},
+    })),
+
+  updateCharacter: (data) =>
+    set(() => ({
       character: {...initialCharacter, ...data},
     })),
 
   resetCharacter: () =>
-    set((state) => ({
+    set(() => ({
       character: initialCharacter,
     })),
 

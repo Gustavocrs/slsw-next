@@ -31,6 +31,8 @@ import {
   Stack,
   IconButton,
 } from "@mui/material";
+import {doc, onSnapshot} from "firebase/firestore";
+import {db} from "@/lib/firebase";
 import {CircularProgress} from "@mui/material";
 import {styled} from "@mui/material/styles";
 import {
@@ -57,6 +59,8 @@ import AwakeningSection from "./AwakeningSection";
 import {useCharacterStore, useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
+import {getCharacterStatusEffects} from "@/lib/characterStatus";
+import {getTableGameSession} from "@/lib/sheetLocks";
 import {
   DICE,
   SKILLS,
@@ -233,12 +237,76 @@ function SheetView({
     propActions?.removeItemFromList || storeRemoveItemFromList;
 
   const {user} = useAuth();
+
+  const gameSession = useMemo(
+    () => getTableGameSession(selectedTable),
+    [selectedTable],
+  );
+  const isGM = selectedTable?.gmId === user?.uid;
+  const isTableSession = !!selectedTable;
+  const isGameSessionLocked =
+    !isInspection && isTableSession && !isGM && gameSession.isActive;
+  const lockedFieldSet = useMemo(
+    () => new Set(gameSession.lockedFields || []),
+    [gameSession.lockedFields],
+  );
+  const hasLockedFieldsNotice =
+    isGameSessionLocked && gameSession.lockedFields.length > 0;
+
+  const isFieldLocked = React.useCallback(
+    (fieldKey) => isGameSessionLocked && lockedFieldSet.has(fieldKey),
+    [isGameSessionLocked, lockedFieldSet],
+  );
+
+  const updateAttributeIfAllowed = React.useCallback(
+    (fieldKey, value) => {
+      if (isFieldLocked(fieldKey)) return false;
+      updateAttribute(fieldKey, value);
+      return true;
+    },
+    [isFieldLocked, updateAttribute],
+  );
+
+  const addItemToListIfAllowed = React.useCallback(
+    (fieldKey, listName, item) => {
+      if (isFieldLocked(fieldKey)) return false;
+      addItemToList(listName, item);
+      return true;
+    },
+    [addItemToList, isFieldLocked],
+  );
+
+  const removeItemFromListIfAllowed = React.useCallback(
+    (fieldKey, listName, index) => {
+      if (isFieldLocked(fieldKey)) return false;
+      removeItemFromList(listName, index);
+      return true;
+    },
+    [isFieldLocked, removeItemFromList],
+  );
+
+  const updateListItemIfAllowed = React.useCallback(
+    (fieldKey, listName, index, item) => {
+      if (isFieldLocked(fieldKey)) return false;
+      updateListItem(listName, index, item);
+      return true;
+    },
+    [isFieldLocked, updateListItem],
+  );
+
+  const isRemoteUpdate = React.useRef(false);
   const [autoSaveStatus, setAutoSaveStatus] = React.useState("idle"); // idle, saving, saved, error
 
   // Lógica de Auto-Save
   React.useEffect(() => {
     // Não salva se estiver inspecionando (propCharacter existe) ou se não tiver ID/User
     if (propCharacter || !character._id || !user) return;
+
+    // Se a atualização veio do banco (GM/Listener), não salva de volta para evitar loop/reversão
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
 
     const timeoutId = setTimeout(async () => {
       try {
@@ -258,6 +326,37 @@ function SheetView({
     return () => clearTimeout(timeoutId);
   }, [character, propCharacter, user]);
 
+  // Listener para sincronização em tempo real (ex: GM altera mana/vida)
+  React.useEffect(() => {
+    // Só ativa se não estiver inspecionando (propCharacter) e tiver um ID válido
+    if (propCharacter || !character?._id) return;
+
+    const unsubscribe = onSnapshot(
+      doc(db, "characters", character._id),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const remoteData = docSnap.data();
+          const currentCharacter = useCharacterStore.getState().character;
+
+          // Comparação simples para evitar updates desnecessários e loops
+          // Removemos updatedAt da comparação pois ele muda a cada save
+          const {updatedAt: rUp, ...rRest} = remoteData;
+          const {updatedAt: cUp, ...cRest} = currentCharacter;
+
+          if (JSON.stringify(rRest) !== JSON.stringify(cRest)) {
+            isRemoteUpdate.current = true; // Marca como atualização remota
+            storeUpdateCharacter({
+              _id: currentCharacter._id || character._id,
+              ...remoteData,
+            });
+          }
+        }
+      },
+    );
+
+    return () => unsubscribe();
+  }, [character?._id, propCharacter, storeUpdateCharacter]);
+
   const [retroMode, setRetroMode] = React.useState(true);
   const [imgLoading, setImgLoading] = useState(false);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
@@ -266,11 +365,12 @@ function SheetView({
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (isFieldLocked("imagem_url")) return;
 
     setImgLoading(true);
     try {
       const url = await APIService.uploadFile(file);
-      updateAttribute("imagem_url", url);
+      updateAttributeIfAllowed("imagem_url", url);
       showNotification("Imagem enviada com sucesso!", "success");
     } catch (error) {
       showNotification("Erro ao enviar imagem.", "error");
@@ -335,12 +435,17 @@ Negative Prompt: ${promptData.negativePrompt}.
   const maxMana = useMemo(() => calculateMaxMana(character), [character]);
   const currentMana =
     character.mana_atual !== undefined ? character.mana_atual : maxMana;
+  const statusEffects = useMemo(
+    () => getCharacterStatusEffects(character),
+    [character],
+  );
 
   const handleUpdateMana = (newValue) => {
-    updateAttribute("mana_atual", Math.min(newValue, maxMana)); // Cap at max? Or allow overflow? Usually cap.
+    updateAttributeIfAllowed("mana_atual", Math.min(newValue, maxMana));
   };
 
   const handleCastSpell = (spell) => {
+    if (isFieldLocked("mana_atual")) return;
     const cost = parseInt(spell.pp, 10) || 0;
     if (cost > 0) {
       if (currentMana < cost) {
@@ -351,7 +456,7 @@ Negative Prompt: ${promptData.negativePrompt}.
         return;
       }
       const newValue = currentMana - cost;
-      updateAttribute("mana_atual", newValue);
+      updateAttributeIfAllowed("mana_atual", newValue);
       showNotification(`Magia usada! -${cost} Mana`, "info");
     }
   };
@@ -641,6 +746,12 @@ Negative Prompt: ${promptData.negativePrompt}.
         </Tabs>
       </TabsPaper>
 
+      {hasLockedFieldsNotice && (
+        <Alert severity="warning" sx={{mb: 2}}>
+          Jogo em andamento. O GM bloqueou parte da ficha durante esta sessão.
+        </Alert>
+      )}
+
       {/* TAB 0: VISUALIZAR */}
       {tabValue === 0 && (
         <Box sx={{p: 2, pb: 10}}>
@@ -651,22 +762,39 @@ Negative Prompt: ${promptData.negativePrompt}.
               justifyContent: "space-between",
               alignItems: {xs: "flex-start", sm: "center"},
               gap: 2,
-              mb: 3,
+              mb: 2,
               pb: 1,
               borderBottom: "1px solid #e0e0e0",
             }}
           >
-            <Box>
-              <Grid container spacing={2}>
+            <Box sx={{width: "100%"}}>
+              <Grid container spacing={2} alignItems="center">
                 {/* Coluna Esquerda: Dados Atuais */}
-                <Grid item xs={12} md={8}>
-                  <h2 style={{margin: 0, color: "#333"}}>
+                <Grid
+                  item
+                  xs={12}
+                  md={4}
+                  sx={{
+                    flexBasis: {md: "25%"},
+                    maxWidth: {md: "25%"},
+                  }}
+                >
+                  <h2
+                    style={{
+                      margin: 0,
+                      color: "#333",
+                      fontWeight: 600,
+                      fontSize: "1.2rem",
+                    }}
+                  >
                     {character.nome || "Sem Nome"}
                   </h2>
-                  <div style={{fontSize: "0.9rem", color: "#666"}}>
+                  <div
+                    style={{width: "100%", fontSize: "0.9rem", color: "#666"}}
+                  >
                     {character.rank} • {character.arquetipo || "—"} (
-                    {character.conceito || "—"})
-                    {character.guilda && ` • ${character.guilda}`}
+                    {character.conceito || "—"}) •{" "}
+                    {character.guilda && ` ${character.guilda}`}
                   </div>
                   {(character.xp !== undefined ||
                     character.riqueza !== undefined) && (
@@ -683,45 +811,213 @@ Negative Prompt: ${promptData.negativePrompt}.
                           XP: {character.xp}
                         </span>
                       )}
+
                       {character.riqueza !== undefined && (
-                        <span>Riqueza: ${character.riqueza}</span>
+                        <span style={{marginRight: "12px"}}>
+                          Dinheiro: ${character.riqueza}
+                        </span>
+                      )}
+
+                      {character.bencaos && (
+                        <span>Benes: {character.bencaos || 3}</span>
                       )}
                     </div>
                   )}
                 </Grid>
 
-                {/* Coluna Direita: Espaço para Mana */}
-                <Grid item xs={12} md={4}>
+                {/* Coluna Direita */}
+                <Grid
+                  item
+                  xs={12}
+                  md={8}
+                  sx={{
+                    flexBasis: {md: "75%"},
+                    maxWidth: {md: "75%"},
+                  }}
+                >
                   <Box
                     sx={{
                       display: "flex",
-                      justifyContent: {xs: "flex-start", md: "flex-end"},
+                      // Remover alinhamento vertical central para permitir stretch
                       gap: 1,
-                      flexWrap: "wrap",
+                      flexWrap: "nowrap",
+                      height: "100%", // Garante que o container ocupe a altura
                     }}
                   >
+                    {/* Widget de Abalado */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                        px: 2,
+                        py: 1,
+                        borderRadius: "10px",
+                        background: character.abalado
+                          ? "rgba(255, 193, 7, 0.2)"
+                          : "rgba(0, 0, 0, 0.05)",
+                        color: character.abalado ? "#ff8f00" : "#9e9e9e",
+                        border: character.abalado
+                          ? "1px solid rgba(255, 193, 7, 0.5)"
+                          : "1px solid rgba(0, 0, 0, 0.1)",
+                        fontWeight: "bold",
+                        fontSize: "0.95rem",
+                        height: "100%", // Ocupar altura disponível
+                        flex: 1,
+                      }}
+                    >
+                      <span
+                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
+                      >
+                        Abalado
+                      </span>
+                      <Box
+                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
+                      >
+                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
+                          💫
+                        </span>
+                        {character.abalado ? "SIM" : "NÃO"}
+                      </Box>
+                    </Box>
+
+                    {/* Widget de Ferimentos */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                        px: 2,
+                        py: 1,
+                        borderRadius: "10px",
+                        background: "rgba(211, 47, 47, 0.1)",
+                        color: "#d32f2f",
+                        border: "1px solid rgba(211, 47, 47, 0.3)",
+                        fontWeight: "bold",
+                        fontSize: "0.95rem",
+                        height: "100%",
+                        flex: 1,
+                      }}
+                    >
+                      <span
+                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
+                      >
+                        Ferimentos
+                      </span>
+                      <Box
+                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
+                      >
+                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
+                          🩸
+                        </span>
+                        {character.ferimentos || 0}
+                      </Box>
+                    </Box>
+
+                    {/* Widget de Fadiga */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                        px: 2,
+                        py: 1,
+                        borderRadius: "10px",
+                        background: "rgba(237, 108, 2, 0.1)",
+                        color: "#ed6c02",
+                        border: "1px solid rgba(237, 108, 2, 0.3)",
+                        fontWeight: "bold",
+                        fontSize: "0.95rem",
+                        height: "100%",
+                        flex: 1,
+                      }}
+                    >
+                      <span
+                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
+                      >
+                        Fadiga
+                      </span>
+                      <Box
+                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
+                      >
+                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
+                          😓
+                        </span>
+                        {character.fadiga || 0}
+                      </Box>
+                    </Box>
+
                     {/* Widget de Mana */}
                     <Box
                       sx={{
                         display: "flex",
+                        flexDirection: "column",
                         alignItems: "center",
-                        gap: 1,
+                        justifyContent: "center",
+                        gap: 0.5,
                         px: 2,
                         py: 1,
-                        borderRadius: "20px",
+                        borderRadius: "10px",
                         background: "rgba(33, 150, 243, 0.1)",
                         color: "#1565c0",
                         border: "1px solid rgba(33, 150, 243, 0.3)",
                         fontWeight: "bold",
                         fontSize: "0.95rem",
+                        height: "100%",
+                        flex: 1,
                       }}
                     >
-                      <AiIcon fontSize="small" />
-                      {currentMana}/{maxMana}
+                      <span
+                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
+                      >
+                        Mana
+                      </span>
+                      <Box
+                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
+                      >
+                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
+                          🌀
+                        </span>
+                        {currentMana}/{maxMana}
+                      </Box>
                     </Box>
                   </Box>
                 </Grid>
               </Grid>
+
+              {statusEffects.length > 0 && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{fontWeight: 700, color: "text.secondary"}}
+                  >
+                    Efeitos:
+                  </Typography>
+                  {statusEffects.map((effect) => (
+                    <Chip
+                      key={effect}
+                      size="small"
+                      color="warning"
+                      label={effect}
+                      sx={{fontWeight: 600}}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
 
             {/* Status do Auto-Save */}
@@ -1045,8 +1341,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     <Checkbox
                       checked={character.abalado || false}
                       size="small"
+                      disabled={isFieldLocked("abalado")}
                       onChange={(e) =>
-                        updateAttribute("abalado", e.target.checked)
+                        updateAttributeIfAllowed("abalado", e.target.checked)
                       }
                     />
                   </Box>
@@ -1072,14 +1369,15 @@ Negative Prompt: ${promptData.negativePrompt}.
                           key={lvl}
                           checked={(character.ferimentos || 0) >= lvl}
                           size="small"
+                          disabled={isFieldLocked("ferimentos")}
                           sx={{p: 0.5}}
                           onChange={() => {
                             const current = character.ferimentos || 0;
                             const newVal = current === lvl ? lvl - 1 : lvl;
                             if (newVal > current && !character.abalado) {
-                              updateAttribute("abalado", true);
+                              updateAttributeIfAllowed("abalado", true);
                             }
-                            updateAttribute("ferimentos", newVal);
+                            updateAttributeIfAllowed("ferimentos", newVal);
                           }}
                         />
                       ))}
@@ -1107,11 +1405,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                           key={lvl}
                           checked={(character.fadiga || 0) >= lvl}
                           size="small"
+                          disabled={isFieldLocked("fadiga")}
                           sx={{p: 0.5}}
                           onChange={() => {
                             const current = character.fadiga || 0;
                             const newVal = current === lvl ? lvl - 1 : lvl;
-                            updateAttribute("fadiga", newVal);
+                            updateAttributeIfAllowed("fadiga", newVal);
                           }}
                         />
                       ))}
@@ -1341,6 +1640,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 retro={retroMode}
               >
                 <textarea
+                  disabled={isFieldLocked("notas")}
                   style={{
                     width: "100%",
                     minHeight: "200px",
@@ -1352,7 +1652,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     outline: "none",
                   }}
                   value={character.notas || ""}
-                  onChange={(e) => updateAttribute("notas", e.target.value)}
+                  onChange={(e) =>
+                    updateAttributeIfAllowed("notas", e.target.value)
+                  }
                   placeholder="Escreva suas anotações..."
                 />
               </GridCard>
@@ -1421,7 +1723,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                             ? "primary"
                             : "error"
                         }
-                        disabled={currentMana < (parseInt(m.pp) || 0)}
+                        disabled={
+                          isFieldLocked("mana_atual") ||
+                          currentMana < (parseInt(m.pp) || 0)
+                        }
                         sx={{
                           fontSize: "0.75rem",
                           py: 0.5,
@@ -1463,7 +1768,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Nome do Personagem"
                     value={character.nome || ""}
-                    onChange={(e) => updateAttribute("nome", e.target.value)}
+                    disabled={isFieldLocked("nome")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("nome", e.target.value)
+                    }
                     placeholder="Ex: Sung Jinwoo"
                     size="small"
                   />
@@ -1474,7 +1782,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Jogador"
                     value={character.jogador || ""}
-                    onChange={(e) => updateAttribute("jogador", e.target.value)}
+                    disabled={isFieldLocked("jogador")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("jogador", e.target.value)
+                    }
                     placeholder="Nome do jogador"
                     size="small"
                   />
@@ -1485,8 +1796,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Conceito"
                     value={character.conceito || ""}
+                    disabled={isFieldLocked("conceito")}
                     onChange={(e) =>
-                      updateAttribute("conceito", e.target.value)
+                      updateAttributeIfAllowed("conceito", e.target.value)
                     }
                     placeholder="Ex: Guerreiro prudente"
                     size="small"
@@ -1497,10 +1809,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                   <FormControl fullWidth size="small">
                     <InputLabel>Arquétipo</InputLabel>
                     <StyledSelect
+                      disabled={isFieldLocked("arquetipo")}
                       value={character.arquetipo || ""}
                       label="Arquétipo"
                       onChange={(e) =>
-                        updateAttribute("arquetipo", e.target.value)
+                        updateAttributeIfAllowed("arquetipo", e.target.value)
                       }
                     >
                       <MenuItem value="">Selecione...</MenuItem>
@@ -1517,7 +1830,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Guilda"
                     value={character.guilda || ""}
-                    onChange={(e) => updateAttribute("guilda", e.target.value)}
+                    disabled={isFieldLocked("guilda")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("guilda", e.target.value)
+                    }
                     placeholder="Ex: Hunter's Association"
                     size="small"
                   />
@@ -1527,9 +1843,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                   <FormControl fullWidth size="small">
                     <InputLabel>Rank</InputLabel>
                     <StyledSelect
+                      disabled={isFieldLocked("rank")}
                       value={character.rank || "Novato"}
                       label="Rank"
-                      onChange={(e) => updateAttribute("rank", e.target.value)}
+                      onChange={(e) =>
+                        updateAttributeIfAllowed("rank", e.target.value)
+                      }
                     >
                       {RANKS.map((r) => (
                         <MenuItem key={r} value={r}>
@@ -1546,8 +1865,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                     type="number"
                     label="XP"
                     value={character.xp || 0}
+                    disabled={isFieldLocked("xp")}
                     onChange={(e) =>
-                      updateAttribute("xp", parseInt(e.target.value) || 0)
+                      updateAttributeIfAllowed(
+                        "xp",
+                        parseInt(e.target.value) || 0,
+                      )
                     }
                     size="small"
                   />
@@ -1559,8 +1882,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                     type="number"
                     label="Riqueza ($)"
                     value={character.riqueza || 0}
+                    disabled={isFieldLocked("riqueza")}
                     onChange={(e) =>
-                      updateAttribute("riqueza", parseInt(e.target.value) || 0)
+                      updateAttributeIfAllowed(
+                        "riqueza",
+                        parseInt(e.target.value) || 0,
+                      )
                     }
                     size="small"
                   />
@@ -1584,7 +1911,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Idade"
                     value={character.idade || ""}
-                    onChange={(e) => updateAttribute("idade", e.target.value)}
+                    disabled={isFieldLocked("idade")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("idade", e.target.value)
+                    }
                     size="small"
                   />
                 </Grid>
@@ -1593,7 +1923,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Altura"
                     value={character.altura || ""}
-                    onChange={(e) => updateAttribute("altura", e.target.value)}
+                    disabled={isFieldLocked("altura")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("altura", e.target.value)
+                    }
                     size="small"
                   />
                 </Grid>
@@ -1602,7 +1935,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Peso"
                     value={character.peso || ""}
-                    onChange={(e) => updateAttribute("peso", e.target.value)}
+                    disabled={isFieldLocked("peso")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("peso", e.target.value)
+                    }
                     size="small"
                   />
                 </Grid>
@@ -1611,7 +1947,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Cabelos"
                     value={character.cabelos || ""}
-                    onChange={(e) => updateAttribute("cabelos", e.target.value)}
+                    disabled={isFieldLocked("cabelos")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("cabelos", e.target.value)
+                    }
                     size="small"
                     placeholder="Curto / Castanho"
                   />
@@ -1621,7 +1960,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Olhos"
                     value={character.olhos || ""}
-                    onChange={(e) => updateAttribute("olhos", e.target.value)}
+                    disabled={isFieldLocked("olhos")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("olhos", e.target.value)
+                    }
                     size="small"
                     placeholder="Brilhantes"
                   />
@@ -1631,7 +1973,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                     fullWidth
                     label="Pele"
                     value={character.pele || ""}
-                    onChange={(e) => updateAttribute("pele", e.target.value)}
+                    disabled={isFieldLocked("pele")}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("pele", e.target.value)
+                    }
                     size="small"
                     placeholder="Negra / Parda / Outras"
                   />
@@ -1689,10 +2034,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                       <FormControl fullWidth size="small">
                         <InputLabel>{attr.label}</InputLabel>
                         <StyledSelect
+                          disabled={isFieldLocked(attr.key)}
                           value={character[attr.key] || "d4"}
                           label={attr.label}
                           onChange={(e) =>
-                            updateAttribute(attr.key, e.target.value)
+                            updateAttributeIfAllowed(attr.key, e.target.value)
                           }
                         >
                           {DICE.map((d) => (
@@ -1736,8 +2082,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                       fullWidth
                       label="Descrição & Histórico"
                       value={character.descricao || ""}
+                      disabled={isFieldLocked("descricao")}
                       onChange={(e) =>
-                        updateAttribute("descricao", e.target.value)
+                        updateAttributeIfAllowed("descricao", e.target.value)
                       }
                       placeholder="Descreva a personalidade e um breve histórico do personagem..."
                       multiline
@@ -1805,7 +2152,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                           <CloudUpload />
                         )
                       }
-                      disabled={imgLoading}
+                      disabled={imgLoading || isFieldLocked("imagem_url")}
                     >
                       <input
                         type="file"
@@ -1838,11 +2185,27 @@ Negative Prompt: ${promptData.negativePrompt}.
       )}
 
       {/* TAB 2: DESPERTAR */}
-      {tabValue === 2 && <AwakeningSection />}
+      {tabValue === 2 && (
+        <AwakeningSection
+          character={character}
+          updateAttribute={updateAttributeIfAllowed}
+          addItemToList={(listName, item) =>
+            addItemToListIfAllowed("recursos_despertar", listName, item)
+          }
+          updateListItem={(listName, index, item) =>
+            updateListItemIfAllowed("recursos_despertar", listName, index, item)
+          }
+          isFieldLocked={isFieldLocked}
+        />
+      )}
 
       {/* TAB 3: COMBATE */}
       {tabValue === 3 && (
-        <CombatList character={character} updateAttribute={updateAttribute} />
+        <CombatList
+          character={character}
+          updateAttribute={updateAttributeIfAllowed}
+          isFieldLocked={isFieldLocked}
+        />
       )}
 
       {/* TAB 4: PERÍCIAS */}
@@ -1869,6 +2232,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
           <Box sx={{maxWidth: "600px"}}>
             <SkillsList
+              disabled={isFieldLocked("pericias")}
               items={character?.pericias?.map((p) => {
                 const attrKey = getSkillAttribute(p.name);
                 const attrDie = character[attrKey] || "d4";
@@ -1885,13 +2249,18 @@ Negative Prompt: ${promptData.negativePrompt}.
                 };
               })}
               onAdd={(item) => {
+                if (isFieldLocked("pericias")) return;
                 const idx = (character.pericias || []).findIndex(
                   (p) => p.name === item.name,
                 );
-                if (idx >= 0) removeItemFromList("pericias", idx);
-                addItemToList("pericias", item);
+                if (idx >= 0) {
+                  removeItemFromListIfAllowed("pericias", "pericias", idx);
+                }
+                addItemToListIfAllowed("pericias", "pericias", item);
               }}
-              onRemove={(idx) => removeItemFromList("pericias", idx)}
+              onRemove={(idx) =>
+                removeItemFromListIfAllowed("pericias", "pericias", idx)
+              }
               addButtonLabel="+ "
             />
           </Box>
@@ -1928,15 +2297,20 @@ Negative Prompt: ${promptData.negativePrompt}.
                 </Box>
 
                 <VantagesList
+                  disabled={isFieldLocked("vantagens")}
                   items={(character.vantagens || []).map((v) => {
                     const edge = EDGES.find((e) => e.name === v.name);
                     return edge ? {...edge, ...v} : v;
                   })}
                   availableOptions={availableEdges}
-                  onAdd={(item) => addItemToList("vantagens", item)}
-                  onRemove={(idx) => removeItemFromList("vantagens", idx)}
+                  onAdd={(item) =>
+                    addItemToListIfAllowed("vantagens", "vantagens", item)
+                  }
+                  onRemove={(idx) =>
+                    removeItemFromListIfAllowed("vantagens", "vantagens", idx)
+                  }
                   onUpdate={(idx, item) =>
-                    updateListItem("vantagens", idx, item)
+                    updateListItemIfAllowed("vantagens", "vantagens", idx, item)
                   }
                 />
               </Box>
@@ -1977,14 +2351,32 @@ Negative Prompt: ${promptData.negativePrompt}.
                 </Box>
 
                 <ComplicacoesList
+                  disabled={isFieldLocked("complicacoes")}
                   items={(character.complicacoes || []).map((c) => {
                     const hind = HINDRANCES.find((h) => h.name === c.name);
                     return hind ? {...hind, ...c} : c;
                   })}
-                  onAdd={(item) => addItemToList("complicacoes", item)}
-                  onRemove={(idx) => removeItemFromList("complicacoes", idx)}
+                  onAdd={(item) =>
+                    addItemToListIfAllowed(
+                      "complicacoes",
+                      "complicacoes",
+                      item,
+                    )
+                  }
+                  onRemove={(idx) =>
+                    removeItemFromListIfAllowed(
+                      "complicacoes",
+                      "complicacoes",
+                      idx,
+                    )
+                  }
                   onUpdate={(idx, item) =>
-                    updateListItem("complicacoes", idx, item)
+                    updateListItemIfAllowed(
+                      "complicacoes",
+                      "complicacoes",
+                      idx,
+                      item,
+                    )
                   }
                 />
               </Box>
@@ -2003,10 +2395,15 @@ Negative Prompt: ${promptData.negativePrompt}.
                 ⚔️ Armas
               </h3>
               <WeaponsList
+                disabled={isFieldLocked("armas")}
                 items={character.armas || []}
-                onAdd={(item) => addItemToList("armas", item)}
-                onRemove={(idx) => removeItemFromList("armas", idx)}
-                onUpdate={(idx, item) => updateListItem("armas", idx, item)}
+                onAdd={(item) => addItemToListIfAllowed("armas", "armas", item)}
+                onRemove={(idx) =>
+                  removeItemFromListIfAllowed("armas", "armas", idx)
+                }
+                onUpdate={(idx, item) =>
+                  updateListItemIfAllowed("armas", "armas", idx, item)
+                }
               />
             </Grid>
 
@@ -2016,10 +2413,15 @@ Negative Prompt: ${promptData.negativePrompt}.
                 🎒 Itens
               </h3>
               <ItemsList
+                disabled={isFieldLocked("itens")}
                 items={character.itens || []}
-                onAdd={(item) => addItemToList("itens", item)}
-                onRemove={(idx) => removeItemFromList("itens", idx)}
-                onUpdate={(idx, item) => updateListItem("itens", idx, item)}
+                onAdd={(item) => addItemToListIfAllowed("itens", "itens", item)}
+                onRemove={(idx) =>
+                  removeItemFromListIfAllowed("itens", "itens", idx)
+                }
+                onUpdate={(idx, item) =>
+                  updateListItemIfAllowed("itens", "itens", idx, item)
+                }
               />
             </Grid>
 
@@ -2035,10 +2437,17 @@ Negative Prompt: ${promptData.negativePrompt}.
                 Armaduras & Escudos
               </h3>
               <ArmorList
+                disabled={isFieldLocked("armaduras")}
                 items={character.armaduras || []}
-                onAdd={(item) => addItemToList("armaduras", item)}
-                onRemove={(idx) => removeItemFromList("armaduras", idx)}
-                onUpdate={(idx, item) => updateListItem("armaduras", idx, item)}
+                onAdd={(item) =>
+                  addItemToListIfAllowed("armaduras", "armaduras", item)
+                }
+                onRemove={(idx) =>
+                  removeItemFromListIfAllowed("armaduras", "armaduras", idx)
+                }
+                onUpdate={(idx, item) =>
+                  updateListItemIfAllowed("armaduras", "armaduras", idx, item)
+                }
                 addButtonLabel="+ "
               />
             </Grid>
@@ -2049,17 +2458,24 @@ Negative Prompt: ${promptData.negativePrompt}.
                 💎 Espólios
               </h3>
               <EspoliosList
+                disabled={isFieldLocked("espolios")}
                 items={character.espolios || []}
-                onAdd={(item) => addItemToList("espolios", item)}
-                onRemove={(idx) => removeItemFromList("espolios", idx)}
-                onUpdate={(idx, item) => updateListItem("espolios", idx, item)}
+                onAdd={(item) =>
+                  addItemToListIfAllowed("espolios", "espolios", item)
+                }
+                onRemove={(idx) =>
+                  removeItemFromListIfAllowed("espolios", "espolios", idx)
+                }
+                onUpdate={(idx, item) =>
+                  updateListItemIfAllowed("espolios", "espolios", idx, item)
+                }
               />
             </Grid>
           </Grid>
         </Box>
       )}
 
-      {/* TAB 7: PODERES (Magias + Recursos Despertar) */}
+      {/* TAB 7: PODERES (Magias) */}
       {tabValue === 7 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
@@ -2069,10 +2485,15 @@ Negative Prompt: ${promptData.negativePrompt}.
                 🔮 Magias
               </h3>
               <MagiasList
+                disabled={isFieldLocked("magias")}
                 items={character.magias || []}
-                onAdd={(item) => addItemToList("magias", item)}
+                onAdd={(item) =>
+                  addItemToListIfAllowed("magias", "magias", item)
+                }
                 availableOptions={availablePowers}
-                onRemove={(idx) => removeItemFromList("magias", idx)}
+                onRemove={(idx) =>
+                  removeItemFromListIfAllowed("magias", "magias", idx)
+                }
               />
             </Grid>
           </Grid>
@@ -2091,6 +2512,7 @@ Negative Prompt: ${promptData.negativePrompt}.
         >
           <h3 style={{margin: "0 0 12px 0"}}>📝 Notas</h3>
           <textarea
+            disabled={isFieldLocked("notas")}
             style={{
               width: "100%",
               minHeight: "600px",
@@ -2102,14 +2524,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               resize: "vertical",
             }}
             value={character.notas || ""}
-            onChange={(e) =>
-              useCharacterStore.setState((state) => ({
-                character: {
-                  ...state.character,
-                  notas: e.target.value,
-                },
-              }))
-            }
+            onChange={(e) => updateAttributeIfAllowed("notas", e.target.value)}
             placeholder="Adicione suas anotações aqui..."
           />
         </Box>

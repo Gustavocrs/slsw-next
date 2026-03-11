@@ -61,9 +61,20 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
+function WeaponsList({
+  items = [],
+  onAdd,
+  onRemove,
+  addButtonLabel = "+ ",
+  disabled = false,
+}) {
   const [name, setName] = useState("");
   const [damage, setDamage] = useState("");
   const [range, setRange] = useState("");
@@ -83,6 +94,7 @@ function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         <TextField
           value={name}
           onChange={(e) => setName(e.target.value)}
+          disabled={disabled}
           size="small"
           placeholder="Nome da Arma"
           fullWidth
@@ -91,6 +103,7 @@ function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         <TextField
           value={damage}
           onChange={(e) => setDamage(e.target.value)}
+          disabled={disabled}
           size="small"
           placeholder="Dano"
           sx={{background: "#fff", borderRadius: "4px"}}
@@ -98,11 +111,14 @@ function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         <TextField
           value={range}
           onChange={(e) => setRange(e.target.value)}
+          disabled={disabled}
           size="small"
           placeholder="Alcance"
           sx={{background: "#fff", borderRadius: "4px"}}
         />
-        <Button onClick={handleAdd}>{addButtonLabel}</Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          {addButtonLabel}
+        </Button>
       </InputRow>
 
       {items.length === 0 ? (
@@ -137,6 +153,7 @@ function WeaponsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
             <IconButton
               size="small"
               color="error"
+              disabled={disabled}
               onClick={() => onRemove?.(index)}
               sx={{padding: "4px"}}
             >

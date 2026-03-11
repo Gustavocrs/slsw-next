@@ -64,9 +64,14 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
+function ItemsList({items = [], onAdd, onRemove, onUpdate, disabled = false}) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
 
@@ -93,6 +98,7 @@ function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
         <TextField
           value={name}
           onChange={(e) => setName(e.target.value)}
+          disabled={disabled}
           size="small"
           placeholder="Nome do Item"
           fullWidth
@@ -101,11 +107,14 @@ function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
         <TextField
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
+          disabled={disabled}
           size="small"
           placeholder="Qtd"
           sx={{background: "#fff", borderRadius: "4px"}}
         />
-        <Button onClick={handleAdd}>+ </Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          +{" "}
+        </Button>
       </InputRow>
 
       {items.length === 0 ? (
@@ -131,6 +140,7 @@ function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
               <IconButton
                 size="small"
                 title="Consumir/Usar (Reduzir Qtd)"
+                disabled={disabled}
                 onClick={() => handleConsume(index, item)}
                 sx={{padding: "4px", color: "#667eea"}}
               >
@@ -139,6 +149,7 @@ function ItemsList({items = [], onAdd, onRemove, onUpdate}) {
               <IconButton
                 size="small"
                 color="error"
+                disabled={disabled}
                 onClick={() => onRemove?.(index)}
                 sx={{padding: "4px"}}
               >

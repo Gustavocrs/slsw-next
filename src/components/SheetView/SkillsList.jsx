@@ -68,9 +68,20 @@ const Button = styled("button")(({theme}) => ({
   "&:active": {
     background: "#445cb9",
   },
+
+  "&:disabled": {
+    background: "#bdbdbd",
+    cursor: "not-allowed",
+  },
 }));
 
-function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
+function SkillsList({
+  items = [],
+  onAdd,
+  onRemove,
+  addButtonLabel = "+ ",
+  disabled = false,
+}) {
   const [inputSkill, setInputSkill] = useState("");
   const [inputDice, setInputDice] = useState("d4");
 
@@ -109,6 +120,7 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         <Select
           value={inputSkill}
           onChange={(e) => setInputSkill(e.target.value)}
+          disabled={disabled}
           displayEmpty
           size="small"
           fullWidth
@@ -128,6 +140,7 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
         <Select
           value={inputDice}
           onChange={(e) => setInputDice(e.target.value)}
+          disabled={disabled}
           size="small"
           sx={{
             background: "#fff",
@@ -141,7 +154,9 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
           ))}
         </Select>
 
-        <Button onClick={handleAdd}>{addButtonLabel}</Button>
+        <Button onClick={handleAdd} disabled={disabled}>
+          {addButtonLabel}
+        </Button>
       </InputRow>
 
       {/* Skills List */}
@@ -173,6 +188,7 @@ function SkillsList({items = [], onAdd, onRemove, addButtonLabel = "+ "}) {
               <IconButton
                 size="small"
                 color="error"
+                disabled={disabled}
                 onClick={() => handleRemove(index)}
                 sx={{padding: "4px"}}
               >

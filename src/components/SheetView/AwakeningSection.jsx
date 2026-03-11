@@ -110,17 +110,31 @@ const OPTIONS = {
   ],
 };
 
-function AwakeningSection() {
-  const character = useCharacterStore((state) => state.character);
-  const updateAttribute = useCharacterStore((state) => state.updateAttribute);
-  const addItemToList = useCharacterStore((state) => state.addItemToList);
-  const updateListItem = useCharacterStore((state) => state.updateListItem);
+function AwakeningSection({
+  character: propCharacter,
+  updateAttribute: propUpdateAttribute,
+  addItemToList: propAddItemToList,
+  updateListItem: propUpdateListItem,
+  isFieldLocked = () => false,
+}) {
+  const storeCharacter = useCharacterStore((state) => state.character);
+  const storeUpdateAttribute = useCharacterStore(
+    (state) => state.updateAttribute,
+  );
+  const storeAddItemToList = useCharacterStore((state) => state.addItemToList);
+  const storeUpdateListItem = useCharacterStore((state) => state.updateListItem);
+
+  const character = propCharacter || storeCharacter;
+  const updateAttribute = propUpdateAttribute || storeUpdateAttribute;
+  const addItemToList = propAddItemToList || storeAddItemToList;
+  const updateListItem = propUpdateListItem || storeUpdateListItem;
 
   const renderSelect = (label, key, options) => (
     <Grid item xs={12}>
       <FormControl fullWidth size="small">
         <InputLabel>{label}</InputLabel>
         <Select
+          disabled={isFieldLocked(key)}
           value={character[key] || ""}
           label={label}
           onChange={(e) => updateAttribute(key, e.target.value)}
@@ -191,6 +205,7 @@ function AwakeningSection() {
             </Typography>
 
             <RecursosDespertarList
+              disabled={isFieldLocked("recursos_despertar")}
               items={character.recursos_despertar || []}
               onAdd={(item) => addItemToList("recursos_despertar", item)}
               onUpdate={(idx, item) =>

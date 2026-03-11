@@ -6,9 +6,17 @@
 "use client";
 
 import React from "react";
-import {Box, Grid, Checkbox, TextField} from "@mui/material";
+import {Box, Grid, Checkbox, TextField, Chip} from "@mui/material";
+import {getCharacterStatusEffects} from "@/lib/characterStatus";
 
-export function CombatList({character, updateAttribute}) {
+export function CombatList({
+  character,
+  updateAttribute,
+  readOnly = false,
+  isFieldLocked = () => false,
+}) {
+  const isDisabled = (fieldKey) => readOnly || isFieldLocked(fieldKey);
+
   // Cálculos de Combate
   const fightingSkill = character.pericias?.find((p) => p.name === "Lutar");
   const fightingDieVal = fightingSkill
@@ -23,6 +31,7 @@ export function CombatList({character, updateAttribute}) {
   }, 0);
   const vigorDieVal = parseInt((character.vigor || "d4").replace("d", ""), 10);
   const toughnessBase = 2 + vigorDieVal / 2;
+  const statusEffects = getCharacterStatusEffects(character);
 
   return (
     <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
@@ -61,6 +70,7 @@ export function CombatList({character, updateAttribute}) {
               <Checkbox
                 checked={character.abalado || false}
                 onChange={(e) => updateAttribute("abalado", e.target.checked)}
+                disabled={isDisabled("abalado")}
                 sx={{color: "#d97706", "&.Mui-checked": {color: "#d97706"}}}
               />
             </Box>
@@ -98,6 +108,7 @@ export function CombatList({character, updateAttribute}) {
                       }
                       updateAttribute("ferimentos", newVal);
                     }}
+                    disabled={isDisabled("ferimentos")}
                     size="small"
                     sx={{
                       p: 0.5,
@@ -139,6 +150,7 @@ export function CombatList({character, updateAttribute}) {
                       const newVal = current === level ? level - 1 : level;
                       updateAttribute("fadiga", newVal);
                     }}
+                    disabled={isDisabled("fadiga")}
                     size="small"
                     sx={{
                       p: 0.5,
@@ -184,6 +196,31 @@ export function CombatList({character, updateAttribute}) {
         </Grid>
       </Box>
 
+      {statusEffects.length > 0 && (
+        <Box sx={{mb: 4}}>
+          <h3
+            style={{
+              margin: "0 0 16px 0",
+              borderBottom: "1px solid #eee",
+              paddingBottom: "8px",
+              color: "#333",
+            }}
+          >
+            Efeitos Ativos
+          </h3>
+          <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
+            {statusEffects.map((effect) => (
+              <Chip
+                key={effect}
+                label={effect}
+                color="warning"
+                variant="outlined"
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+
       {/* TITULO: DEFESAS */}
       <Box sx={{mb: 4}}>
         <h3
@@ -227,6 +264,7 @@ export function CombatList({character, updateAttribute}) {
                   type="number"
                   placeholder="+A"
                   value={character.aparar_bonus || ""}
+                  disabled={isDisabled("aparar_bonus")}
                   onChange={(e) =>
                     updateAttribute(
                       "aparar_bonus",
@@ -271,6 +309,7 @@ export function CombatList({character, updateAttribute}) {
                   type="number"
                   placeholder="+D"
                   value={character.armadura_bonus || ""}
+                  disabled={isDisabled("armadura_bonus")}
                   onChange={(e) =>
                     updateAttribute(
                       "armadura_bonus",
@@ -309,6 +348,7 @@ export function CombatList({character, updateAttribute}) {
               <TextField
                 type="number"
                 value={character.bencaos ?? 3}
+                disabled={isDisabled("bencaos")}
                 onChange={(e) =>
                   updateAttribute("bencaos", parseInt(e.target.value) || 0)
                 }
@@ -327,6 +367,7 @@ export function CombatList({character, updateAttribute}) {
               <TextField
                 type="number"
                 value={character.movimento ?? 6}
+                disabled={isDisabled("movimento")}
                 onChange={(e) =>
                   updateAttribute("movimento", parseInt(e.target.value) || 0)
                 }
@@ -355,6 +396,7 @@ export function CombatList({character, updateAttribute}) {
           rows={3}
           fullWidth
           value={character.lesoes || ""}
+          disabled={isDisabled("lesoes")}
           onChange={(e) => updateAttribute("lesoes", e.target.value)}
           sx={{
             background: "#f9fafb",
