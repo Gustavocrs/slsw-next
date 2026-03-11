@@ -2,13 +2,14 @@
 FROM node:22-slim AS dependencies
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev
+# Instalamos TUDO (incluindo devDeps) para que o builder consiga compilar o CSS
+RUN npm install
 
 # ESTÁGIO 2: Builder
 FROM node:22-slim AS builder
 WORKDIR /app
 
-# ARGs do Firebase
+# ARGs do Firebase (Mantidos conforme seu original)
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -23,8 +24,13 @@ ENV NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Copiamos as node_modules completas
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
+
+# O build do Next.js agora terá o Tailwind/PostCSS disponível
 RUN npm run build
 
 # ESTÁGIO 3: Runner
@@ -32,8 +38,7 @@ FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# No modo standalone, o Next.js coloca tudo em .next/standalone
-# Copiamos o conteúdo de standalone para a raiz /app do container
+# O modo standalone já otimiza o tamanho, não precisamos das devDeps aqui
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
@@ -41,5 +46,5 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 USER node
 EXPOSE 3000
 
-# O segredo: chamar o server.js gerado pelo build standalone
+# Execução via node server.js (saída do standalone)
 CMD ["node", "server.js"]

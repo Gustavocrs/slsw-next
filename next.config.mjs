@@ -1,15 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Gera o build otimizado para Docker (node server.js)
   output: "standalone",
-  reactCompiler: true,
+
   compiler: {
+    // Habilita suporte nativo do SWC para styled-components
     styledComponents: true,
-    experimental: {
-      reactCompiler: true,
-    },
-    telemetry: false,
   },
 
+  experimental: {
+    // Habilita o novo React Compiler para otimização de hooks e memoização
+    reactCompiler: true,
+  },
+
+  // Configurações de Headers (CORS)
   async headers() {
     return [
       {

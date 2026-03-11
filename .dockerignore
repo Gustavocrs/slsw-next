@@ -1,9 +1,9 @@
+node_modules
+.next
+out
+build
+.git
+.gitignore
 Dockerfile
 .dockerignore
-node_modules
 npm-debug.log
-README.md
-.next
-.git
-.env*
-! .env.production
