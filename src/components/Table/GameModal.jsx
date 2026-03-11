@@ -274,12 +274,15 @@ function GameModal() {
       const maxMana = calculateMaxMana(charData);
 
       switch (actionType) {
-        case "short_rest": // Recupera um pouco de Mana e Fadiga
+        case "short_rest": // Recupera METADE da Mana, 1 Fadiga, 1 Ferimento e remove Abalado
+          const manaRecovery = Math.floor(maxMana / 2);
           updates.mana_atual = Math.min(
-            (charData.mana_atual || 0) + 5,
+            (charData.mana_atual || 0) + manaRecovery,
             maxMana,
           );
           updates.fadiga = Math.max((charData.fadiga || 0) - 1, 0);
+          updates.ferimentos = Math.max((charData.ferimentos || 0) - 1, 0);
+          updates.abalado = false;
           showNotification(
             `Descanso Curto aplicado em ${selectedPlayer.name}.`,
             "success",
@@ -299,14 +302,14 @@ function GameModal() {
           updates.abalado = true;
           showNotification(`${selectedPlayer.name} está Abalado.`, "warning");
           break;
-        case "damage": // Causar Dano (Simplificado: +1 Ferimento + Abalado)
+        case "damage": // Causar Dano: +1 Ferimento e aplica Abalado
           updates.ferimentos = (charData.ferimentos || 0) + 1;
           updates.abalado = true;
           showNotification(`Dano aplicado em ${selectedPlayer.name}.`, "error");
           break;
-        case "faint": // Desmaiar (Simulado com Fadiga Max ou apenas narrativo)
+        case "faint": // Causar Fadiga / Desmaiar: 2 Níveis de Fadiga (Exausto) + Abalado
           updates.abalado = true;
-          updates.fadiga = 2; // Exausto
+          updates.fadiga = 2;
           showNotification(`${selectedPlayer.name} desmaiou!`, "error");
           break;
       }
