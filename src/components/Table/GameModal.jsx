@@ -64,6 +64,9 @@ import {
   Science as PoisonIcon,
   ExpandMore as ExpandMoreIcon,
   ChevronRight as ChevronRightIcon,
+  AcUnit as FrozenIcon,
+  PanTool as ParalyzedIcon,
+  Help as OtherStatusIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -146,9 +149,12 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
     charData?.mana_atual !== undefined ? charData.mana_atual : maxMana;
   const wounds = charData?.ferimentos || 0;
   const fatigue = charData?.fadiga || 0;
+  const corruption = charData?.corrupcao || 0;
+  const isShaken = charData?.abalado || false;
+  const statusEffects = getCharacterStatusEffects(charData || {});
 
-  const isDead = wounds >= 5;
-  const isUnconscious = wounds === 4 || fatigue >= 3;
+  // Limites SWADE: 3 Ferimentos (4 = Incap), 2 Fadiga (3 = Incap)
+  const isDead = wounds > 3; // Ajustado para ser considerado "Morto/Incap" visualmente acima de 3
 
   return (
     <Paper
@@ -158,7 +164,7 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
         minHeight: 80,
         display: "flex",
         alignItems: "center",
-        gap: 1.5,
+        gap: 4,
         cursor: "pointer",
         transition: "all 0.2s",
         "&:hover": {
@@ -168,7 +174,9 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
         },
         border: "1px solid #e0e0e0",
       }}
-      onClick={(e) => onClick(e, player)}
+      onClick={(e) =>
+        onClick(e, player, {isShaken, wounds, fatigue, corruption})
+      }
     >
       <Badge
         overlap="circular"
@@ -219,73 +227,125 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
                   p: 0.5,
                   borderRadius: 1,
                   textAlign: "center",
-                  fontSize: "0.75rem",
+                  fontSize: "0.7rem",
                 }}
               >
                 MORTO 💀
               </Typography>
-            ) : isUnconscious ? (
-              <Typography
+            ) : (
+              <Box
                 sx={{
-                  color: "#d32f2f",
-                  fontWeight: "800",
-                  bgcolor: "#ffebee",
-                  p: 0.5,
-                  borderRadius: 1,
-                  textAlign: "center",
-                  fontSize: "0.75rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 0.5,
                 }}
               >
-                DESACORDADO 💤
-              </Typography>
-            ) : (
-              <>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    color: "#d32f2f",
-                    fontWeight: "600",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {wounds} <DamageIcon sx={{fontSize: 16, ml: 0.5}} />
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    color: "#ed6c02",
-                    fontWeight: "600",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {fatigue} <FatigueIcon sx={{fontSize: 16, ml: 0.5}} />
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    color: "#1976d2",
-                    fontWeight: "600",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {currentMana}/{maxMana}{" "}
-                  <span
-                    style={{
-                      fontSize: "1.1em",
-                      marginLeft: "4px",
-                      lineHeight: 1,
+                {/* Linha 1: Abalado, Ferimentos, Fadiga, Corrupção, Mana */}
+                <Box sx={{display: "flex", alignItems: "center", gap: 1.5}}>
+                  {/* Abalado */}
+                  <Box
+                    title="Abalado"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: isShaken ? "#d97706" : "#e0e0e0",
                     }}
                   >
-                    🌀
-                  </span>
+                    <StunIcon sx={{fontSize: 24}} />
+                  </Box>
+
+                  {/* Ferimentos */}
+                  <Box
+                    title="Ferimentos"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                      color: wounds > 0 ? "#d32f2f" : "#bdbdbd",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {wounds} <DamageIcon sx={{fontSize: 24}} />
+                  </Box>
+
+                  {/* Fadiga */}
+                  <Box
+                    title="Fadiga"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                      color: fatigue > 0 ? "#ed6c02" : "#bdbdbd",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {fatigue} <FatigueIcon sx={{fontSize: 24}} />
+                  </Box>
+
+                  {/* Corrupção */}
+                  <Box
+                    title="Corrupção"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                      color: corruption > 0 ? "#7b1fa2" : "#bdbdbd",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {corruption} <CorruptionIcon sx={{fontSize: 24}} />
+                  </Box>
+
+                  {/* Mana */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      color: "#1976d2",
+                      fontWeight: "700",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {currentMana}/{maxMana}{" "}
+                    <span style={{fontSize: "1.5em", lineHeight: 1}}>🌀</span>
+                  </Box>
                 </Box>
-              </>
+
+                {/* Linha 2: Demais Status */}
+                <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}>
+                  {statusEffects.map((effect) => {
+                    let EffectIcon = OtherStatusIcon;
+                    let effectColor = "#9c27b0"; // Default Purple/Violet
+
+                    if (effect === "Envenenado") {
+                      EffectIcon = PoisonIcon;
+                      effectColor = "#4caf50"; // Verde (Solicitado)
+                    } else if (effect === "Paralisado") {
+                      EffectIcon = ParalyzedIcon;
+                      effectColor = "#ffb74d"; // Laranja/Amarelo
+                    } else if (effect === "Congelado") {
+                      EffectIcon = FrozenIcon;
+                      effectColor = "#29b6f6"; // Azul Claro
+                    }
+
+                    return (
+                      <Box
+                        key={effect}
+                        title={effect}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          color: effectColor,
+                        }}
+                      >
+                        <EffectIcon sx={{fontSize: 24}} />
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
             )}
           </Grid>
         )}
@@ -311,6 +371,7 @@ function GameModal() {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [selectedPlayerStatus, setSelectedPlayerStatus] = useState({});
   const [submenuAnchorEl, setSubmenuAnchorEl] = useState(null);
   const [submenuType, setSubmenuType] = useState(null);
 
@@ -378,11 +439,12 @@ function GameModal() {
     showNotification,
   ]);
 
-  const handlePlayerClick = (event, player) => {
+  const handlePlayerClick = (event, player, status = {}) => {
     // 1. Permitir clicar em si mesmo (para ver ficha ou configurar)
     if (player.uid === user?.uid) {
       setAnchorEl(event.currentTarget);
       setSelectedPlayer(player);
+      setSelectedPlayerStatus(status);
       return;
     }
 
@@ -391,11 +453,13 @@ function GameModal() {
       // GM pode clicar em qualquer um
       setAnchorEl(event.currentTarget);
       setSelectedPlayer(player);
+      setSelectedPlayerStatus(status);
     } else {
       // Jogador só pode clicar no GM
       if (player.isGM) {
         setAnchorEl(event.currentTarget);
         setSelectedPlayer(player);
+        setSelectedPlayerStatus(status);
       }
     }
   };
@@ -405,6 +469,7 @@ function GameModal() {
     setSubmenuAnchorEl(null);
     setSubmenuType(null);
     setSelectedPlayer(null);
+    setSelectedPlayerStatus({});
   };
 
   const handleOpenSubmenu = (type, event) => {
@@ -532,10 +597,7 @@ function GameModal() {
         case "short_rest": {
           // Recupera METADE da Mana, 1 Fadiga, 1 Ferimento e remove Abalado
           const manaRecovery = Math.floor(maxMana / 2);
-          updates.mana_atual = Math.min(
-            currentMana + manaRecovery,
-            maxMana,
-          );
+          updates.mana_atual = Math.min(currentMana + manaRecovery, maxMana);
           updates.fadiga = Math.max((charData.fadiga || 0) - 1, 0);
           updates.ferimentos = Math.max((charData.ferimentos || 0) - 1, 0);
           updates.abalado = false;
@@ -574,7 +636,7 @@ function GameModal() {
           // Causar Dano
           const currentWounds = charData.ferimentos || 0;
 
-          if (currentWounds >= 5) {
+          if (currentWounds > 3) {
             showNotification(`${targetPlayer.name} já está morto.`, "error");
             return;
           }
@@ -583,23 +645,20 @@ function GameModal() {
           updates.ferimentos = newWounds;
           updates.abalado = true; // Dano sempre abala
 
-          if (newWounds >= 5) {
+          if (newWounds > 3) {
             showNotification(`${targetPlayer.name} MORREU!`, "error");
-          } else if (newWounds === 4) {
+          } else if (newWounds === 3) {
             showNotification(
               `${targetPlayer.name} desmaiou por ferimentos!`,
               "warning",
             );
           } else {
-            showNotification(
-              `Dano aplicado em ${targetPlayer.name}.`,
-              "error",
-            );
+            showNotification(`Dano aplicado em ${targetPlayer.name}.`, "error");
           }
           break;
         }
         case "heal_damage": // Curar Dano
-          if ((charData.ferimentos || 0) >= 5) {
+          if ((charData.ferimentos || 0) > 3) {
             showNotification(
               `${targetPlayer.name} está morto. Apenas ressurreição funciona.`,
               "error",
@@ -615,7 +674,7 @@ function GameModal() {
         case "fatigue": {
           // Fatigar (Max 3 = Desmaio)
           const currentFatigue = charData.fadiga || 0;
-          if (currentFatigue >= 3) {
+          if (currentFatigue >= 2) {
             showNotification(
               `${targetPlayer.name} já está desmaiado de exaustão.`,
               "warning",
@@ -626,17 +685,14 @@ function GameModal() {
           const newFatigue = currentFatigue + 1;
           updates.fadiga = newFatigue;
 
-          if (newFatigue >= 3) {
+          if (newFatigue >= 2) {
             showNotification(
               `${targetPlayer.name} desmaiou de exaustão!`,
               "warning",
             );
             updates.abalado = true;
           } else {
-            showNotification(
-              `${targetPlayer.name} sofreu Fadiga.`,
-              "warning",
-            );
+            showNotification(`${targetPlayer.name} sofreu Fadiga.`, "warning");
           }
           break;
         }
@@ -655,20 +711,25 @@ function GameModal() {
           );
           break;
         case "potion_heal":
+          updates.abalado = false;
           updates.ferimentos = Math.max(
             (charData.ferimentos || 0) - healingTier,
             0,
           );
           showNotification(
-            `${targetPlayer.name} usou Poção de Cura (+${payload.amount || 5}).`,
+            `${targetPlayer.name} usou Poção de Cura e recuperou ${healingTier} ferimento${healingTier > 1 ? "s" : ""}. Abalado removido.`,
             "success",
           );
           break;
         case "potion_mana":
-          updates.mana_atual = Math.min(
-            currentMana + (payload.amount || 10),
-            maxMana,
-          );
+          if (payload.amount === "total") {
+            updates.mana_atual = maxMana;
+          } else {
+            updates.mana_atual = Math.min(
+              currentMana + (payload.amount || 10),
+              maxMana,
+            );
+          }
           showNotification(
             `${targetPlayer.name} usou Poção de Mana (+${payload.amount || 10}).`,
             "success",
@@ -681,7 +742,12 @@ function GameModal() {
             updates,
             toggleCharacterStatusEffect(charData, "Envenenado").updates,
           );
-          if (!(charData.envenenado || getCharacterStatusEffects(charData).includes("Envenenado"))) {
+          if (
+            !(
+              charData.envenenado ||
+              getCharacterStatusEffects(charData).includes("Envenenado")
+            )
+          ) {
             updates.status_efeitos = getCharacterStatusEffects(charData);
             updates.envenenado = false;
           }
@@ -690,7 +756,10 @@ function GameModal() {
         case "toggle_effect": {
           const effectLabel = payload.effectLabel;
           if (!effectLabel) return;
-          const effectState = toggleCharacterStatusEffect(charData, effectLabel);
+          const effectState = toggleCharacterStatusEffect(
+            charData,
+            effectLabel,
+          );
           Object.assign(updates, effectState.updates);
           showNotification(
             `${targetPlayer.name} ${effectState.isActive ? `recebeu ${effectLabel}` : `não está mais com ${effectLabel}`}.`,
@@ -707,7 +776,10 @@ function GameModal() {
 
           if (!customEffect) return;
 
-          const effectState = toggleCharacterStatusEffect(charData, customEffect);
+          const effectState = toggleCharacterStatusEffect(
+            charData,
+            customEffect,
+          );
           Object.assign(updates, effectState.updates);
           showNotification(
             `${targetPlayer.name} ${effectState.isActive ? `recebeu ${customEffect}` : `não está mais com ${customEffect}`}.`,
@@ -1447,9 +1519,7 @@ function GameModal() {
                 </Typography>,
                 <MenuItem
                   key="act-pot-heal"
-                  onClick={(event) =>
-                    handleOpenSubmenu("heal-potion", event)
-                  }
+                  onClick={(event) => handleOpenSubmenu("heal-potion", event)}
                 >
                   <ListItemIcon>
                     <HealthPotionIcon fontSize="small" color="error" />
@@ -1459,9 +1529,7 @@ function GameModal() {
                 </MenuItem>,
                 <MenuItem
                   key="act-pot-mana"
-                  onClick={(event) =>
-                    handleOpenSubmenu("mana-potion", event)
-                  }
+                  onClick={(event) => handleOpenSubmenu("mana-potion", event)}
                 >
                   <ListItemIcon>
                     <ManaPotionIcon fontSize="small" color="primary" />
@@ -1514,6 +1582,187 @@ function GameModal() {
               )}
           </Menu>
 
+          {/* SUBMENU: Ações */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "actions"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={handleSendMessage}>
+              <ListItemIcon>
+                <MessageIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Enviar Msg</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleRequestFile}>
+              <ListItemIcon>
+                <FileIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Solicitar Arquivo</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Dano */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "damage"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("damage")}>
+              <ListItemIcon>
+                <DamageIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText color="error">Causar Dano</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("heal_damage")}>
+              <ListItemIcon>
+                <HealIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText color="success">Curar Dano</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Descanso */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "rest"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("short_rest")}>
+              <ListItemIcon>
+                <RestIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Curto</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("long_rest")}>
+              <ListItemIcon>
+                <SleepIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Longo</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Corrupção */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "corruption"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("corruption_add")}>
+              <ListItemIcon>
+                <CorruptionIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Causar</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("corruption_remove")}>
+              <ListItemIcon>
+                <PurifyIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Curar</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Poções */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "potions"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
+              <ListItemIcon>
+                <HealthPotionIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Cura</ListItemText>
+              <ChevronRightIcon fontSize="small" />
+            </MenuItem>
+            <MenuItem onClick={(e) => handleOpenSubmenu("mana-potion", e)}>
+              <ListItemIcon>
+                <ManaPotionIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Mana</ListItemText>
+              <ChevronRightIcon fontSize="small" />
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("antidote")}>
+              <ListItemIcon>
+                <AntidoteIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText>Antídoto</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Poção de Cura */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "heal-potion"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem
+              onClick={() => handleGMAction("potion_heal", {amount: 5})}
+            >
+              <ListItemText>+1 Ferimento</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleGMAction("potion_heal", {amount: 10})}
+            >
+              <ListItemText>+2 Ferimentos</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleGMAction("potion_heal", {amount: 15})}
+            >
+              <ListItemText>+3 Ferimentos</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Poção de Mana */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "mana-potion"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem
+              onClick={() => handleGMAction("potion_mana", {amount: 3})}
+            >
+              <ListItemText>+3 Mana</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleGMAction("potion_mana", {amount: 5})}
+            >
+              <ListItemText>+5 Mana</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleGMAction("potion_mana", {amount: 10})}
+            >
+              <ListItemText>+10 Mana</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleGMAction("potion_mana", {amount: "total"})}
+            >
+              <ListItemText>Total</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Efeitos (Status) */}
           <Menu
             anchorEl={submenuAnchorEl}
             open={submenuType === "effects"}
@@ -1546,42 +1795,6 @@ function GameModal() {
             <MenuItem onClick={() => handleGMAction("custom_effect")}>
               <ListItemText>Outros status de RPG</ListItemText>
             </MenuItem>
-          </Menu>
-
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "heal-potion"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            {[5, 10, 15].map((amount) => (
-              <MenuItem
-                key={`heal-${amount}`}
-                onClick={() => handleGMAction("potion_heal", {amount})}
-              >
-                <ListItemText>{`+${amount}`}</ListItemText>
-              </MenuItem>
-            ))}
-          </Menu>
-
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "mana-potion"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            {[5, 10, 15].map((amount) => (
-              <MenuItem
-                key={`mana-${amount}`}
-                onClick={() => handleGMAction("potion_mana", {amount})}
-              >
-                <ListItemText>{`+${amount}`}</ListItemText>
-              </MenuItem>
-            ))}
           </Menu>
         </DialogContent>
 
@@ -1700,7 +1913,10 @@ function GameModal() {
               gap: 1,
             }}
           >
-            <Button onClick={handleCloseGameSettings} disabled={savingGameSettings}>
+            <Button
+              onClick={handleCloseGameSettings}
+              disabled={savingGameSettings}
+            >
               Fechar
             </Button>
             <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>

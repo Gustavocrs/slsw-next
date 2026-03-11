@@ -5,81 +5,102 @@
 
 "use client";
 
-import React, {useMemo, useState} from "react";
 import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Grid,
-  Tooltip,
-  Alert,
-  Checkbox,
-  Switch,
-  FormControlLabel,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stack,
-  IconButton,
-} from "@mui/material";
-import {doc, onSnapshot} from "firebase/firestore";
-import {db} from "@/lib/firebase";
-import {CircularProgress} from "@mui/material";
-import {styled} from "@mui/material/styles";
-import {
+  Add as AddIcon,
+  AutoAwesome as AiIcon,
+  AutoFixHigh as AwakeningIcon,
+  VolunteerActivism as BlessingIcon,
+  Person as CharacterIcon,
   CheckCircle,
   CloudUpload,
-  Error as ErrorIcon,
-  AutoAwesome as AiIcon,
   ContentCopy as CopyIcon,
-  Add as AddIcon,
-  Remove as RemoveIcon,
-  Bolt as BoltIcon,
+  Security as DefenseIcon,
+  Error as ErrorIcon,
+  AcUnit as FrozenIcon,
+  BatteryAlert as FatigueIcon,
+  BadgeOutlined as IdentityIcon,
+  Inventory2 as InventoryIcon,
+  Notes as NotesIcon,
+  Help as OtherStatusIcon,
+  PanTool as ParalyzedIcon,
+  Science as PoisonIcon,
+  EmojiEvents as RankIcon,
   Refresh as RefreshIcon,
+  Remove as RemoveIcon,
+  FlashOn as ShockIcon,
+  Psychology as SkillIcon,
+  MenuBook as SpellbookIcon,
+  Science as StatusIcon,
+  Stars as TraitIcon,
+  VisibilityOutlined as ViewIcon,
+  AccountBalanceWallet as WalletIcon,
+  Gavel as WeaponIcon,
+  LocalHospital as WoundIcon,
 } from "@mui/icons-material";
-import {CombatList} from "./CombatList";
-import SkillsList from "./SkillsList";
-import MagiasList from "./MagiasList";
-import ArmorList from "./ArmorList";
-import WeaponsList from "./WeaponsList";
-import ItemsList from "./ItemsList";
-import EspoliosList from "./EspoliosList";
-import VantagesList from "./VantagesList";
-import ComplicacoesList from "./ComplicacoesList";
-import AwakeningSection from "./AwakeningSection";
-import {useCharacterStore, useUIStore} from "@/stores/characterStore";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  LinearProgress,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import {alpha, styled} from "@mui/material/styles";
+import {doc, onSnapshot} from "firebase/firestore";
+import React, {useMemo, useState} from "react";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {getCharacterStatusEffects} from "@/lib/characterStatus";
-import {getTableGameSession} from "@/lib/sheetLocks";
+import {db} from "@/lib/firebase";
 import {
+  calculateMaxMana,
+  calculateTotalEdgePoints,
+  calculateTotalHindrancePoints,
+  calculateTotalSkillPoints,
   DICE,
-  SKILLS,
   EDGES,
+  filterEdgesByRank,
+  filterPowersByRank,
+  getSkillAttribute,
   HINDRANCES,
   POWERS,
   RANKS,
-  getSkillAttribute,
-  filterEdgesByRank,
-  filterPowersByRank,
-  calculateTotalSkillPoints,
-  calculateTotalEdgePoints,
-  calculateTotalHindrancePoints,
-  calculateMaxMana,
+  SKILLS,
 } from "@/lib/rpgEngine";
+import {getTableGameSession} from "@/lib/sheetLocks";
+import {useCharacterStore, useUIStore} from "@/stores/characterStore";
+import ArmorList from "./ArmorList";
+import AwakeningSection from "./AwakeningSection";
+import {CombatList} from "./CombatList";
+import ComplicacoesList from "./ComplicacoesList";
+import EspoliosList from "./EspoliosList";
+import ItemsList from "./ItemsList";
+import MagiasList from "./MagiasList";
+import SkillsList from "./SkillsList";
+import VantagesList from "./VantagesList";
+import WeaponsList from "./WeaponsList";
 
 const TabsPaper = styled(Paper)(({theme}) => ({
   marginBottom: "12px",
-  borderRadius: "12px",
+  borderRadius: "10px",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
   "@media print": {
     display: "none",
@@ -124,7 +145,7 @@ const StyledSelect = styled(Select)(({theme}) => ({
 const PointsBadge = styled("span")(({theme}) => ({
   display: "inline-block",
   padding: "4px 10px",
-  borderRadius: "12px",
+  borderRadius: "10px",
   fontSize: "0.75rem",
   fontWeight: "bold",
   background: "#f0f0f0",
@@ -132,69 +153,300 @@ const PointsBadge = styled("span")(({theme}) => ({
   marginLeft: "8px",
 }));
 
-const GridCard = ({
+const SHEET_TABS = {
+  VISUALIZAR: 0,
+  IDENTIFICACAO: 1,
+  DESPERTAR: 2,
+  COMBATE: 3,
+  PERICIAS: 4,
+  VANTAGENS_E_COMPLICACOES: 5,
+  EQUIPAMENTOS: 6,
+  MAGIAS: 7,
+  NOTAS: 8,
+};
+
+const EDGE_DESCRIPTION_MAP = Object.fromEntries(
+  EDGES.map((edge) => [edge.name, edge.description]),
+);
+
+const HINDRANCE_DESCRIPTION_MAP = Object.fromEntries(
+  HINDRANCES.map((hindrance) => [hindrance.name, hindrance.description]),
+);
+
+const OverviewPanel = ({
   title,
+  subtitle,
+  icon,
+  accent = "#667eea",
   children,
-  color = "#667eea",
-  bg = "#fff",
-  retro = false,
+  onIconClick,
+  iconTooltip,
   sx = {},
 }) => (
   <Box
     sx={{
-      background: retro ? "#f4e4bc" : bg,
-      p: 1.5,
-      borderRadius: retro ? 0 : 2,
-      border: retro ? "1px solid #5d4037" : "none",
-      borderLeft: retro ? "1px solid #5d4037" : `3px solid ${color}`,
-      boxShadow: retro
-        ? "3px 3px 0 rgba(93, 64, 55, 0.4)"
-        : "0 2px 4px rgba(0,0,0,0.05)",
-      color: retro ? "#3e2723" : "inherit",
-      overflowY: "auto",
-      height: "100%",
-      position: "relative",
-      "&::before": retro
-        ? {
-            content: '""',
-            position: "absolute",
-            top: "2px",
-            left: "2px",
-            right: "2px",
-            bottom: "2px",
-            border: "1px solid rgba(93, 64, 55, 0.2)",
-            pointerEvents: "none",
-          }
-        : {},
-      "@media print": {
-        overflow: "visible",
-        height: "auto",
-        boxShadow: "none",
-        border: "1px solid #000",
-        breakInside: "avoid",
-      },
+      p: {xs: 1.25, md: 1.5},
+      borderRadius: "8px",
+      border: `1px solid ${alpha(accent, 0.18)}`,
+      background: `linear-gradient(180deg, ${alpha(accent, 0.12)} 0%, rgba(255,255,255,0.9) 100%)`,
+      boxShadow: `0 10px 22px ${alpha("#0f172a", 0.06)}`,
+      backdropFilter: "blur(8px)",
+      overflow: "hidden",
       ...sx,
     }}
   >
-    {title && (
-      <h4
-        style={{
-          margin: "0 0 8px 0",
-          fontSize: retro ? "1.1rem" : "1rem",
-          fontWeight: retro ? 700 : 600,
-          color: retro ? "#3e2723" : "#444",
-          fontFamily: retro ? '"Times New Roman", serif' : "inherit",
-          textTransform: retro ? "uppercase" : "none",
-          borderBottom: retro ? "1px solid rgba(93, 64, 55, 0.2)" : "none",
-          paddingBottom: retro ? "4px" : "0",
+    {(title || icon) && (
+      <Box sx={{display: "flex", alignItems: "center", gap: 1, mb: 1.1}}>
+        {onIconClick ? (
+          <Tooltip title={iconTooltip || "Abrir aba correspondente"} arrow>
+            <IconButton
+              size="small"
+              onClick={onIconClick}
+              aria-label={`Abrir ${title}`}
+              sx={{
+                width: 34,
+                height: 34,
+                borderRadius: "7px",
+                color: accent,
+                bgcolor: alpha(accent, 0.14),
+                boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+                flexShrink: 0,
+                "&:hover": {
+                  bgcolor: alpha(accent, 0.22),
+                },
+              }}
+            >
+              {icon}
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Box
+            sx={{
+              width: 34,
+              height: 34,
+              borderRadius: "7px",
+              display: "grid",
+              placeItems: "center",
+              color: accent,
+              bgcolor: alpha(accent, 0.14),
+              boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+            }}
+          >
+            {icon}
+          </Box>
+        )}
+        <Box sx={{minWidth: 0}}>
+          <Typography
+            variant="subtitle1"
+            sx={{fontWeight: 800, color: "#0f172a", lineHeight: 1.1}}
+          >
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography
+              variant="caption"
+              sx={{color: "#64748b", display: "block", mt: 0.25}}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+    )}
+    {children}
+  </Box>
+);
+
+const SectionRow = ({label, value, helper}) => (
+  <Box
+    sx={{
+      py: 0.95,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: 1.15,
+      borderTop: "1px solid rgba(148, 163, 184, 0.16)",
+      "&:first-of-type": {
+        pt: 0,
+        borderTop: "none",
+      },
+    }}
+  >
+    <Box sx={{minWidth: 0}}>
+      <Typography
+        variant="caption"
+        sx={{
+          display: "block",
+          color: "#64748b",
+          fontWeight: 700,
+          letterSpacing: 0.35,
+          textTransform: "uppercase",
         }}
       >
-        {title}
-      </h4>
+        {label}
+      </Typography>
+      {helper && (
+        <Typography
+          variant="caption"
+          sx={{display: "block", color: "#94a3b8", mt: 0.3}}
+        >
+          {helper}
+        </Typography>
+      )}
+    </Box>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "#0f172a",
+        fontWeight: 700,
+        textAlign: "right",
+      }}
+    >
+      {value}
+    </Typography>
+  </Box>
+);
+
+const EmptyState = ({children}) => (
+  <Typography variant="body2" sx={{color: "#64748b"}}>
+    {children}
+  </Typography>
+);
+
+const TabLabel = ({icon, label}) => (
+  <Box sx={{display: "inline-flex", alignItems: "center", gap: 0.9}}>
+    {React.cloneElement(icon, {sx: {fontSize: 18}})}
+    <Box component="span" sx={{display: {xs: "none", sm: "inline"}}}>
+      {label}
+    </Box>
+  </Box>
+);
+
+const MetricCard = ({
+  title,
+  value,
+  helper,
+  icon,
+  accent = "#667eea",
+  progress,
+  children,
+  onIconClick,
+  iconTooltip,
+  sx = {},
+}) => (
+  <Box
+    sx={{
+      minHeight: 98,
+      p: 1.25,
+      borderRadius: "8px",
+      border: `1px solid ${alpha(accent, 0.18)}`,
+      background: "rgba(255,255,255,0.82)",
+      boxShadow: `0 10px 20px ${alpha("#0f172a", 0.06)}`,
+      backdropFilter: "blur(10px)",
+      ...sx,
+    }}
+  >
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 1.5,
+      }}
+    >
+      <Box sx={{minWidth: 0}}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: 0.65,
+            fontWeight: 700,
+          }}
+        >
+          {title}
+        </Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 900,
+            color: "#0f172a",
+            mt: 0.35,
+            fontSize: {xs: "1.24rem", md: "1.35rem"},
+          }}
+        >
+          {value}
+        </Typography>
+        {helper && (
+          <Typography
+            variant="caption"
+            sx={{color: "#475569", display: "block", mt: 0.5}}
+          >
+            {helper}
+          </Typography>
+        )}
+      </Box>
+      {onIconClick ? (
+        <Tooltip title={iconTooltip || "Abrir aba correspondente"} arrow>
+          <IconButton
+            size="small"
+            onClick={onIconClick}
+            aria-label={`Abrir ${title}`}
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: "7px",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              color: accent,
+              bgcolor: alpha(accent, 0.14),
+              boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+              "&:hover": {
+                bgcolor: alpha(accent, 0.22),
+              },
+            }}
+          >
+            {icon}
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: "7px",
+            display: "grid",
+            placeItems: "center",
+            flexShrink: 0,
+            color: accent,
+            bgcolor: alpha(accent, 0.14),
+            boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+          }}
+        >
+          {icon}
+        </Box>
+      )}
+    </Box>
+
+    {typeof progress === "number" && (
+      <LinearProgress
+        variant="determinate"
+        value={Math.max(0, Math.min(progress, 100))}
+        sx={{
+          mt: 1.15,
+          height: 6,
+          borderRadius: "7px",
+          bgcolor: alpha(accent, 0.12),
+          "& .MuiLinearProgress-bar": {
+            borderRadius: "7px",
+            bgcolor: accent,
+          },
+        }}
+      />
     )}
-    <div style={{fontFamily: retro ? '"Times New Roman", serif' : "inherit"}}>
-      {children}
-    </div>
+
+    {children}
   </Box>
 );
 
@@ -211,8 +463,12 @@ function SheetView({
   const isInspection = !!propCharacter;
 
   const tabValue = isInspection ? localTab : sheetTab;
-  const handleTabChange = (e, newValue) =>
-    isInspection ? setLocalTab(newValue) : setSheetTab(newValue);
+  const navigateToTab = React.useCallback(
+    (newValue) =>
+      isInspection ? setLocalTab(newValue) : setSheetTab(newValue),
+    [isInspection, setSheetTab],
+  );
+  const handleTabChange = (e, newValue) => navigateToTab(newValue);
 
   // Store Hooks (Default)
   const storeCharacter = useCharacterStore((state) => state.character);
@@ -357,7 +613,6 @@ function SheetView({
     return () => unsubscribe();
   }, [character?._id, propCharacter, storeUpdateCharacter]);
 
-  const [retroMode, setRetroMode] = React.useState(true);
   const [imgLoading, setImgLoading] = useState(false);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [promptData, setPromptData] = useState(null);
@@ -440,6 +695,37 @@ Negative Prompt: ${promptData.negativePrompt}.
     [character],
   );
 
+  // Helper para renderizar ícones de status no Widget
+  const renderStatusIcons = () => {
+    if (statusEffects.length === 0) return "Sem efeitos";
+
+    return (
+      <Box sx={{display: "flex", gap: 0.5, flexWrap: "wrap"}}>
+        {statusEffects.map((effect) => {
+          let Icon = OtherStatusIcon;
+          let color = "#a16207";
+
+          if (effect === "Envenenado") {
+            Icon = PoisonIcon;
+            color = "#4caf50"; // Verde
+          } else if (effect === "Paralisado") {
+            Icon = ParalyzedIcon;
+            color = "#ffb74d"; // Laranja/Amarelo
+          } else if (effect === "Congelado") {
+            Icon = FrozenIcon;
+            color = "#29b6f6"; // Azul Claro
+          }
+
+          return (
+            <Tooltip key={effect} title={effect} arrow>
+              <Icon sx={{color, fontSize: 24}} />
+            </Tooltip>
+          );
+        })}
+      </Box>
+    );
+  };
+
   const handleUpdateMana = (newValue) => {
     updateAttributeIfAllowed("mana_atual", Math.min(newValue, maxMana));
   };
@@ -458,6 +744,23 @@ Negative Prompt: ${promptData.negativePrompt}.
       const newValue = currentMana - cost;
       updateAttributeIfAllowed("mana_atual", newValue);
       showNotification(`Magia usada! -${cost} Mana`, "info");
+    }
+  };
+
+  const handleUseAwakeningResource = (resource) => {
+    if (isFieldLocked("mana_atual")) return;
+    const cost = parseInt(resource.custo || resource.pp, 10) || 0;
+    if (cost > 0) {
+      if (currentMana < cost) {
+        showNotification(
+          `Mana insuficiente! Necessário: ${cost} PP`,
+          "warning",
+        );
+        return;
+      }
+      const newValue = currentMana - cost;
+      updateAttributeIfAllowed("mana_atual", newValue);
+      showNotification(`Recurso usado! -${cost} Mana`, "info");
     }
   };
 
@@ -598,6 +901,47 @@ Negative Prompt: ${promptData.negativePrompt}.
   }, 0);
   const vigorDieVal = parseInt((character.vigor || "d4").replace("d", ""), 10);
   const toughnessBase = 2 + vigorDieVal / 2;
+  const woundCount = character.ferimentos || 0;
+  const fatigueCount = character.fadiga || 0;
+  const injuryPenalty = woundCount + fatigueCount;
+  const blessingCount = character.bencaos ?? 3;
+  const totalParry =
+    parryBase + (character.aparar_bonus || 0) + armorParryBonus;
+  const totalToughness =
+    toughnessBase + (character.armadura_bonus || 0) + armorDefenseBonus;
+  const manaProgress = maxMana > 0 ? (currentMana / maxMana) * 100 : 0;
+  const woundProgress = Math.min((woundCount / 3) * 100, 100);
+  const fatigueProgress = Math.min((fatigueCount / 2) * 100, 100);
+  const hunterIdentityLine = [
+    character.rank || "Novato",
+    character.arquetipo
+      ? `${character.arquetipo}${character.conceito ? ` (${character.conceito})` : ""}`
+      : character.conceito || "Arquétipo indefinido",
+    character.guilda || null,
+  ].filter(Boolean);
+  const autoSaveMeta =
+    autoSaveStatus === "saving"
+      ? {
+          icon: <CloudUpload sx={{fontSize: 16}} />,
+          text: "Salvando",
+          color: "#475569",
+          bg: alpha("#cbd5e1", 0.42),
+        }
+      : autoSaveStatus === "saved"
+        ? {
+            icon: <CheckCircle sx={{fontSize: 16}} />,
+            text: "Salvo",
+            color: "#166534",
+            bg: alpha("#86efac", 0.25),
+          }
+        : autoSaveStatus === "error"
+          ? {
+              icon: <ErrorIcon sx={{fontSize: 16}} />,
+              text: "Erro ao salvar",
+              color: "#b91c1c",
+              bg: alpha("#fca5a5", 0.25),
+            }
+          : null;
 
   return (
     <Box>
@@ -627,122 +971,30 @@ Negative Prompt: ${promptData.negativePrompt}.
           scrollButtons="auto"
         >
           <TabStyled
-            label={
-              <Box>
-                👁️
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Visualizar
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<ViewIcon />} label="Visualizar" />}
           />
           <TabStyled
-            label={
-              <Box>
-                🆔
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Identificação
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<IdentityIcon />} label="Identificação" />}
           />
           <TabStyled
-            label={
-              <Box>
-                🌀
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Despertar
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<AwakeningIcon />} label="Despertar" />}
           />
           <TabStyled
-            label={
-              <Box>
-                🎯
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Combate
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<DefenseIcon />} label="Combate" />}
           />
           <TabStyled
-            label={
-              <Box>
-                ⚔️
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Perícias
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<SkillIcon />} label="Perícias" />}
           />
           <TabStyled
-            label={
-              <Box>
-                ✨
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Vant. & Comp.
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<TraitIcon />} label="Vant. & Comp." />}
           />
           <TabStyled
-            label={
-              <Box>
-                ⚙️
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Equipamentos
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<InventoryIcon />} label="Equipamentos" />}
           />
           <TabStyled
-            label={
-              <Box>
-                ✨
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Magias
-                </Box>
-              </Box>
-            }
+            label={<TabLabel icon={<SpellbookIcon />} label="Magias" />}
           />
-          <TabStyled
-            label={
-              <Box>
-                📝
-                <Box
-                  component="span"
-                  sx={{display: {xs: "none", sm: "inline"}}}
-                >
-                  Notas
-                </Box>
-              </Box>
-            }
-          />
+          <TabStyled label={<TabLabel icon={<NotesIcon />} label="Notas" />} />
         </Tabs>
       </TabsPaper>
 
@@ -754,996 +1006,947 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 0: VISUALIZAR */}
       {tabValue === 0 && (
-        <Box sx={{p: 2, pb: 10}}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: {xs: "column", sm: "row"},
-              justifyContent: "space-between",
-              alignItems: {xs: "flex-start", sm: "center"},
-              gap: 2,
-              mb: 2,
-              pb: 1,
-              borderBottom: "1px solid #e0e0e0",
-            }}
-          >
-            <Box sx={{width: "100%"}}>
-              <Grid container spacing={2} alignItems="center">
-                {/* Coluna Esquerda: Dados Atuais */}
-                <Grid
-                  item
-                  xs={12}
-                  md={4}
-                  sx={{
-                    flexBasis: {md: "25%"},
-                    maxWidth: {md: "25%"},
-                  }}
-                >
-                  <h2
-                    style={{
-                      margin: 0,
-                      color: "#333",
-                      fontWeight: 600,
-                      fontSize: "1.2rem",
-                    }}
-                  >
-                    {character.nome || "Sem Nome"}
-                  </h2>
-                  <div
-                    style={{width: "100%", fontSize: "0.9rem", color: "#666"}}
-                  >
-                    {character.rank} • {character.arquetipo || "—"} (
-                    {character.conceito || "—"}) •{" "}
-                    {character.guilda && ` ${character.guilda}`}
-                  </div>
-                  {(character.xp !== undefined ||
-                    character.riqueza !== undefined) && (
-                    <div
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "#555",
-                        marginTop: "4px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {character.xp !== undefined && (
-                        <span style={{marginRight: "12px"}}>
-                          XP: {character.xp}
-                        </span>
-                      )}
-
-                      {character.riqueza !== undefined && (
-                        <span style={{marginRight: "12px"}}>
-                          Dinheiro: ${character.riqueza}
-                        </span>
-                      )}
-
-                      {character.bencaos && (
-                        <span>Benes: {character.bencaos || 3}</span>
-                      )}
-                    </div>
-                  )}
-                </Grid>
-
-                {/* Coluna Direita */}
-                <Grid
-                  item
-                  xs={12}
-                  md={8}
-                  sx={{
-                    flexBasis: {md: "75%"},
-                    maxWidth: {md: "75%"},
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      // Remover alinhamento vertical central para permitir stretch
-                      gap: 1,
-                      flexWrap: "nowrap",
-                      height: "100%", // Garante que o container ocupe a altura
-                    }}
-                  >
-                    {/* Widget de Abalado */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 0.5,
-                        px: 2,
-                        py: 1,
-                        borderRadius: "10px",
-                        background: character.abalado
-                          ? "rgba(255, 193, 7, 0.2)"
-                          : "rgba(0, 0, 0, 0.05)",
-                        color: character.abalado ? "#ff8f00" : "#9e9e9e",
-                        border: character.abalado
-                          ? "1px solid rgba(255, 193, 7, 0.5)"
-                          : "1px solid rgba(0, 0, 0, 0.1)",
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                        height: "100%", // Ocupar altura disponível
-                        flex: 1,
-                      }}
-                    >
-                      <span
-                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
-                      >
-                        Abalado
-                      </span>
-                      <Box
-                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
-                      >
-                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
-                          💫
-                        </span>
-                        {character.abalado ? "SIM" : "NÃO"}
-                      </Box>
-                    </Box>
-
-                    {/* Widget de Ferimentos */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 0.5,
-                        px: 2,
-                        py: 1,
-                        borderRadius: "10px",
-                        background: "rgba(211, 47, 47, 0.1)",
-                        color: "#d32f2f",
-                        border: "1px solid rgba(211, 47, 47, 0.3)",
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                        height: "100%",
-                        flex: 1,
-                      }}
-                    >
-                      <span
-                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
-                      >
-                        Ferimentos
-                      </span>
-                      <Box
-                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
-                      >
-                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
-                          🩸
-                        </span>
-                        {character.ferimentos || 0}
-                      </Box>
-                    </Box>
-
-                    {/* Widget de Fadiga */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 0.5,
-                        px: 2,
-                        py: 1,
-                        borderRadius: "10px",
-                        background: "rgba(237, 108, 2, 0.1)",
-                        color: "#ed6c02",
-                        border: "1px solid rgba(237, 108, 2, 0.3)",
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                        height: "100%",
-                        flex: 1,
-                      }}
-                    >
-                      <span
-                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
-                      >
-                        Fadiga
-                      </span>
-                      <Box
-                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
-                      >
-                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
-                          😓
-                        </span>
-                        {character.fadiga || 0}
-                      </Box>
-                    </Box>
-
-                    {/* Widget de Mana */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 0.5,
-                        px: 2,
-                        py: 1,
-                        borderRadius: "10px",
-                        background: "rgba(33, 150, 243, 0.1)",
-                        color: "#1565c0",
-                        border: "1px solid rgba(33, 150, 243, 0.3)",
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                        height: "100%",
-                        flex: 1,
-                      }}
-                    >
-                      <span
-                        style={{fontSize: "0.7rem", textTransform: "uppercase"}}
-                      >
-                        Mana
-                      </span>
-                      <Box
-                        sx={{display: "flex", alignItems: "center", gap: 0.5}}
-                      >
-                        <span style={{fontSize: "1.2rem", lineHeight: 1}}>
-                          🌀
-                        </span>
-                        {currentMana}/{maxMana}
-                      </Box>
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {statusEffects.length > 0 && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 1,
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{fontWeight: 700, color: "text.secondary"}}
-                  >
-                    Efeitos:
-                  </Typography>
-                  {statusEffects.map((effect) => (
-                    <Chip
-                      key={effect}
-                      size="small"
-                      color="warning"
-                      label={effect}
-                      sx={{fontWeight: 600}}
-                    />
-                  ))}
-                </Box>
-              )}
-            </Box>
-
-            {/* Status do Auto-Save */}
-            {!propCharacter && (
-              <Box
+        <Box
+          sx={{
+            p: {xs: 1, md: 1.5},
+            pb: {xs: 12, md: 14},
+            borderRadius: "8px",
+            border: "1px solid rgba(148, 163, 184, 0.18)",
+            background: `
+              radial-gradient(circle at top left, rgba(191, 145, 61, 0.14), transparent 24%),
+              radial-gradient(circle at top right, rgba(79, 70, 229, 0.12), transparent 28%),
+              linear-gradient(180deg, #f8f3e6 0%, #f3ecdc 55%, #efe6d4 100%)
+            `,
+            boxShadow: "0 24px 50px rgba(15, 23, 42, 0.08)",
+            "& .MuiChip-root": {
+              borderRadius: "8px",
+            },
+            "& .MuiButton-root": {
+              borderRadius: "8px",
+            },
+          }}
+        >
+          <Grid container spacing={1.5}>
+            <Grid item xs={12} md={3} sx={{display: "flex"}}>
+              <OverviewPanel
+                title="Retrato"
+                icon={<CharacterIcon />}
+                accent="#b88941"
                 sx={{
+                  width: "100%",
                   display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  position: "absolute",
-                  top: 16,
-                  right: 16,
+                  flexDirection: "column",
+                  background:
+                    "linear-gradient(180deg, rgba(191,145,61,0.16) 0%, rgba(255,255,255,0.88) 100%)",
                 }}
               >
-                {autoSaveStatus === "saving" && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#666",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    <CloudUpload sx={{fontSize: 16, mr: 0.5}} /> Salvando...
-                  </Box>
-                )}
-                {autoSaveStatus === "saved" && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#4caf50",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    <CheckCircle sx={{fontSize: 16, mr: 0.5}} /> Salvo
-                  </Box>
-                )}
-                {autoSaveStatus === "error" && (
-                  <Tooltip title="Falha ao salvar automaticamente. Verifique sua conexão.">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        color: "#f44336",
-                        fontSize: "0.8rem",
-                        cursor: "help",
-                      }}
-                    >
-                      <ErrorIcon sx={{fontSize: 16, mr: 0.5}} /> Erro ao salvar
-                    </Box>
-                  </Tooltip>
-                )}
-              </Box>
-            )}
-
-            {/* <FormControlLabel
-              sx={{"@media print": {display: "none"}}}
-              control={
-                <Switch
-                  checked={retroMode}
-                  onChange={(e) => setRetroMode(e.target.checked)}
-                  color="default"
-                />
-              }
-              label={retroMode ? "📜 Pergaminho" : "🎨 Moderno"}
-            /> */}
-          </Box>
-
-          <Box
-            sx={{
-              display: "grid",
-              gap: 2,
-              gridTemplateColumns: {xs: "1fr", md: "repeat(4, 1fr)"},
-              gridTemplateRows: {md: "repeat(5, minmax(min-content, auto))"},
-              alignItems: "stretch",
-            }}
-          >
-            {/* 1. IMAGEM (Col 1, Row 1-4) */}
-            <Box
-              sx={{
-                gridColumn: {md: "1"},
-                gridRow: {md: "1 / span 4"},
-                height: "100%",
-              }}
-            >
-              {character.imagem_url && (
-                <img
-                  src={character.imagem_url}
-                  referrerPolicy="no-referrer"
-                  alt="Personagem"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
+                <Box
+                  sx={{
+                    position: "relative",
+                    minHeight: {xs: 200, md: 248},
                     borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    maxHeight: "600px",
-                  }}
-                />
-              )}
-              {!character.imagem_url && (
-                <Box
-                  sx={{
-                    height: "100%",
-                    background: "#eee",
-                    borderRadius: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#999",
+                    overflow: "hidden",
+                    border: "1px solid rgba(148, 163, 184, 0.22)",
+                    bgcolor: "#111827",
+                    boxShadow: "0 18px 30px rgba(15, 23, 42, 0.16)",
                   }}
                 >
-                  Sem Foto
-                </Box>
-              )}
-            </Box>
-
-            {/* 2. ATRIBUTOS (Col 2, Row 1) */}
-            <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "1"}}}>
-              <GridCard
-                title="Atributos"
-                color="#2196f3"
-                bg="#e3f2fd"
-                retro={retroMode}
-              >
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(5, 1fr)",
-                    gap: 0.5,
-                    textAlign: "center",
-                  }}
-                >
-                  {[
-                    {l: "AGI", v: character.agilidade},
-                    {l: "INT", v: character.intelecto},
-                    {l: "ESP", v: character.espirito},
-                    {l: "FOR", v: character.forca},
-                    {l: "VIG", v: character.vigor},
-                  ].map((a) => (
-                    <Box key={a.l}>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          fontWeight: 600,
-                          color: retroMode ? "#5d4037" : "#666",
-                        }}
-                      >
-                        {a.l}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "1.2rem",
-                          fontWeight: 700,
-                          color: retroMode ? "#3e2723" : "#2196f3",
-                        }}
-                      >
-                        {a.v || "d4"}
-                      </div>
-                    </Box>
-                  ))}
-                </Box>
-                <Box
-                  sx={{mt: 2, pt: 1, borderTop: "1px solid rgba(0,0,0,0.1)"}}
-                >
-                  <h4
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Progresso
-                  </h4>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-around",
-                      fontSize: "0.9rem",
-                      textAlign: "center",
-                    }}
-                  >
-                    <Box>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#666",
-                          marginBottom: "2px",
-                        }}
-                      >
-                        XP
-                      </div>
-                      <strong
-                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
-                      >
-                        {character.xp || 0}
-                      </strong>
-                    </Box>
-                    <Box>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#666",
-                          marginBottom: "2px",
-                        }}
-                      >
-                        Riqueza ($)
-                      </div>
-                      <strong
-                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
-                      >
-                        ${character.riqueza || 0}
-                      </strong>
-                    </Box>
-                    <Box>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: retroMode ? "#5d4037" : "#666",
-                          marginBottom: "2px",
-                        }}
-                      >
-                        Bênçãos
-                      </div>
-                      <strong
-                        style={{color: retroMode ? "#3e2723" : "#667eea"}}
-                      >
-                        {character.bencaos ?? 3}
-                      </strong>
-                    </Box>
-                  </Box>
-                </Box>
-              </GridCard>
-            </Box>
-
-            {/* 3. COMBATE (Col 3, Row 1) */}
-            <Box sx={{gridColumn: {md: "3"}, gridRow: {md: "1"}}}>
-              <GridCard
-                title="Combate"
-                color="#ef5350"
-                bg="#ffebee"
-                retro={retroMode}
-              >
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    textAlign: "center",
-                    gap: 1,
-                  }}
-                >
-                  <Box>
-                    <div style={{fontSize: "0.8rem"}}>Aparar</div>
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#d32f2f",
+                  {character.imagem_url ? (
+                    <Box
+                      component="img"
+                      src={character.imagem_url}
+                      referrerPolicy="no-referrer"
+                      alt={character.nome || "Personagem"}
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
                       }}
-                    >
-                      {parryBase +
-                        (character.aparar_bonus || 0) +
-                        armorParryBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.8rem"}}>Resist.</div>
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#d32f2f",
-                      }}
-                    >
-                      {toughnessBase +
-                        (character.armadura_bonus || 0) +
-                        armorDefenseBonus}
-                    </div>
-                  </Box>
-                  <Box>
-                    <div style={{fontSize: "0.8rem"}}>Mov.</div>
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "1.1rem",
-                        color: retroMode ? "#3e2723" : "#d32f2f",
-                      }}
-                    >
-                      {character.movimento || 6}
-                    </div>
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
-                    mt: 2,
-                    pt: 1,
-                    borderTop: "1px solid rgba(0,0,0,0.1)",
-                    display: "flex",
-                    gap: 2,
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#d97706",
-                      }}
-                    >
-                      ABALADO
-                    </span>
-                    <Checkbox
-                      checked={character.abalado || false}
-                      size="small"
-                      disabled={isFieldLocked("abalado")}
-                      onChange={(e) =>
-                        updateAttributeIfAllowed("abalado", e.target.checked)
-                      }
                     />
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#dc2626",
-                      }}
-                    >
-                      FERIMENTOS
-                    </span>
-                    <Box>
-                      {[1, 2, 3].map((lvl) => (
-                        <Checkbox
-                          key={lvl}
-                          checked={(character.ferimentos || 0) >= lvl}
-                          size="small"
-                          disabled={isFieldLocked("ferimentos")}
-                          sx={{p: 0.5}}
-                          onChange={() => {
-                            const current = character.ferimentos || 0;
-                            const newVal = current === lvl ? lvl - 1 : lvl;
-                            if (newVal > current && !character.abalado) {
-                              updateAttributeIfAllowed("abalado", true);
-                            }
-                            updateAttributeIfAllowed("ferimentos", newVal);
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: "bold",
-                        color: retroMode ? "#3e2723" : "#7f1d1d",
-                      }}
-                    >
-                      FADIGA
-                    </span>
-                    <Box>
-                      {[1, 2].map((lvl) => (
-                        <Checkbox
-                          key={lvl}
-                          checked={(character.fadiga || 0) >= lvl}
-                          size="small"
-                          disabled={isFieldLocked("fadiga")}
-                          sx={{p: 0.5}}
-                          onChange={() => {
-                            const current = character.fadiga || 0;
-                            const newVal = current === lvl ? lvl - 1 : lvl;
-                            updateAttributeIfAllowed("fadiga", newVal);
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                </Box>
-              </GridCard>
-            </Box>
-
-            {/* 5. PERÍCIAS (Col 4, Row 1) */}
-            <Box sx={{gridColumn: {md: "4"}, gridRow: {md: "1 / span 2"}}}>
-              <GridCard
-                title="Perícias"
-                color="#3f51b5"
-                bg="#e8eaf6"
-                retro={retroMode}
-              >
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(140px, 1fr))",
-                    gap: 1,
-                  }}
-                >
-                  {(character.pericias || []).map((s, i) => (
+                  ) : (
                     <Box
-                      key={i}
                       sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: "0.9rem",
-                        p: 0.5,
-                        background: retroMode
-                          ? "transparent"
-                          : "rgba(255,255,255,0.5)",
-                        borderRadius: 1,
+                        position: "absolute",
+                        inset: 0,
+                        display: "grid",
+                        placeItems: "center",
+                        background:
+                          "radial-gradient(circle at top, rgba(191,145,61,0.28), transparent 38%), linear-gradient(180deg, #111827 0%, #1f2937 100%)",
+                        color: alpha("#f8fafc", 0.7),
                       }}
                     >
-                      <span>{s.name}</span>
-                      <strong
-                        style={{color: retroMode ? "#3e2723" : "#3f51b5"}}
-                      >
-                        {s.die}
-                      </strong>
+                      <Box sx={{textAlign: "center"}}>
+                        <CharacterIcon sx={{fontSize: 56, mb: 1}} />
+                        <Typography
+                          variant="body2"
+                          sx={{fontWeight: 700, letterSpacing: 0.4}}
+                        >
+                          Sem retrato
+                        </Typography>
+                      </Box>
                     </Box>
-                  ))}
-                  {(!character.pericias || character.pericias.length === 0) && (
-                    <span style={{fontSize: "0.9rem"}}>Nenhuma</span>
                   )}
-                </Box>
-              </GridCard>
-            </Box>
 
-            {/* 6. ARMAS (Col 2, Row 2) */}
-            <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "2"}}}>
-              <GridCard
-                title="Armas"
-                color="#e53e3e"
-                bg="#fff5f5"
-                retro={retroMode}
-              >
-                {(character.armas || []).map((w, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      fontSize: "0.9rem",
-                      display: "flex",
-                      justifyContent: "space-between",
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
                     }}
                   >
-                    <span>{w.name}</span>
-                    <span style={{fontWeight: "bold"}}>{w.damage}</span>
-                  </div>
-                ))}
-              </GridCard>
-            </Box>
-
-            {/* 9. ARMADURAS (Col 2, Row 3) */}
-            <Box sx={{gridColumn: {md: "2"}, gridRow: {md: "3"}}}>
-              <GridCard
-                title="Armaduras"
-                color="#48bb78"
-                bg="#f0fff4"
-                retro={retroMode}
-              >
-                {(character.armaduras || []).map((a, i) => (
-                  <div key={i} style={{fontSize: "0.9rem"}}>
-                    {a.name} (+{a.defense || 0})
-                  </div>
-                ))}
-              </GridCard>
-            </Box>
-
-            {/* 10. VANTAGENS E COMPLICAÇÕES (Col 3, Row 2-3) */}
-            <Box
-              sx={{
-                gridColumn: {md: "3"},
-                gridRow: {md: "2 / span 2"},
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
-              <GridCard
-                title="Vantagens"
-                color="#667eea"
-                bg="#f0fff4"
-                retro={retroMode}
-                sx={{height: "auto"}}
-              >
-                <Box sx={{display: "flex", flexDirection: "column", gap: 0.5}}>
-                  {(character.vantagens || []).map((v, i) => (
-                    <div key={i} style={{fontSize: "0.9rem"}}>
-                      • {v.name}
-                    </div>
-                  ))}
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        color: "#fff",
+                        fontWeight: 900,
+                        lineHeight: 1.05,
+                        textShadow: "0 4px 16px rgba(0,0,0,0.35)",
+                      }}
+                    >
+                      {character.nome || "Sem Nome"}
+                    </Typography>
+                  </Box>
                 </Box>
-              </GridCard>
-              <GridCard
-                title="Complicações"
-                color="#ff9800"
-                bg="#fffbf0"
-                retro={retroMode}
-                sx={{height: "auto"}}
-              >
-                {(character.complicacoes || []).map((c, i) => (
-                  <div key={i} style={{fontSize: "0.9rem"}}>
-                    • {c.name}
-                  </div>
-                ))}
-              </GridCard>
-            </Box>
+              </OverviewPanel>
+            </Grid>
 
-            {/* 12. RECURSOS DO DESPERTAR (Col 3, Row 5) */}
-            <Box sx={{gridColumn: {md: "3"}, gridRow: {md: "5"}}}>
-              <GridCard
-                title="Recursos do Despertar"
-                color="#9c27b0"
-                bg="#f3e5f5"
-                retro={retroMode}
+            <Grid item xs={12} md={9} sx={{display: "flex"}}>
+              <OverviewPanel
+                title={null} // Título removido conforme solicitado
+                icon={null}
+                accent="#4f46e5"
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  background:
+                    "linear-gradient(180deg, rgba(79,70,229,0.14) 0%, rgba(255,255,255,0.92) 100%)",
+                  gap: 2,
+                }}
               >
-                {(character.recursos_despertar || []).map((res, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{mb: 1.5, pb: 1, borderBottom: "1px dashed #ccc"}}
-                  >
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                        color: retroMode ? "#3e2723" : "#6a1b9a",
-                      }}
-                    >
-                      {res.name} (Nv {res.nivel})
-                    </div>
-                    <div style={{fontSize: "0.9rem"}}>PP: {res.custo}</div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: retroMode ? "#5d4037" : "#555",
-                        marginTop: 2,
-                      }}
-                    >
-                      {res.descricao}
-                    </div>
-                    {res.limitacao && (
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: retroMode ? "#3e2723" : "#d32f2f",
-                          marginTop: 1,
+                {/* Linha Superior: Nome/Identidade + XP/Riqueza/Bênçãos */}
+                <Grid container spacing={2} alignItems="center">
+                  {/* Coluna 1: Nome e Identidade */}
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{minWidth: 0}}>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          fontWeight: 900,
+                          color: "#0f172a",
+                          letterSpacing: -0.5,
+                          fontSize: {xs: "1.7rem", md: "2rem"},
                         }}
                       >
-                        Lim: {res.limitacao}
-                      </div>
+                        {character.nome || "Sem Nome"}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{mt: 0.55, color: "#334155", fontWeight: 700}}
+                      >
+                        {hunterIdentityLine.length > 0
+                          ? hunterIdentityLine.join(" • ")
+                          : "Sem afiliação definida"}
+                      </Typography>
+                    </Box>
+                    {!propCharacter && autoSaveMeta && (
+                      <Box sx={{mt: 1}}>
+                        <Chip
+                          size="small"
+                          icon={autoSaveMeta.icon}
+                          label={autoSaveMeta.text}
+                          sx={{
+                            bgcolor: autoSaveMeta.bg,
+                            color: autoSaveMeta.color,
+                            fontWeight: 700,
+                            border: "1px solid rgba(15, 23, 42, 0.06)",
+                          }}
+                        />
+                      </Box>
                     )}
-                  </Box>
-                ))}
-              </GridCard>
-            </Box>
+                  </Grid>
 
-            {/* 13. ITENS e ESPÓLIOS (Col 2, Row 5) - Trocado com Magias */}
-            <Box
-              sx={{
-                gridColumn: {md: "2"},
-                gridRow: {md: "5"},
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
-              <GridCard
-                title="Itens"
-                color="#607d8b"
-                bg="#eceff1"
-                retro={retroMode}
-                sx={{height: "auto"}}
-              >
-                {(character.itens || []).map((item, i) => (
-                  <div key={i} style={{fontSize: "0.9rem"}}>
-                    {item.name}
-                  </div>
-                ))}
-              </GridCard>
-              <GridCard
-                title="Espólios"
-                color="#009688"
-                bg="#e0f2f1"
-                retro={retroMode}
-                sx={{height: "auto"}}
-              >
-                {(character.espolios || []).map((item, i) => (
-                  <div key={i} style={{fontSize: "0.9rem"}}>
-                    {item.name}
-                  </div>
-                ))}
-              </GridCard>
-            </Box>
-
-            {/* 14. NOTAS (Col 1, Row 5) */}
-            <Box sx={{gridColumn: {md: "1"}, gridRow: {md: "5"}}}>
-              <GridCard
-                title="Notas"
-                color="#ffd700"
-                bg="#fffde7"
-                retro={retroMode}
-              >
-                <textarea
-                  disabled={isFieldLocked("notas")}
-                  style={{
-                    width: "100%",
-                    minHeight: "200px",
-                    border: "none",
-                    background: "transparent",
-                    resize: "vertical",
-                    fontFamily: "monospace",
-                    fontSize: "0.85rem",
-                    outline: "none",
-                  }}
-                  value={character.notas || ""}
-                  onChange={(e) =>
-                    updateAttributeIfAllowed("notas", e.target.value)
-                  }
-                  placeholder="Escreva suas anotações..."
-                />
-              </GridCard>
-            </Box>
-
-            {/* 15. MAGIAS (Col 4, Row 3-5) */}
-            <Box sx={{gridColumn: {md: "4"}, gridRow: {md: "3 / span 3"}}}>
-              <GridCard
-                title="Magias"
-                color="#7e57c2"
-                bg="#f3e5f5"
-                retro={retroMode}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                  }}
-                >
-                  {(character.magias || []).map((m, i) => (
-                    <Box
-                      key={i}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        fontSize: "0.9rem",
-                        p: 0.5,
-                        background: retroMode
-                          ? "transparent"
-                          : "rgba(255,255,255,0.5)",
-                        borderRadius: 1,
-                        borderBottom: retroMode
-                          ? "1px dashed rgba(93, 64, 55, 0.2)"
-                          : "none",
-                      }}
-                    >
-                      <Box sx={{flex: 1, mr: 1}}>
-                        <div style={{fontWeight: "bold"}}>
-                          {m.name}{" "}
-                          <span
-                            style={{
-                              fontSize: "0.8rem",
-                              fontWeight: "normal",
-                              opacity: 0.8,
+                  {/* Coluna 2: XP, Riqueza, Bênçãos */}
+                  <Grid item xs={12} md={6}>
+                    <Grid container spacing={1}>
+                      {[
+                        {
+                          label: "XP",
+                          value: character.xp || 0,
+                          accent: "#4f46e5",
+                        },
+                        {
+                          label: "Riqueza",
+                          value: `$${character.riqueza || 0}`,
+                          accent: "#047857",
+                        },
+                        {
+                          label: "Bênçãos",
+                          value: blessingCount,
+                          accent: "#b45309",
+                        },
+                      ].map((item) => (
+                        <Grid item xs={4} key={item.label}>
+                          <Box
+                            sx={{
+                              p: 1.05,
+                              height: "100%",
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.72)",
+                              border: `1px solid ${alpha(item.accent, 0.15)}`,
+                              boxShadow: `inset 0 0 0 1px ${alpha("#fff", 0.6)}`,
+                              textAlign: "center",
                             }}
                           >
-                            ({m.pp} PP)
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.8rem",
-                            color: retroMode ? "#5d4037" : "#555",
-                          }}
-                        >
-                          {m.range} {m.duration && `• ${m.duration}`}
-                        </div>
-                      </Box>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color={
-                          currentMana >= (parseInt(m.pp) || 0)
-                            ? "primary"
-                            : "error"
-                        }
-                        disabled={
-                          isFieldLocked("mana_atual") ||
-                          currentMana < (parseInt(m.pp) || 0)
-                        }
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#64748b",
+                                textTransform: "uppercase",
+                                letterSpacing: 0.45,
+                                fontWeight: 700,
+                                display: "block",
+                              }}
+                            >
+                              {item.label}
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                mt: 0.3,
+                                fontWeight: 900,
+                                color: item.accent,
+                                lineHeight: 1,
+                              }}
+                            >
+                              {item.value}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{my: 1}} />
+
+                {/* Linha Inferior: Atributos e Combate integrados */}
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <OverviewPanel
+                      title="Atributos"
+                      subtitle="Base de dados, dano e resistência"
+                      icon={<CharacterIcon />}
+                      accent="#2563eb"
+                      sx={{height: "100%"}}
+                    >
+                      <Box
                         sx={{
-                          fontSize: "0.75rem",
-                          py: 0.5,
-                          minWidth: "60px",
+                          display: "grid",
+                          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                          gap: 1,
                         }}
-                        onClick={() => handleCastSpell(m)}
                       >
-                        Usar
-                      </Button>
-                    </Box>
-                  ))}
-                  {(!character.magias || character.magias.length === 0) && (
-                    <span style={{fontSize: "0.9rem"}}>Nenhuma magia</span>
-                  )}
+                        {[
+                          {label: "AGI", value: character.agilidade || "d4"},
+                          {label: "INT", value: character.intelecto || "d4"},
+                          {label: "ESP", value: character.espirito || "d4"},
+                          {label: "FOR", value: character.forca || "d4"},
+                          {label: "VIG", value: character.vigor || "d4"},
+                        ].map((attribute) => (
+                          <Box
+                            key={attribute.label}
+                            sx={{
+                              p: 1.15,
+                              borderRadius: "8px",
+                              textAlign: "center",
+                              bgcolor: "rgba(255,255,255,0.78)",
+                              border: "1px solid rgba(37, 99, 235, 0.12)",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: "block",
+                                color: "#64748b",
+                                fontWeight: 800,
+                                letterSpacing: 0.45,
+                              }}
+                            >
+                              {attribute.label}
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                mt: 0.35,
+                                fontWeight: 900,
+                                color: "#1d4ed8",
+                              }}
+                            >
+                              {attribute.value}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </OverviewPanel>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <OverviewPanel
+                      title="Combate"
+                      subtitle="Defesas e pressão de cena"
+                      icon={<DefenseIcon />}
+                      accent="#b91c1c"
+                      sx={{height: "100%"}}
+                    >
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                          gap: 1,
+                        }}
+                      >
+                        {[
+                          {
+                            label: "Aparar",
+                            value: totalParry,
+                            accent: "#b91c1c",
+                          },
+                          {
+                            label: "Resistência",
+                            value: totalToughness,
+                            accent: "#991b1b",
+                          },
+                          {
+                            label: "Movimento",
+                            value: character.movimento || 6,
+                            accent: "#1d4ed8",
+                          },
+                          {
+                            label: "Penalidade",
+                            value: `-${injuryPenalty}`,
+                            accent: "#d97706",
+                          },
+                        ].map((stat) => (
+                          <Box
+                            key={stat.label}
+                            sx={{
+                              p: 1.15,
+                              borderRadius: "8px",
+                              textAlign: "center",
+                              bgcolor: "rgba(255,255,255,0.78)",
+                              border: `1px solid ${alpha(stat.accent, 0.14)}`,
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#64748b",
+                                textTransform: "uppercase",
+                                letterSpacing: 0.45,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {stat.label}
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                mt: 0.3,
+                                color: stat.accent,
+                                fontWeight: 900,
+                              }}
+                            >
+                              {stat.value}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </OverviewPanel>
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{my: 1}} />
+
+                {/* Linha Inferior 2: Widgets de Status */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "repeat(2, minmax(0, 1fr))",
+                      sm: "repeat(3, minmax(0, 1fr))",
+                      lg: "repeat(5, minmax(0, 1fr))",
+                    },
+                    gap: 1.25,
+                  }}
+                >
+                  {" "}
+                  <MetricCard
+                    title="Abalado"
+                    value={character.abalado ? "Sim" : "Não"}
+                    helper={
+                      character.abalado ? "Precisa reagir" : "Mantém postura"
+                    }
+                    icon={<ShockIcon />}
+                    accent={character.abalado ? "#d97706" : "#475569"}
+                  />
+                  <MetricCard
+                    title="Ferimentos"
+                    value={`${woundCount}/3`}
+                    helper={
+                      woundCount >= 3
+                        ? "Estado crítico"
+                        : "Atenção à resistência"
+                    }
+                    icon={<WoundIcon />}
+                    accent="#b91c1c"
+                    progress={woundProgress}
+                  />
+                  <MetricCard
+                    title="Fadiga"
+                    value={`${fatigueCount}/2`}
+                    helper={fatigueCount >= 2 ? "Exausto" : "Fôlego atual"}
+                    icon={<FatigueIcon />}
+                    accent="#c2410c"
+                    progress={fatigueProgress}
+                  />
+                  <MetricCard
+                    title="Mana"
+                    value={`${currentMana}/${maxMana}`}
+                    helper="Reserva arcana"
+                    icon={
+                      <span style={{fontSize: "1.35rem", lineHeight: 1}}>
+                        🌀
+                      </span>
+                    }
+                    accent="#2563eb"
+                    progress={manaProgress}
+                  />
+                  <MetricCard
+                    title="Status"
+                    value={renderStatusIcons()}
+                    helper="Efeitos situacionais"
+                    icon={<StatusIcon />}
+                    accent="#a16207"
+                  />
                 </Box>
-              </GridCard>
-            </Box>
+              </OverviewPanel>
+            </Grid>
+          </Grid>
+
+          <Box sx={{mt: 1.5}}>
+            <Grid container spacing={1.25} alignItems="flex-start">
+              {/* COLUNA ESQUERDA: Perícias, Recursos, Magias, Notas */}
+              <Grid item xs={12} md={6}>
+                <Stack spacing={1.25}>
+                  <OverviewPanel
+                    title="Perícias"
+                    subtitle="Principais capacidades em jogo"
+                    icon={<SkillIcon />}
+                    accent="#0f766e"
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.85,
+                      }}
+                    >
+                      {(character.pericias || []).length > 0 ? (
+                        character.pericias.map((skill, index) => (
+                          <Box
+                            key={`${skill.name}-${index}`}
+                            sx={{
+                              p: 1,
+                              px: 1.5,
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.76)",
+                              border: "1px solid rgba(15, 118, 110, 0.12)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{fontWeight: 700, color: "#0f172a"}}
+                              >
+                                {skill.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{color: "#64748b", fontWeight: 700}}
+                              >
+                                (
+                                {(getSkillAttribute(skill.name) || "")
+                                  .substring(0, 3)
+                                  .toUpperCase() || "—"}
+                                )
+                              </Typography>
+                            </Box>
+                            <Typography
+                              variant="body2"
+                              sx={{fontWeight: 800, color: "#0f766e"}}
+                            >
+                              {skill.die || "d4"}
+                            </Typography>
+                          </Box>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma perícia cadastrada.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Recursos do Despertar"
+                    subtitle="Poderes especiais em uso"
+                    icon={<BlessingIcon />}
+                    accent="#6d28d9"
+                  >
+                    <Box sx={{display: "grid", gap: 0.85}}>
+                      {(character.recursos_despertar || []).length > 0 ? (
+                        character.recursos_despertar.map((resource, index) => (
+                          <Box
+                            key={`${resource.name}-${index}`}
+                            sx={{
+                              p: 1.05,
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.76)",
+                              border: "1px solid rgba(124, 58, 237, 0.12)",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                gap: 1,
+                              }}
+                            >
+                              <Box sx={{minWidth: 0}}>
+                                <Typography
+                                  variant="body2"
+                                  sx={{fontWeight: 800, color: "#4c1d95"}}
+                                >
+                                  {resource.name || "Recurso sem nome"}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: "#6d28d9",
+                                    fontWeight: 700,
+                                    display: "block",
+                                    mt: 0.25,
+                                  }}
+                                >
+                                  Nv {resource.nivel || "—"} • Custo{" "}
+                                  {resource.custo || resource.pp || "—"}
+                                </Typography>
+                                {resource.descricao && (
+                                  <Typography
+                                    variant="body2"
+                                    sx={{mt: 0.5, color: "#475569"}}
+                                  >
+                                    {resource.descricao}
+                                  </Typography>
+                                )}
+                                {resource.limitacao && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      display: "block",
+                                      mt: 0.65,
+                                      color: "#92400e",
+                                    }}
+                                  >
+                                    Limitação: {resource.limitacao}
+                                  </Typography>
+                                )}
+                              </Box>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color={
+                                  currentMana >=
+                                  (parseInt(
+                                    resource.custo || resource.pp,
+                                    10,
+                                  ) || 0)
+                                    ? "primary"
+                                    : "error"
+                                }
+                                disabled={
+                                  isFieldLocked("mana_atual") ||
+                                  currentMana <
+                                    (parseInt(
+                                      resource.custo || resource.pp,
+                                      10,
+                                    ) || 0)
+                                }
+                                sx={{
+                                  borderRadius: "8px",
+                                  minWidth: 68,
+                                  fontWeight: 700,
+                                }}
+                                onClick={() =>
+                                  handleUseAwakeningResource(resource)
+                                }
+                              >
+                                Usar
+                              </Button>
+                            </Box>
+                          </Box>
+                        ))
+                      ) : (
+                        <EmptyState>
+                          Nenhum recurso do despertar cadastrado.
+                        </EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Magias"
+                    subtitle="Lista rápida para conjuração em cena"
+                    icon={<SpellbookIcon />}
+                    accent="#6d28d9"
+                  >
+                    <Box sx={{display: "grid", gap: 0.85}}>
+                      {(character.magias || []).length > 0 ? (
+                        character.magias.map((spell, index) => (
+                          <Box
+                            key={`${spell.name}-${index}`}
+                            sx={{
+                              p: 1.05,
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.76)",
+                              border: "1px solid rgba(109, 40, 217, 0.12)",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                gap: 1,
+                              }}
+                            >
+                              <Box sx={{minWidth: 0}}>
+                                <Typography
+                                  variant="body2"
+                                  sx={{fontWeight: 800, color: "#0f172a"}}
+                                >
+                                  {spell.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    display: "block",
+                                    mt: 0.45,
+                                    color: "#64748b",
+                                  }}
+                                >
+                                  {spell.pp || 0} PP
+                                  {spell.range ? ` • ${spell.range}` : ""}
+                                  {spell.duration ? ` • ${spell.duration}` : ""}
+                                </Typography>
+                              </Box>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color={
+                                  currentMana >= (parseInt(spell.pp, 10) || 0)
+                                    ? "primary"
+                                    : "error"
+                                }
+                                disabled={
+                                  isFieldLocked("mana_atual") ||
+                                  currentMana < (parseInt(spell.pp, 10) || 0)
+                                }
+                                sx={{
+                                  borderRadius: "8px",
+                                  minWidth: 68,
+                                  fontWeight: 700,
+                                }}
+                                onClick={() => handleCastSpell(spell)}
+                              >
+                                Usar
+                              </Button>
+                            </Box>
+                          </Box>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma magia aprendida.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+                </Stack>
+              </Grid>
+
+              {/* COLUNA DIREITA: Armas, Armaduras, Vantagens, Complicações, Itens, Espólios */}
+              <Grid item xs={12} md={6}>
+                <Stack spacing={1.25}>
+                  <OverviewPanel
+                    title="Armas"
+                    subtitle="Golpes prontos para a cena"
+                    icon={<WeaponIcon />}
+                    accent="#7c2d12"
+                  >
+                    <Box sx={{display: "grid", gap: 0.85}}>
+                      {(character.armas || []).length > 0 ? (
+                        character.armas.map((weapon, index) => (
+                          <Box
+                            key={`${weapon.name}-${index}`}
+                            sx={{
+                              p: 1.05,
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.76)",
+                              border: "1px solid rgba(124, 45, 18, 0.12)",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: 1,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{fontWeight: 800, color: "#0f172a"}}
+                              >
+                                {weapon.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{fontWeight: 700, color: "#7c2d12"}}
+                              >
+                                {weapon.damage || "—"}
+                              </Typography>
+                            </Box>
+                            {weapon.range && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  display: "block",
+                                  mt: 0.45,
+                                  color: "#64748b",
+                                }}
+                              >
+                                Alcance: {weapon.range}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma arma equipada.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Armaduras"
+                    subtitle="Proteção equipada"
+                    icon={<DefenseIcon />}
+                    accent="#166534"
+                  >
+                    <Box sx={{display: "grid", gap: 0.85}}>
+                      {(character.armaduras || []).length > 0 ? (
+                        character.armaduras.map((armor, index) => (
+                          <Box
+                            key={`${armor.name}-${index}`}
+                            sx={{
+                              p: 1.05,
+                              borderRadius: "8px",
+                              bgcolor: "rgba(255,255,255,0.76)",
+                              border: "1px solid rgba(34, 197, 94, 0.12)",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{fontWeight: 800, color: "#0f172a"}}
+                            >
+                              {armor.name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: "block",
+                                mt: 0.45,
+                                color: "#166534",
+                              }}
+                            >
+                              Defesa +{armor.defense || armor.def || 0} • Aparar
+                              +{armor.parry || armor.ap || 0}
+                            </Typography>
+                          </Box>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma armadura equipada.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Vantagens"
+                    subtitle="Benefícios permanentes ativos"
+                    icon={<TraitIcon />}
+                    accent="#166534"
+                  >
+                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                      {(character.vantagens || []).length > 0 ? (
+                        character.vantagens.map((item, index) => (
+                          <Tooltip
+                            key={`${item.name}-${index}`}
+                            title={
+                              item.description ||
+                              EDGE_DESCRIPTION_MAP[item.name] ||
+                              "Sem descrição disponível."
+                            }
+                            arrow
+                          >
+                            <Chip
+                              label={item.name}
+                              sx={{
+                                bgcolor: alpha("#22c55e", 0.12),
+                                color: "#166534",
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Tooltip>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma vantagem.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Complicações"
+                    subtitle="Fraquezas e gatilhos da ficha"
+                    icon={<TraitIcon />}
+                    accent="#b45309"
+                  >
+                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                      {(character.complicacoes || []).length > 0 ? (
+                        character.complicacoes.map((item, index) => (
+                          <Tooltip
+                            key={`${item.name}-${index}`}
+                            title={
+                              item.description ||
+                              HINDRANCE_DESCRIPTION_MAP[item.name] ||
+                              "Sem descrição disponível."
+                            }
+                            arrow
+                          >
+                            <Chip
+                              label={item.name}
+                              sx={{
+                                bgcolor: alpha("#f59e0b", 0.12),
+                                color: "#92400e",
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Tooltip>
+                        ))
+                      ) : (
+                        <EmptyState>Nenhuma complicação.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Itens"
+                    subtitle="Consumíveis e utilidades"
+                    icon={<InventoryIcon />}
+                    accent="#475569"
+                  >
+                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                      {(character.itens || []).length > 0 ? (
+                        character.itens.map((item, index) => (
+                          <Chip
+                            key={`${item.name}-${index}`}
+                            label={item.name}
+                            sx={{
+                              bgcolor: alpha("#64748b", 0.12),
+                              color: "#334155",
+                              fontWeight: 700,
+                            }}
+                          />
+                        ))
+                      ) : (
+                        <EmptyState>Nenhum item cadastrado.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+
+                  <OverviewPanel
+                    title="Espólios"
+                    subtitle="Saques e recompensas"
+                    icon={<WalletIcon />}
+                    accent="#0f766e"
+                  >
+                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                      {(character.espolios || []).length > 0 ? (
+                        character.espolios.map((item, index) => (
+                          <Chip
+                            key={`${item.name}-${index}`}
+                            label={item.name}
+                            sx={{
+                              bgcolor: alpha("#14b8a6", 0.12),
+                              color: "#0f766e",
+                              fontWeight: 700,
+                            }}
+                          />
+                        ))
+                      ) : (
+                        <EmptyState>Nenhum espólio registrado.</EmptyState>
+                      )}
+                    </Box>
+                  </OverviewPanel>
+                </Stack>
+              </Grid>
+
+              <Grid item xs={12}>
+                <OverviewPanel
+                  title="Notas de Campanha"
+                  subtitle="Observações rápidas, pistas e lembretes"
+                  icon={<NotesIcon />}
+                  accent="#0f172a"
+                >
+                  <StyledTextField
+                    fullWidth
+                    multiline
+                    minRows={4}
+                    disabled={isFieldLocked("notas")}
+                    value={character.notas || ""}
+                    onChange={(e) =>
+                      updateAttributeIfAllowed("notas", e.target.value)
+                    }
+                    placeholder="Escreva suas anotações..."
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "rgba(255,255,255,0.72)",
+                        alignItems: "flex-start",
+                      },
+                      "& textarea": {
+                        fontFamily: '"IBM Plex Sans", system-ui, sans-serif',
+                      },
+                    }}
+                  />
+                </OverviewPanel>
+              </Grid>
+            </Grid>
           </Box>
         </Box>
       )}
@@ -2357,11 +2560,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     return hind ? {...hind, ...c} : c;
                   })}
                   onAdd={(item) =>
-                    addItemToListIfAllowed(
-                      "complicacoes",
-                      "complicacoes",
-                      item,
-                    )
+                    addItemToListIfAllowed("complicacoes", "complicacoes", item)
                   }
                   onRemove={(idx) =>
                     removeItemFromListIfAllowed(

@@ -35,192 +35,6 @@ export function CombatList({
 
   return (
     <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
-      {/* TITULO: SAÚDE */}
-      <Box sx={{mb: 4}}>
-        <h3
-          style={{
-            margin: "0 0 16px 0",
-            borderBottom: "1px solid #eee",
-            paddingBottom: "8px",
-            color: "#333",
-          }}
-        >
-          Saúde
-        </h3>
-        <Grid container spacing={2} alignItems="center">
-          {/* Abalado */}
-          <Grid item xs={6} sm={3}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  fontWeight: "bold",
-                  color: "#d97706",
-                  marginBottom: "4px",
-                }}
-              >
-                ABALADO
-              </span>
-              <Checkbox
-                checked={character.abalado || false}
-                onChange={(e) => updateAttribute("abalado", e.target.checked)}
-                disabled={isDisabled("abalado")}
-                sx={{color: "#d97706", "&.Mui-checked": {color: "#d97706"}}}
-              />
-            </Box>
-          </Grid>
-
-          {/* Ferimentos */}
-          <Grid item xs={6} sm={3}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  fontWeight: "bold",
-                  color: "#dc2626",
-                  marginBottom: "4px",
-                }}
-              >
-                FERIMENTOS
-              </span>
-              <Box>
-                {[1, 2, 3].map((level) => (
-                  <Checkbox
-                    key={level}
-                    checked={(character.ferimentos || 0) >= level}
-                    onChange={() => {
-                      const current = character.ferimentos || 0;
-                      const newVal = current === level ? level - 1 : level;
-                      if (newVal > current && !character.abalado) {
-                        updateAttribute("abalado", true);
-                      }
-                      updateAttribute("ferimentos", newVal);
-                    }}
-                    disabled={isDisabled("ferimentos")}
-                    size="small"
-                    sx={{
-                      p: 0.5,
-                      color: "#ef4444",
-                      "&.Mui-checked": {color: "#dc2626"},
-                    }}
-                  />
-                ))}
-              </Box>
-            </Box>
-          </Grid>
-
-          {/* Fadiga */}
-          <Grid item xs={6} sm={3}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  fontWeight: "bold",
-                  color: "#991b1b",
-                  marginBottom: "4px",
-                }}
-              >
-                FADIGA
-              </span>
-              <Box>
-                {[1, 2].map((level) => (
-                  <Checkbox
-                    key={level}
-                    checked={(character.fadiga || 0) >= level}
-                    onChange={() => {
-                      const current = character.fadiga || 0;
-                      const newVal = current === level ? level - 1 : level;
-                      updateAttribute("fadiga", newVal);
-                    }}
-                    disabled={isDisabled("fadiga")}
-                    size="small"
-                    sx={{
-                      p: 0.5,
-                      color: "#ef4444",
-                      "&.Mui-checked": {color: "#dc2626"},
-                    }}
-                  />
-                ))}
-              </Box>
-            </Box>
-          </Grid>
-
-          {/* Penalidade */}
-          <Grid item xs={6} sm={3}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  fontWeight: "bold",
-                  color: "#7f1d1d",
-                  marginBottom: "4px",
-                }}
-              >
-                PENALIDADE
-              </span>
-              <span
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "800",
-                  color: "#dc2626",
-                }}
-              >
-                -{(character.ferimentos || 0) + (character.fadiga || 0)}
-              </span>
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {statusEffects.length > 0 && (
-        <Box sx={{mb: 4}}>
-          <h3
-            style={{
-              margin: "0 0 16px 0",
-              borderBottom: "1px solid #eee",
-              paddingBottom: "8px",
-              color: "#333",
-            }}
-          >
-            Efeitos Ativos
-          </h3>
-          <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
-            {statusEffects.map((effect) => (
-              <Chip
-                key={effect}
-                label={effect}
-                color="warning"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </Box>
-      )}
-
       {/* TITULO: DEFESAS */}
       <Box sx={{mb: 4}}>
         <h3
@@ -406,4 +220,218 @@ export function CombatList({
       </Box>
     </Box>
   );
+}
+
+{
+  /* TITULO: SAÚDE */
+}
+// <Box sx={{mb: 4}}>
+//   <h3
+//     style={{
+//       margin: "0 0 16px 0",
+//       borderBottom: "1px solid #eee",
+//       paddingBottom: "8px",
+//       color: "#333",
+//     }}
+//   >
+//     Saúde
+//   </h3>
+//   <Box
+//     sx={{
+//       display: "grid",
+//       gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+//       gap: 1.5,
+//     }}
+//   >
+{
+  /* Abalado */
+}
+// <Box
+//   sx={{
+//     display: "flex",
+//     flexDirection: "column",
+//     alignItems: "center",
+//     p: 1.5,
+//     borderRadius: "8px",
+//     bgcolor: "#fff7ed",
+//     border: "1px solid #ffedd5",
+//   }}
+// >
+//   <span
+//     style={{
+//       fontSize: "0.85rem",
+//       fontWeight: "bold",
+//       color: "#d97706",
+//       marginBottom: "4px",
+//     }}
+//   >
+//     ABALADO
+//   </span>
+//   <Checkbox
+//     checked={character.abalado || false}
+//     onChange={(e) => updateAttribute("abalado", e.target.checked)}
+//     disabled={isDisabled("abalado")}
+//     sx={{color: "#d97706", "&.Mui-checked": {color: "#d97706"}}}
+//   />
+// </Box>
+
+{
+  /* Ferimentos */
+}
+// <Box
+//   sx={{
+//     display: "flex",
+//     flexDirection: "column",
+//     alignItems: "center",
+//     p: 1.5,
+//     borderRadius: "8px",
+//     bgcolor: "#fef2f2",
+//     border: "1px solid #fee2e2",
+//   }}
+// >
+//   <span
+//     style={{
+//       fontSize: "0.85rem",
+//       fontWeight: "bold",
+//       color: "#dc2626",
+//       marginBottom: "4px",
+//     }}
+//   >
+//     FERIMENTOS
+//   </span>
+//   <Box>
+//     {[1, 2, 3].map((level) => (
+//       <Checkbox
+//         key={level}
+//         checked={(character.ferimentos || 0) >= level}
+//         onChange={() => {
+//           const current = character.ferimentos || 0;
+//           const newVal = current === level ? level - 1 : level;
+//           if (newVal > current && !character.abalado) {
+//             updateAttribute("abalado", true);
+//           }
+//           updateAttribute("ferimentos", newVal);
+//         }}
+//         disabled={isDisabled("ferimentos")}
+//         size="small"
+//         sx={{
+//           p: 0.5,
+//           color: "#ef4444",
+//           "&.Mui-checked": {color: "#dc2626"},
+//         }}
+//       />
+//     ))}
+//   </Box>
+// </Box>
+
+{
+  /* Fadiga */
+}
+{
+  /* <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              p: 1.5,
+              borderRadius: "8px",
+              bgcolor: "#fef2f2",
+              border: "1px solid #fee2e2",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: "bold",
+                color: "#991b1b",
+                marginBottom: "4px",
+              }}
+            >
+              FADIGA
+            </span>
+            <Box>
+              {[1, 2].map((level) => (
+                <Checkbox
+                  key={level}
+                  checked={(character.fadiga || 0) >= level}
+                  onChange={() => {
+                    const current = character.fadiga || 0;
+                    const newVal = current === level ? level - 1 : level;
+                    updateAttribute("fadiga", newVal);
+                  }}
+                  disabled={isDisabled("fadiga")}
+                  size="small"
+                  sx={{
+                    p: 0.5,
+                    color: "#ef4444",
+                    "&.Mui-checked": {color: "#dc2626"},
+                  }}
+                />
+              ))}
+            </Box>
+          </Box> */
+}
+
+{
+  /* Penalidade */
+}
+{
+  /* <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              p: 1.5,
+              borderRadius: "8px",
+              bgcolor: "#fef2f2",
+              border: "1px solid #fee2e2",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: "bold",
+                color: "#7f1d1d",
+                marginBottom: "4px",
+              }}
+            >
+              PENALIDADE
+            </span>
+            <span
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "800",
+                color: "#dc2626",
+              }}
+            >
+              -{(character.ferimentos || 0) + (character.fadiga || 0)}
+            </span>
+          </Box>
+        </Box>
+      </Box>
+
+      {statusEffects.length > 0 && (
+        <Box sx={{mb: 4}}>
+          <h3
+            style={{
+              margin: "0 0 16px 0",
+              borderBottom: "1px solid #eee",
+              paddingBottom: "8px",
+              color: "#333",
+            }}
+          >
+            Efeitos Ativos
+          </h3>
+          <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
+            {statusEffects.map((effect) => (
+              <Chip
+                key={effect}
+                label={effect}
+                color="warning"
+                variant="outlined"
+              />
+            ))}
+          </Box>
+        </Box>
+      )} */
 }
