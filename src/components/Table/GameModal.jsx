@@ -93,6 +93,12 @@ import {
   toggleCharacterStatusEffect,
 } from "@/lib/characterStatus";
 
+const TRACKED_STATUSES = [
+  {label: "Envenenado", icon: PoisonIcon, color: "#4caf50"},
+  {label: "Paralisado", icon: ParalyzedIcon, color: "#ffb74d"},
+  {label: "Congelado", icon: FrozenIcon, color: "#29b6f6"},
+];
+
 // Sub-componente para item da lista de jogadores com listener em tempo real
 const PlayerListItem = ({player, isGMView, onClick}) => {
   const [charData, setCharData] = useState(null);
@@ -252,7 +258,7 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
                       color: isShaken ? "#d97706" : "#e0e0e0",
                     }}
                   >
-                    <StunIcon sx={{fontSize: 24}} />
+                    <StunIcon sx={{fontSize: 30}} />
                   </Box>
 
                   {/* Ferimentos */}
@@ -266,7 +272,7 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
                       fontWeight: "700",
                     }}
                   >
-                    {wounds} <DamageIcon sx={{fontSize: 24}} />
+                    {wounds} <DamageIcon sx={{fontSize: 30}} />
                   </Box>
 
                   {/* Fadiga */}
@@ -280,7 +286,7 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
                       fontWeight: "700",
                     }}
                   >
-                    {fatigue} <FatigueIcon sx={{fontSize: 24}} />
+                    {fatigue} <FatigueIcon sx={{fontSize: 30}} />
                   </Box>
 
                   {/* Corrupção */}
@@ -294,7 +300,7 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
                       fontWeight: "700",
                     }}
                   >
-                    {corruption} <CorruptionIcon sx={{fontSize: 24}} />
+                    {corruption} <CorruptionIcon sx={{fontSize: 30}} />
                   </Box>
 
                   {/* Mana */}
@@ -315,35 +321,42 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
 
                 {/* Linha 2: Demais Status */}
                 <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}>
-                  {statusEffects.map((effect) => {
-                    let EffectIcon = OtherStatusIcon;
-                    let effectColor = "#9c27b0"; // Default Purple/Violet
-
-                    if (effect === "Envenenado") {
-                      EffectIcon = PoisonIcon;
-                      effectColor = "#4caf50"; // Verde (Solicitado)
-                    } else if (effect === "Paralisado") {
-                      EffectIcon = ParalyzedIcon;
-                      effectColor = "#ffb74d"; // Laranja/Amarelo
-                    } else if (effect === "Congelado") {
-                      EffectIcon = FrozenIcon;
-                      effectColor = "#29b6f6"; // Azul Claro
-                    }
-
+                  {/* Status Fixos (Cinza se inativo, Colorido se ativo) */}
+                  {TRACKED_STATUSES.map(({label, icon: Icon, color}) => {
+                    const isActive = statusEffects.includes(label);
                     return (
+                      <Box
+                        key={label}
+                        title={label}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          color: isActive ? color : "#e0e0e0",
+                        }}
+                      >
+                        <Icon sx={{fontSize: 30}} />
+                      </Box>
+                    );
+                  })}
+
+                  {/* Status Extras (Customizados) */}
+                  {statusEffects
+                    .filter(
+                      (eff) => !TRACKED_STATUSES.some((t) => t.label === eff),
+                    )
+                    .map((effect) => (
                       <Box
                         key={effect}
                         title={effect}
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          color: effectColor,
+                          color: "#9c27b0",
                         }}
                       >
-                        <EffectIcon sx={{fontSize: 24}} />
+                        <OtherStatusIcon sx={{fontSize: 30}} />
                       </Box>
-                    );
-                  })}
+                    ))}
                 </Box>
               </Box>
             )}
@@ -1337,112 +1350,101 @@ function GameModal() {
             {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
             {isGM &&
               !selectedPlayer?.isGM && [
-                <Typography
-                  key="title-sheet"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Ficha
-                </Typography>,
                 <MenuItem key="view-sheet" onClick={handleViewSheet}>
                   <ListItemIcon>
                     <SheetIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Ver Ficha</ListItemText>
                 </MenuItem>,
-                <Typography
-                  key="title-character"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
+
+                // AÇÕES
+                <MenuItem
+                  key="menu-actions"
+                  onClick={(e) => handleOpenSubmenu("actions", e)}
                 >
-                  Personagem
-                </Typography>,
-                <MenuItem key="send-msg" onClick={handleSendMessage}>
                   <ListItemIcon>
-                    <MessageIcon fontSize="small" />
+                    <SendIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Enviar Msg</ListItemText>
+                  <ListItemText>Ações</ListItemText>
+                  <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
-                <MenuItem key="req-file" onClick={handleRequestFile}>
-                  <ListItemIcon>
-                    <FileIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Solicitar Arquivo</ListItemText>
-                </MenuItem>,
+
                 <Divider key="div-actions" />,
-                <Typography
-                  key="title-combat"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Combate
-                </Typography>,
-                <MenuItem key="act-stun" onClick={() => handleGMAction("stun")}>
-                  <ListItemIcon>
-                    <StunIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Abalar</ListItemText>
-                </MenuItem>,
+
+                // ABALAR / REMOVER ABALADO
+                selectedPlayerStatus.isShaken ? (
+                  <MenuItem
+                    key="act-remove-stun"
+                    onClick={() => handleGMAction("remove_stun")}
+                  >
+                    <ListItemIcon>
+                      <HealIcon fontSize="small" color="success" />
+                    </ListItemIcon>
+                    <ListItemText>Remover Abalado</ListItemText>
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    key="act-stun"
+                    onClick={() => handleGMAction("stun")}
+                  >
+                    <ListItemIcon>
+                      <StunIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Abalar</ListItemText>
+                  </MenuItem>
+                ),
+
+                // DANO
                 <MenuItem
-                  key="act-remove-stun"
-                  onClick={() => handleGMAction("remove_stun")}
-                >
-                  <ListItemIcon>
-                    <HealIcon fontSize="small" color="success" />
-                  </ListItemIcon>
-                  <ListItemText>Remover Abalado</ListItemText>
-                </MenuItem>,
-                <MenuItem
-                  key="act-dmg"
-                  onClick={() => handleGMAction("damage")}
+                  key="menu-damage"
+                  onClick={(e) => handleOpenSubmenu("damage", e)}
                 >
                   <ListItemIcon>
                     <DamageIcon fontSize="small" color="error" />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "error.main"}}>
-                    Causar Dano
-                  </ListItemText>
+                  <ListItemText sx={{color: "error.main"}}>Dano</ListItemText>
+                  <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
+
+                // DESCANSO
                 <MenuItem
-                  key="act-heal-dmg"
-                  onClick={() => handleGMAction("heal_damage")}
+                  key="menu-rest"
+                  onClick={(e) => handleOpenSubmenu("rest", e)}
                 >
                   <ListItemIcon>
-                    <HealIcon fontSize="small" color="success" />
+                    <RestIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "success.main"}}>
-                    Curar Dano
-                  </ListItemText>
+                  <ListItemText>Descanso</ListItemText>
+                  <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
+
+                <Divider key="div-sit" />,
+
+                // CORRUPÇÃO
                 <MenuItem
-                  key="act-fatigue"
-                  onClick={() => handleGMAction("fatigue")}
+                  key="menu-corruption"
+                  onClick={(e) => handleOpenSubmenu("corruption", e)}
                 >
                   <ListItemIcon>
-                    <FatigueIcon fontSize="small" color="warning" />
+                    <CorruptionIcon fontSize="small" sx={{color: "#7b1fa2"}} />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "warning.dark"}}>
-                    Fatigar
-                  </ListItemText>
+                  <ListItemText sx={{color: "#7b1fa2"}}>Corrupção</ListItemText>
+                  <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
+
+                // POÇÕES
+                <MenuItem
+                  key="menu-potions"
+                  onClick={(e) => handleOpenSubmenu("potions", e)}
+                >
+                  <ListItemIcon>
+                    <HealthPotionIcon fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText>Poções</ListItemText>
+                  <ChevronRightIcon fontSize="small" />
+                </MenuItem>,
+
+                // EFEITOS
                 <MenuItem
                   key="act-effects"
                   onClick={(event) => handleOpenSubmenu("effects", event)}
@@ -1450,116 +1452,11 @@ function GameModal() {
                   <ListItemIcon>
                     <PoisonIcon fontSize="small" sx={{color: "#9c27b0"}} />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "#9c27b0"}}>Efeito</ListItemText>
+                  <ListItemText sx={{color: "#9c27b0"}}>Efeitos</ListItemText>
                   <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
-                <Divider key="div-sit" />,
-                <Typography
-                  key="title-sit"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Situacionais
-                </Typography>,
-                <MenuItem
-                  key="act-short"
-                  onClick={() => handleGMAction("short_rest")}
-                >
-                  <ListItemIcon>
-                    <RestIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Descanso Curto</ListItemText>
-                </MenuItem>,
-                <MenuItem
-                  key="act-long"
-                  onClick={() => handleGMAction("long_rest")}
-                >
-                  <ListItemIcon>
-                    <SleepIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Descanso Longo</ListItemText>
-                </MenuItem>,
-                <MenuItem
-                  key="act-corr-add"
-                  onClick={() => handleGMAction("corruption_add")}
-                >
-                  <ListItemIcon>
-                    <CorruptionIcon fontSize="small" sx={{color: "#7b1fa2"}} />
-                  </ListItemIcon>
-                  <ListItemText>Causar Corrupção</ListItemText>
-                </MenuItem>,
-                <MenuItem
-                  key="act-corr-rem"
-                  onClick={() => handleGMAction("corruption_remove")}
-                >
-                  <ListItemIcon>
-                    <PurifyIcon fontSize="small" sx={{color: "#4caf50"}} />
-                  </ListItemIcon>
-                  <ListItemText>Curar Corrupção</ListItemText>
-                </MenuItem>,
-                <Divider key="div-items" />,
-                <Typography
-                  key="title-items"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Itens
-                </Typography>,
-                <MenuItem
-                  key="act-pot-heal"
-                  onClick={(event) => handleOpenSubmenu("heal-potion", event)}
-                >
-                  <ListItemIcon>
-                    <HealthPotionIcon fontSize="small" color="error" />
-                  </ListItemIcon>
-                  <ListItemText>Usar Poção de Cura</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-                <MenuItem
-                  key="act-pot-mana"
-                  onClick={(event) => handleOpenSubmenu("mana-potion", event)}
-                >
-                  <ListItemIcon>
-                    <ManaPotionIcon fontSize="small" color="primary" />
-                  </ListItemIcon>
-                  <ListItemText>Usar Poção de Mana</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-                <MenuItem
-                  key="act-antidote"
-                  onClick={() => handleGMAction("antidote")}
-                >
-                  <ListItemIcon>
-                    <AntidoteIcon fontSize="small" color="success" />
-                  </ListItemIcon>
-                  <ListItemText>Usar Antídoto</ListItemText>
-                </MenuItem>,
+
                 <Divider key="divider-kick" />,
-                <Typography
-                  key="title-table"
-                  variant="caption"
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    color: "text.secondary",
-                    display: "block",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Mesa
-                </Typography>,
                 <MenuItem key="remove-player" onClick={handleRemovePlayer}>
                   <ListItemIcon>
                     <PersonRemoveIcon fontSize="small" color="error" />
@@ -1580,6 +1477,129 @@ function GameModal() {
                   <ListItemText>Enviar Msg</ListItemText>
                 </MenuItem>
               )}
+          </Menu>
+
+          {/* SUBMENU: Ações */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "actions"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={handleSendMessage}>
+              <ListItemIcon>
+                <MessageIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Enviar Msg</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleRequestFile}>
+              <ListItemIcon>
+                <FileIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Solicitar Arquivo</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Dano */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "damage"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("damage")}>
+              <ListItemIcon>
+                <DamageIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText color="error">Causar Dano</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("heal_damage")}>
+              <ListItemIcon>
+                <HealIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText color="success">Curar Dano</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Descanso */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "rest"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("short_rest")}>
+              <ListItemIcon>
+                <RestIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Curto</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("long_rest")}>
+              <ListItemIcon>
+                <SleepIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Longo</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Corrupção */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "corruption"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={() => handleGMAction("corruption_add")}>
+              <ListItemIcon>
+                <CorruptionIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Causar</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("corruption_remove")}>
+              <ListItemIcon>
+                <PurifyIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Curar</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          {/* SUBMENU: Poções */}
+          <Menu
+            anchorEl={submenuAnchorEl}
+            open={submenuType === "potions"}
+            onClose={handleCloseSubmenu}
+            anchorOrigin={{vertical: "top", horizontal: "right"}}
+            transformOrigin={{vertical: "top", horizontal: "left"}}
+            PaperProps={{elevation: 3}}
+          >
+            <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
+              <ListItemIcon>
+                <HealthPotionIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Cura</ListItemText>
+              <ChevronRightIcon fontSize="small" />
+            </MenuItem>
+            <MenuItem onClick={(e) => handleOpenSubmenu("mana-potion", e)}>
+              <ListItemIcon>
+                <ManaPotionIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Mana</ListItemText>
+              <ChevronRightIcon fontSize="small" />
+            </MenuItem>
+            <MenuItem onClick={() => handleGMAction("antidote")}>
+              <ListItemIcon>
+                <AntidoteIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText>Antídoto</ListItemText>
+            </MenuItem>
           </Menu>
 
           {/* SUBMENU: Ações */}

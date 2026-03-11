@@ -23,11 +23,13 @@ fi
 
 cd "$DIR_PROJETO"
 
-echo "1. Sincronizando repositório..."
+echo "1. Sincronizando repositório (Forçando limpeza)..."
 git fetch $REMOTE $BRANCH
-git pull $REMOTE $BRANCH
+git reset --hard $REMOTE/$BRANCH
+git clean -fd
 
 echo "2. Iniciando Build e Up (Aproveitando cache de camadas)..."
+# Com o novo Dockerfile, o tempo de cópia será instantâneo
 docker compose up -d --build $SERVICE_NAME
 
 echo "3. Limpeza de imagens órfãs..."

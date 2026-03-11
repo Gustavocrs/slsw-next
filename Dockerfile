@@ -1,14 +1,14 @@
-# ESTÁGIO 1: Dependências (Rápido via Cache)
+# ESTÁGIO 1: Dependências
 FROM node:22-slim AS dependencies
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# ESTÁGIO 2: Builder (Aqui o Next.js compila)
+# ESTÁGIO 2: Builder
 FROM node:22-slim AS builder
 WORKDIR /app
 
-# ARGs do Firebase (Build Time)
+# ARGs do Firebase
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -27,17 +27,19 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# ESTÁGIO 3: Runner (O estágio que você viu no log do Mitra)
+# ESTÁGIO 3: Runner
 FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copia apenas o resultado do build (Standalone)
-# Isso elimina a cópia pesada de node_modules no estágio final
+# No modo standalone, o Next.js coloca tudo em .next/standalone
+# Copiamos o conteúdo de standalone para a raiz /app do container
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 USER node
 EXPOSE 3000
+
+# O segredo: chamar o server.js gerado pelo build standalone
 CMD ["node", "server.js"]
