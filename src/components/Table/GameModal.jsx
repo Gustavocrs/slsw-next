@@ -297,7 +297,7 @@ function GameModal() {
           break;
         case "stun": // Atordoar (Abalado)
           updates.abalado = true;
-          showNotification(`${selectedPlayer.name} está Atordoado.`, "warning");
+          showNotification(`${selectedPlayer.name} está Abalado.`, "warning");
           break;
         case "damage": // Causar Dano (Simplificado: +1 Ferimento + Abalado)
           updates.ferimentos = (charData.ferimentos || 0) + 1;
@@ -777,7 +777,7 @@ function GameModal() {
                   <ListItemIcon>
                     <StunIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Atordoar</ListItemText>
+                  <ListItemText>Abalado</ListItemText>
                 </MenuItem>,
                 <MenuItem
                   key="act-dmg"

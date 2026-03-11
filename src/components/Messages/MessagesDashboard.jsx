@@ -264,9 +264,9 @@ export default function MessagesDashboard() {
     if (!messagesDashboardOpen) {
       setActiveRecipient(undefined);
     } else {
-      setActiveRecipient(null); // Começa no chat global
+      setActiveRecipient(isMobile ? undefined : null);
     }
-  }, [messagesDashboardOpen]);
+  }, [messagesDashboardOpen, isMobile]);
 
   if (!user) return null;
 
