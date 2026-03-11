@@ -37,6 +37,7 @@ import {
   Tab,
   Checkbox,
   FormControlLabel,
+  TextField,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -62,6 +63,7 @@ import {
   Medication as AntidoteIcon,
   Healing as HealIcon,
   Science as PoisonIcon,
+  Send as SendIcon,
   ExpandMore as ExpandMoreIcon,
   ChevronRight as ChevronRightIcon,
   AcUnit as FrozenIcon,
@@ -387,6 +389,10 @@ function GameModal() {
   const [selectedPlayerStatus, setSelectedPlayerStatus] = useState({});
   const [submenuAnchorEl, setSubmenuAnchorEl] = useState(null);
   const [submenuType, setSubmenuType] = useState(null);
+  const [tertiaryAnchorEl, setTertiaryAnchorEl] = useState(null);
+  const [tertiaryType, setTertiaryType] = useState(null);
+  const [customEffectModalOpen, setCustomEffectModalOpen] = useState(false);
+  const [customEffectText, setCustomEffectText] = useState("");
 
   // Estados para NPC e Troca de Mesa
   const [npcModalOpen, setNpcModalOpen] = useState(false);
@@ -481,6 +487,8 @@ function GameModal() {
     setAnchorEl(null);
     setSubmenuAnchorEl(null);
     setSubmenuType(null);
+    setTertiaryAnchorEl(null);
+    setTertiaryType(null);
     setSelectedPlayer(null);
     setSelectedPlayerStatus({});
   };
@@ -493,6 +501,18 @@ function GameModal() {
   const handleCloseSubmenu = () => {
     setSubmenuAnchorEl(null);
     setSubmenuType(null);
+    setTertiaryAnchorEl(null);
+    setTertiaryType(null);
+  };
+
+  const handleOpenTertiary = (type, event) => {
+    setTertiaryAnchorEl(event.currentTarget);
+    setTertiaryType(type);
+  };
+
+  const handleCloseTertiary = () => {
+    setTertiaryAnchorEl(null);
+    setTertiaryType(null);
   };
 
   const handleViewSheet = async () => {
@@ -781,11 +801,7 @@ function GameModal() {
           break;
         }
         case "custom_effect": {
-          const customEffect = window
-            .prompt(
-              "Digite o status de RPG. Se ele já existir na ficha, será removido.",
-            )
-            ?.trim();
+          const customEffect = payload.effectLabel?.trim();
 
           if (!customEffect) return;
 
@@ -816,6 +832,16 @@ function GameModal() {
       } else {
         showNotification("Erro ao aplicar ação na ficha.", "error");
       }
+    }
+  };
+
+  const handleConfirmCustomEffect = () => {
+    if (customEffectText.trim()) {
+      handleGMAction("custom_effect", {effectLabel: customEffectText});
+      setCustomEffectText("");
+      setCustomEffectModalOpen(false);
+    } else {
+      showNotification("Digite um nome para o status.", "warning");
     }
   };
 
@@ -1033,7 +1059,7 @@ function GameModal() {
                 <Grid
                   item
                   xs={12}
-                  md={8}
+                  md={6}
                   sx={{
                     p: {xs: 2, md: 3},
                     display: {
@@ -1255,7 +1281,7 @@ function GameModal() {
                 <Grid
                   item
                   xs={12}
-                  md={4}
+                  md={6}
                   sx={{
                     bgcolor: "#fff",
                     borderLeft: {md: "1px solid #e0e0e0"},
@@ -1703,14 +1729,14 @@ function GameModal() {
             transformOrigin={{vertical: "top", horizontal: "left"}}
             PaperProps={{elevation: 3}}
           >
-            <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
+            <MenuItem onClick={(e) => handleOpenTertiary("heal-potion", e)}>
               <ListItemIcon>
                 <HealthPotionIcon fontSize="small" color="error" />
               </ListItemIcon>
               <ListItemText>Cura</ListItemText>
               <ChevronRightIcon fontSize="small" />
             </MenuItem>
-            <MenuItem onClick={(e) => handleOpenSubmenu("mana-potion", e)}>
+            <MenuItem onClick={(e) => handleOpenTertiary("mana-potion", e)}>
               <ListItemIcon>
                 <ManaPotionIcon fontSize="small" color="primary" />
               </ListItemIcon>
@@ -1727,9 +1753,9 @@ function GameModal() {
 
           {/* SUBMENU: Poção de Cura */}
           <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "heal-potion"}
-            onClose={handleCloseSubmenu}
+            anchorEl={tertiaryAnchorEl}
+            open={tertiaryType === "heal-potion"}
+            onClose={handleCloseTertiary}
             anchorOrigin={{vertical: "top", horizontal: "right"}}
             transformOrigin={{vertical: "top", horizontal: "left"}}
             PaperProps={{elevation: 3}}
@@ -1753,9 +1779,9 @@ function GameModal() {
 
           {/* SUBMENU: Poção de Mana */}
           <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "mana-potion"}
-            onClose={handleCloseSubmenu}
+            anchorEl={tertiaryAnchorEl}
+            open={tertiaryType === "mana-potion"}
+            onClose={handleCloseTertiary}
             anchorOrigin={{vertical: "top", horizontal: "right"}}
             transformOrigin={{vertical: "top", horizontal: "left"}}
             PaperProps={{elevation: 3}}
@@ -1812,7 +1838,14 @@ function GameModal() {
             >
               <ListItemText>Congelar</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleGMAction("custom_effect")}>
+            <MenuItem
+              onClick={() => {
+                setAnchorEl(null);
+                setSubmenuAnchorEl(null);
+                setSubmenuType(null);
+                setCustomEffectModalOpen(true);
+              }}
+            >
               <ListItemText>Outros status de RPG</ListItemText>
             </MenuItem>
           </Menu>
@@ -2016,6 +2049,50 @@ function GameModal() {
 
         {/* Componente de Chat */}
         <ChatModal />
+
+        {/* Modal de Status Personalizado */}
+        <Dialog
+          open={customEffectModalOpen}
+          onClose={() => {
+            setCustomEffectModalOpen(false);
+            handleCloseMenu();
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Status Personalizado</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{mb: 2, color: "text.secondary"}}>
+              Digite o nome do status. Se ele já existir na ficha, será
+              removido.
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Nome do Status"
+              fullWidth
+              variant="outlined"
+              value={customEffectText}
+              onChange={(e) => setCustomEffectText(e.target.value)}
+              onKeyPress={(e) =>
+                e.key === "Enter" && handleConfirmCustomEffect()
+              }
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setCustomEffectModalOpen(false);
+                handleCloseMenu();
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmCustomEffect} variant="contained">
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Dialog>
     </>
   );

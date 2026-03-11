@@ -158,11 +158,10 @@ const SHEET_TABS = {
   IDENTIFICACAO: 1,
   DESPERTAR: 2,
   COMBATE: 3,
-  PERICIAS: 4,
-  VANTAGENS_E_COMPLICACOES: 5,
-  EQUIPAMENTOS: 6,
-  MAGIAS: 7,
-  NOTAS: 8,
+  HABILIDADES: 4,
+  EQUIPAMENTOS: 5,
+  MAGIAS: 6,
+  NOTAS: 7,
 };
 
 const EDGE_DESCRIPTION_MAP = Object.fromEntries(
@@ -983,10 +982,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             label={<TabLabel icon={<DefenseIcon />} label="Combate" />}
           />
           <TabStyled
-            label={<TabLabel icon={<SkillIcon />} label="Perícias" />}
-          />
-          <TabStyled
-            label={<TabLabel icon={<TraitIcon />} label="Vant. & Comp." />}
+            label={<TabLabel icon={<SkillIcon />} label="Habilidades" />}
           />
           <TabStyled
             label={<TabLabel icon={<InventoryIcon />} label="Equipamentos" />}
@@ -2411,71 +2407,84 @@ Negative Prompt: ${promptData.negativePrompt}.
         />
       )}
 
-      {/* TAB 4: PERÍCIAS */}
+      {/* TAB 4: HABILIDADES (PERÍCIAS + VANTAGENS + COMPLICAÇÕES) */}
       {tabValue === 4 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2,
-            }}
-          >
-            <h3 style={{margin: "0", fontSize: "1.1rem"}}>🎯 Perícias</h3>
-            <Tooltip title="Custo: 1 ponto por dado até o atributo chave. 2 pontos por dado acima.">
-              <PointsBadge>{skillPointsSpent}/12 pts</PointsBadge>
-            </Tooltip>
-          </Box>
-
-          <Alert severity="info" sx={{mb: 2}}>
-            Ao comprar uma perícia acima do seu atributo chave, o custo sobe
-            para 2 pontos por passo.
-          </Alert>
-
-          <Box sx={{maxWidth: "600px"}}>
-            <SkillsList
-              disabled={isFieldLocked("pericias")}
-              items={character?.pericias?.map((p) => {
-                const attrKey = getSkillAttribute(p.name);
-                const attrDie = character[attrKey] || "d4";
-                const pVal = parseInt((p.die || "d4").replace("d", ""), 10);
-                const aVal = parseInt(attrDie.replace("d", ""), 10);
-                const isHigher = pVal > aVal;
-                return {
-                  ...p,
-                  style: isHigher ? {backgroundColor: "#fff3e0"} : undefined,
-                  dieColor: isHigher ? "#d32f2f" : "#667eea",
-                  attributeShort: attrKey
-                    ? attrKey.substring(0, 3).toUpperCase()
-                    : "",
-                };
-              })}
-              onAdd={(item) => {
-                if (isFieldLocked("pericias")) return;
-                const idx = (character.pericias || []).findIndex(
-                  (p) => p.name === item.name,
-                );
-                if (idx >= 0) {
-                  removeItemFromListIfAllowed("pericias", "pericias", idx);
-                }
-                addItemToListIfAllowed("pericias", "pericias", item);
-              }}
-              onRemove={(idx) =>
-                removeItemFromListIfAllowed("pericias", "pericias", idx)
-              }
-              addButtonLabel="+ "
-            />
-          </Box>
-        </Box>
-      )}
-
-      {/* TAB 5: VANTAGENS & COMPLICAÇÕES (lado a lado) */}
-      {tabValue === 5 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
-            {/* VANTAGENS - Coluna esquerda */}
-            <Grid item xs={12} md={6}>
+            {/* COLUNA 1: PERÍCIAS */}
+            <Grid item xs={12} md={4}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  height: "100%",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                  }}
+                >
+                  <h3 style={{margin: "0", fontSize: "1.1rem"}}>🎯 Perícias</h3>
+                  <Tooltip title="Custo: 1 ponto por dado até o atributo chave. 2 pontos por dado acima.">
+                    <PointsBadge>{skillPointsSpent}/12 pts</PointsBadge>
+                  </Tooltip>
+                </Box>
+
+                <Alert
+                  severity="info"
+                  sx={{mb: 2, py: 0, px: 2, fontSize: "0.8rem"}}
+                >
+                  Acima do atributo custa 2 pts.
+                </Alert>
+
+                <SkillsList
+                  disabled={isFieldLocked("pericias")}
+                  items={character?.pericias?.map((p) => {
+                    const attrKey = getSkillAttribute(p.name);
+                    const attrDie = character[attrKey] || "d4";
+                    const pVal = parseInt(
+                      (p.die || "d4").replace("d", ""),
+                      10,
+                    );
+                    const aVal = parseInt(attrDie.replace("d", ""), 10);
+                    const isHigher = pVal > aVal;
+                    return {
+                      ...p,
+                      style: isHigher ? {backgroundColor: "#fff3e0"} : undefined,
+                      dieColor: isHigher ? "#d32f2f" : "#667eea",
+                      attributeShort: attrKey
+                        ? attrKey.substring(0, 3).toUpperCase()
+                        : "",
+                    };
+                  })}
+                  onAdd={(item) =>
+                    if (isFieldLocked("pericias")) return;
+                    const idx = (character.pericias || []).findIndex(
+                      (p) => p.name === item.name,
+                    );
+                    if (idx >= 0) {
+                      removeItemFromListIfAllowed(
+                        "pericias",
+                        "pericias",
+                        idx,
+                      );
+                    }
+                    addItemToListIfAllowed("pericias", "pericias", item);
+                  }}
+                  onRemove={(idx) =>
+                    removeItemFromListIfAllowed("pericias", "pericias", idx)
+                  }
+                  addButtonLabel="+ "
+                />
+              </Box>
+            </Grid>
+
+            {/* COLUNA 2: VANTAGENS */}
+            <Grid item xs={12} md={4}>
               <Box
                 sx={{
                   display: "flex",
@@ -2519,8 +2528,8 @@ Negative Prompt: ${promptData.negativePrompt}.
               </Box>
             </Grid>
 
-            {/* COMPLICAÇÕES - Coluna direita */}
-            <Grid item xs={12} md={6}>
+            {/* COLUNA 3: COMPLICAÇÕES */}
+            <Grid item xs={12} md={4}>
               <Box
                 sx={{
                   display: "flex",
@@ -2585,7 +2594,7 @@ Negative Prompt: ${promptData.negativePrompt}.
       )}
 
       {/* TAB 6: EQUIPAMENTOS (2x2 Grid) */}
-      {tabValue === 6 && (
+      {tabValue === 5 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* ARMAS - Superior esquerdo */}
@@ -2675,7 +2684,7 @@ Negative Prompt: ${promptData.negativePrompt}.
       )}
 
       {/* TAB 7: PODERES (Magias) */}
-      {tabValue === 7 && (
+      {tabValue === 6 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
@@ -2700,7 +2709,7 @@ Negative Prompt: ${promptData.negativePrompt}.
       )}
 
       {/* TAB 8: NOTAS */}
-      {tabValue === 8 && (
+      {tabValue === 7 && (
         <Box
           sx={{
             padding: "16px",

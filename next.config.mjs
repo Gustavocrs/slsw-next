@@ -2,6 +2,14 @@
 const nextConfig = {
   output: "standalone",
   reactCompiler: true,
+  compiler: {
+    styledComponents: true,
+    experimental: {
+      reactCompiler: true,
+    },
+    telemetry: false,
+  },
+
   async headers() {
     return [
       {
