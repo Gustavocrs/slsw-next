@@ -20,6 +20,7 @@ import {
 import {Close as CloseIcon} from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import SheetView from "@/components/SheetView";
+import APIService from "@/lib/api";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -39,14 +40,57 @@ function InspectSheetModal() {
     }
   }, [inspectedCharacter]);
 
-  // Mock actions para permitir "edição local" (visual apenas) ou impedir erros
+  // Função de debounce para salvar alterações sem floodar a API
+  const saveCharacterDebounced = React.useCallback((characterData) => {
+    if (!characterData || !characterData._id) return;
+
+    // Limpar timeout anterior se existir
+    if (window._inspectSaveTimeout) clearTimeout(window._inspectSaveTimeout);
+
+    window._inspectSaveTimeout = setTimeout(async () => {
+      try {
+        await APIService.saveCharacter(characterData.userId, characterData);
+        console.log("Ficha inspecionada salva com sucesso.");
+      } catch (error) {
+        console.error("Erro ao salvar ficha inspecionada:", error);
+      }
+    }, 1000);
+  }, []);
+
+  const handleUpdate = (updater) => {
+    setLocalChar((prev) => {
+      const newState = updater(prev);
+      saveCharacterDebounced(newState);
+      return newState;
+    });
+  };
+
   const actions = {
     updateAttribute: (key, value) =>
-      setLocalChar((prev) => ({...prev, [key]: value})),
-    addItemToList: () => {}, // Read-only lists for now
-    removeItemFromList: () => {},
-    updateListItem: () => {},
-    updateCharacter: () => {},
+      handleUpdate((prev) => ({...prev, [key]: value})),
+
+    addItemToList: (listName, item) =>
+      handleUpdate((prev) => ({
+        ...prev,
+        [listName]: [...(prev[listName] || []), item],
+      })),
+
+    removeItemFromList: (listName, index) =>
+      handleUpdate((prev) => ({
+        ...prev,
+        [listName]: (prev[listName] || []).filter((_, i) => i !== index),
+      })),
+
+    updateListItem: (listName, index, item) =>
+      handleUpdate((prev) => {
+        const newList = [...(prev[listName] || [])];
+        newList[index] = item;
+        return {...prev, [listName]: newList};
+      }),
+
+    updateCharacter: (newData) => {
+      setLocalChar(newData); // Atualizações diretas (sem debounce se vierem de fontes externas)
+    },
   };
 
   if (!localChar) return null;

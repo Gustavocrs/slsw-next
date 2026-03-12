@@ -69,6 +69,7 @@ import {
   AcUnit as FrozenIcon,
   PanTool as ParalyzedIcon,
   Help as OtherStatusIcon,
+  LocalFireDepartment as BurnIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -99,6 +100,7 @@ const TRACKED_STATUSES = [
   {label: "Envenenado", icon: PoisonIcon, color: "#4caf50"},
   {label: "Paralisado", icon: ParalyzedIcon, color: "#ffb74d"},
   {label: "Congelado", icon: FrozenIcon, color: "#29b6f6"},
+  {label: "Queimado", icon: BurnIcon, color: "#d32f2f"},
 ];
 
 // Sub-componente para item da lista de jogadores com listener em tempo real
@@ -168,8 +170,8 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
     <Paper
       elevation={0}
       sx={{
-        p: 2,
-        minHeight: 80,
+        p: 1,
+        minHeight: 60,
         display: "flex",
         alignItems: "center",
         gap: 4,
@@ -212,18 +214,18 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
       </Badge>
 
       <Grid container alignItems="center">
-        <Grid item xs={player.isGM ? 12 : 7}>
+        <Grid item xs={player.isGM ? 12 : 3}>
           <Typography variant="body2" fontWeight="bold" noWrap>
-            {displayName}
+            {player.isGM ? displayName : charData?.nome || "Sem Personagem"}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">
-            {player.isGM ? "Game Master" : isGMView ? "Ver opções" : "Jogador"}
+            {player.isGM ? "Game Master" : displayName}
           </Typography>
         </Grid>
         {!player.isGM && (
           <Grid
             item
-            xs={5}
+            xs={9}
             sx={{textAlign: "right", fontSize: "0.7rem", lineHeight: 1.3}}
           >
             {isDead ? (
@@ -244,122 +246,124 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 0.5,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  gap: 1.5,
+                  flexWrap: "wrap",
                 }}
               >
-                {/* Linha 1: Abalado, Ferimentos, Fadiga, Corrupção, Mana */}
-                <Box sx={{display: "flex", alignItems: "center", gap: 1.5}}>
-                  {/* Abalado */}
-                  <Box
-                    title="Abalado"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      color: isShaken ? "#d97706" : "#e0e0e0",
-                    }}
-                  >
-                    <StunIcon sx={{fontSize: 30}} />
-                  </Box>
-
-                  {/* Ferimentos */}
-                  <Box
-                    title="Ferimentos"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      color: wounds > 0 ? "#d32f2f" : "#bdbdbd",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {wounds} <DamageIcon sx={{fontSize: 30}} />
-                  </Box>
-
-                  {/* Fadiga */}
-                  <Box
-                    title="Fadiga"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      color: fatigue > 0 ? "#ed6c02" : "#bdbdbd",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {fatigue} <FatigueIcon sx={{fontSize: 30}} />
-                  </Box>
-
-                  {/* Corrupção */}
-                  <Box
-                    title="Corrupção"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      color: corruption > 0 ? "#7b1fa2" : "#bdbdbd",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {corruption} <CorruptionIcon sx={{fontSize: 30}} />
-                  </Box>
-
-                  {/* Mana */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      color: "#1976d2",
-                      fontWeight: "700",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {currentMana}/{maxMana}{" "}
-                    <span style={{fontSize: "1.5em", lineHeight: 1}}>🌀</span>
-                  </Box>
+                {/* Abalado */}
+                <Box
+                  title="Abalado"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: isShaken ? "#d97706" : "#e0e0e0",
+                  }}
+                >
+                  <StunIcon sx={{fontSize: 30}} />
                 </Box>
 
-                {/* Linha 2: Demais Status */}
-                <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}>
-                  {/* Status Fixos (Cinza se inativo, Colorido se ativo) */}
-                  {TRACKED_STATUSES.map(({label, icon: Icon, color}) => {
-                    const isActive = statusEffects.includes(label);
-                    return (
-                      <Box
-                        key={label}
-                        title={label}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          color: isActive ? color : "#e0e0e0",
-                        }}
-                      >
-                        <Icon sx={{fontSize: 30}} />
-                      </Box>
-                    );
-                  })}
-
-                  {/* Status Extras (Customizados) */}
-                  {statusEffects
-                    .filter(
-                      (eff) => !TRACKED_STATUSES.some((t) => t.label === eff),
-                    )
-                    .map((effect) => (
-                      <Box
-                        key={effect}
-                        title={effect}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          color: "#9c27b0",
-                        }}
-                      >
-                        <OtherStatusIcon sx={{fontSize: 30}} />
-                      </Box>
-                    ))}
+                {/* Ferimentos */}
+                <Box
+                  title="Ferimentos"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    color: wounds > 0 ? "#d32f2f" : "#bdbdbd",
+                    fontWeight: "700",
+                  }}
+                >
+                  {wounds} <DamageIcon sx={{fontSize: 30}} />
                 </Box>
+
+                {/* Fadiga */}
+                <Box
+                  title="Fadiga"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    color: fatigue > 0 ? "#ed6c02" : "#bdbdbd",
+                    fontWeight: "700",
+                  }}
+                >
+                  {fatigue} <FatigueIcon sx={{fontSize: 30}} />
+                </Box>
+
+                {/* Corrupção */}
+                <Box
+                  title="Corrupção"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    color: corruption > 0 ? "#7b1fa2" : "#bdbdbd",
+                    fontWeight: "700",
+                  }}
+                >
+                  {corruption} <CorruptionIcon sx={{fontSize: 30}} />
+                </Box>
+
+                {/* Mana */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    color: "#1976d2",
+                    fontWeight: "700",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {currentMana}/{maxMana}{" "}
+                  <span style={{fontSize: "1.5em", lineHeight: 1}}>🌀</span>
+                </Box>
+
+                {/* Divisor */}
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{mx: 0.5, bgcolor: "rgba(0,0,0,0.12)", height: "auto"}}
+                />
+
+                {/* Status Fixos (Cinza se inativo, Colorido se ativo) */}
+                {TRACKED_STATUSES.map(({label, icon: Icon, color}) => {
+                  const isActive = statusEffects.includes(label);
+                  return (
+                    <Box
+                      key={label}
+                      title={label}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: isActive ? color : "#e0e0e0",
+                      }}
+                    >
+                      <Icon sx={{fontSize: 30}} />
+                    </Box>
+                  );
+                })}
+
+                {/* Status Extras (Customizados) */}
+                {statusEffects
+                  .filter(
+                    (eff) => !TRACKED_STATUSES.some((t) => t.label === eff),
+                  )
+                  .map((effect) => (
+                    <Box
+                      key={effect}
+                      title={effect}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "#9c27b0",
+                      }}
+                    >
+                      <OtherStatusIcon sx={{fontSize: 30}} />
+                    </Box>
+                  ))}
               </Box>
             )}
           </Grid>
@@ -572,6 +576,23 @@ function GameModal() {
 
   const handleRemovePlayer = async () => {
     if (!selectedPlayer || !selectedTable) return;
+
+    // Case: GM's Linked Character (NPC do Mestre)
+    if (selectedPlayer.isNpc && selectedPlayer.uid === selectedTable.gmId) {
+      if (!confirm(`Remover o personagem do mestre da mesa?`)) {
+        handleCloseMenu();
+        return;
+      }
+      try {
+        await APIService.updateTable(selectedTable._id, {gmCharacterId: null});
+        setSelectedTable({...selectedTable, gmCharacterId: null});
+        showNotification("Personagem do mestre removido.", "info");
+      } catch (error) {
+        showNotification("Erro ao remover personagem.", "error");
+      }
+      handleCloseMenu();
+      return;
+    }
 
     if (
       !confirm(`Tem certeza que deseja remover ${selectedPlayer.name} da mesa?`)
@@ -794,6 +815,31 @@ function GameModal() {
             effectLabel,
           );
           Object.assign(updates, effectState.updates);
+
+          // Lógica de Efeitos Mecânicos ao ATIVAR/DESATIVAR
+          if (effectState.isActive) {
+            if (effectLabel === "Congelado") {
+              // Causa fadiga imediata (até 2)
+              const currentFatigue = charData.fadiga || 0;
+              if (currentFatigue < 2) {
+                updates.fadiga = currentFatigue + 1;
+              }
+            } else if (effectLabel === "Paralisado") {
+              updates.movimento = 0;
+            } else if (effectLabel === "Envenenado") {
+              // Primeiro abala
+              if (!charData.abalado) updates.abalado = true;
+            }
+            // Queimado e progressão de Veneno são aplicados por turno/manualmente
+          } else {
+            if (effectLabel === "Paralisado") {
+              // Restaura movimento padrão (6) se estiver zerado
+              if ((charData.movimento || 0) === 0) {
+                updates.movimento = 6;
+              }
+            }
+          }
+
           showNotification(
             `${targetPlayer.name} ${effectState.isActive ? `recebeu ${effectLabel}` : `não está mais com ${effectLabel}`}.`,
             effectState.isActive ? "warning" : "info",
@@ -810,6 +856,21 @@ function GameModal() {
             customEffect,
           );
           Object.assign(updates, effectState.updates);
+
+          // Mesma lógica para status personalizados digitados manualmente
+          if (effectState.isActive) {
+            if (customEffect === "Congelado") {
+              const currentFatigue = charData.fadiga || 0;
+              if (currentFatigue < 2) updates.fadiga = currentFatigue + 1;
+            } else if (customEffect === "Paralisado") {
+              updates.movimento = 0;
+            } else if (customEffect === "Envenenado") {
+              if (!charData.abalado) updates.abalado = true;
+            }
+          } else if (customEffect === "Paralisado") {
+            if ((charData.movimento || 0) === 0) updates.movimento = 6;
+          }
+
           showNotification(
             `${targetPlayer.name} ${effectState.isActive ? `recebeu ${customEffect}` : `não está mais com ${customEffect}`}.`,
             effectState.isActive ? "warning" : "info",
@@ -955,6 +1016,21 @@ function GameModal() {
         characterId: selectedTable.gmCharacterId, // Adicionado para permitir visualização de status do GM se houver
       }
     : null;
+
+  // Data for GM's character (NPC Principal)
+  const gmCharacterData = selectedTable?.gmCharacterId
+    ? {
+        uid: selectedTable.gmId, // Same owner
+        characterId: selectedTable.gmCharacterId,
+        name: "Personagem do Mestre", // Will be overwritten by sheet name
+        isNpc: true,
+      }
+    : null;
+
+  // Separar Jogadores Reais de NPCs
+  const allPlayers = selectedTable?.players || [];
+  const npcList = allPlayers.filter((p) => p.isNpc);
+  const realPlayerList = allPlayers.filter((p) => !p.isNpc);
 
   return (
     <>
@@ -1294,11 +1370,14 @@ function GameModal() {
                   }}
                 >
                   {/* Seção do Game Master */}
-                  <Divider textAlign="left" sx={{mb: 2, mt: 1}}>
+                  <Divider
+                    textAlign="left"
+                    sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
+                  >
                     <Chip label="Game Master" size="small" color="secondary" />
                   </Divider>
 
-                  <Box sx={{mb: 3}}>
+                  <Box sx={{mb: 2}}>
                     <PlayerListItem
                       player={gmData}
                       isGMView={isGM}
@@ -1306,13 +1385,69 @@ function GameModal() {
                     />
                   </Box>
 
+                  {gmCharacterData && (
+                    <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{mb: 0.5, display: "block"}}
+                      >
+                        Personagem do Mestre
+                      </Typography>
+                      <PlayerListItem
+                        player={gmCharacterData}
+                        isGMView={isGM}
+                        onClick={handlePlayerClick}
+                      />
+                    </Box>
+                  )}
+
+                  {/* Seção de NPCs (Abaixo do GM) */}
+                  {npcList.length > 0 && (
+                    <>
+                      <Divider
+                        textAlign="left"
+                        sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                      >
+                        <Chip
+                          label="NPCs & Invocados"
+                          size="small"
+                          sx={{
+                            bgcolor: "#e1bee7",
+                            color: "#4a148c",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Divider>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                          mb: 3,
+                        }}
+                      >
+                        {npcList.map((player) => (
+                          <PlayerListItem
+                            key={player.uid}
+                            player={player}
+                            isGMView={isGM}
+                            onClick={handlePlayerClick}
+                          />
+                        ))}
+                      </Box>
+                    </>
+                  )}
+
                   {/* Seção dos Jogadores */}
-                  <Divider textAlign="left" sx={{mb: 2}}>
+                  <Divider
+                    textAlign="left"
+                    sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                  >
                     <Chip label="Jogadores" size="small" />
                   </Divider>
-
                   <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-                    {(selectedTable.players || []).map((player) => {
+                    {realPlayerList.map((player) => {
                       return (
                         <PlayerListItem
                           key={player.uid}
@@ -1375,7 +1510,9 @@ function GameModal() {
 
             {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
             {isGM &&
-              !selectedPlayer?.isGM && [
+              (!selectedPlayer?.isGM ||
+                (selectedPlayer.isNpc &&
+                  selectedPlayer.uid === selectedTable.gmId)) && [
                 <MenuItem key="view-sheet" onClick={handleViewSheet}>
                   <ListItemIcon>
                     <SheetIcon fontSize="small" />
@@ -1837,6 +1974,13 @@ function GameModal() {
               }
             >
               <ListItemText>Congelar</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() =>
+                handleGMAction("toggle_effect", {effectLabel: "Queimado"})
+              }
+            >
+              <ListItemText>Queimar</ListItemText>
             </MenuItem>
             <MenuItem
               onClick={() => {

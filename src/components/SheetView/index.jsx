@@ -14,6 +14,7 @@ import {
   CheckCircle,
   CloudUpload,
   ContentCopy as CopyIcon,
+  LocalFireDepartment as BurnIcon,
   Security as DefenseIcon,
   Error as ErrorIcon,
   AcUnit as FrozenIcon,
@@ -23,10 +24,12 @@ import {
   Notes as NotesIcon,
   Help as OtherStatusIcon,
   PanTool as ParalyzedIcon,
+  ExpandMore as ExpandMoreIcon,
   Science as PoisonIcon,
   EmojiEvents as RankIcon,
   Refresh as RefreshIcon,
   Remove as RemoveIcon,
+  Settings as SettingsIcon,
   FlashOn as ShockIcon,
   Psychology as SkillIcon,
   MenuBook as SpellbookIcon,
@@ -35,9 +38,19 @@ import {
   VisibilityOutlined as ViewIcon,
   AccountBalanceWallet as WalletIcon,
   Gavel as WeaponIcon,
+  FormatColorText as FontIcon,
+  Palette as PaletteIcon,
+  ColorLens as ColorIcon,
+  Brush as StyleIcon,
+  Widgets as WidgetsIcon,
+  Web as FooterIcon,
   LocalHospital as WoundIcon,
+  DashboardCustomize as DashboardCustomizeIcon,
 } from "@mui/icons-material";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -49,26 +62,34 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormControlLabel,
+  FormGroup,
   Grid,
   IconButton,
   InputLabel,
   LinearProgress,
   MenuItem,
   Paper,
+  Popover,
   Select,
   Stack,
+  Switch,
   Tab,
   Tabs,
   TextField,
   Tooltip,
   Typography,
+  Slider,
 } from "@mui/material";
 import {alpha, styled} from "@mui/material/styles";
 import {doc, onSnapshot} from "firebase/firestore";
 import React, {useMemo, useState} from "react";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
-import {getCharacterStatusEffects} from "@/lib/characterStatus";
+import {
+  getCharacterStatusEffects,
+  toggleCharacterStatusEffect,
+} from "@/lib/characterStatus";
 import {db} from "@/lib/firebase";
 import {
   calculateMaxMana,
@@ -162,6 +183,54 @@ const SHEET_TABS = {
   EQUIPAMENTOS: 5,
   MAGIAS: 6,
   NOTAS: 7,
+  CONFIG: 8,
+};
+
+const DEFAULT_COLORS = {
+  portrait: "#b88941",
+  mainInfo: "#4f46e5",
+  attributes: "#2563eb",
+  combat: "#b91c1c",
+  skills: "#0f766e",
+  resources: "#6d28d9",
+  spells: "#6d28d9",
+  weapons: "#7c2d12",
+  armor: "#166534",
+  edges: "#166534",
+  hindrances: "#b45309",
+  items: "#475569",
+  loot: "#0f766e",
+  notes: "#0f172a",
+  widgetBackground: "rgba(255,255,255,0.82)",
+  widgetTitle: "#64748b",
+  widgetText: "#0f172a",
+  footerBackground: "#ffffff",
+  footerText: "#ffffff",
+  footerIcon: "#666666",
+};
+
+const DEFAULT_FONT_COLORS = {
+  fontName: "#0f172a",
+  fontAux: "#94a3b8",
+  fontTitle: "#0f172a",
+  fontText: "#334155",
+};
+
+const CONFIG_LABELS = {
+  portrait: "Retrato",
+  mainInfo: "Cabeçalho & Status",
+  attributes: "Atributos",
+  combat: "Combate",
+  skills: "Perícias",
+  resources: "Recursos do Despertar",
+  spells: "Magias",
+  weapons: "Armas",
+  armor: "Armaduras",
+  edges: "Vantagens",
+  hindrances: "Complicações",
+  items: "Itens",
+  loot: "Espólios",
+  notes: "Notas",
 };
 
 const EDGE_DESCRIPTION_MAP = Object.fromEntries(
@@ -181,10 +250,14 @@ const OverviewPanel = ({
   onIconClick,
   iconTooltip,
   sx = {},
+  titleColor,
+  subtitleColor,
+  iconStyle = {},
+  compact = false,
 }) => (
   <Box
     sx={{
-      p: {xs: 1.25, md: 1.5},
+      p: compact ? 0.75 : {xs: 1.25, md: 1.5},
       borderRadius: "8px",
       border: `1px solid ${alpha(accent, 0.18)}`,
       background: `linear-gradient(180deg, ${alpha(accent, 0.12)} 0%, rgba(255,255,255,0.9) 100%)`,
@@ -195,7 +268,14 @@ const OverviewPanel = ({
     }}
   >
     {(title || icon) && (
-      <Box sx={{display: "flex", alignItems: "center", gap: 1, mb: 1.1}}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: compact ? 0.5 : 1,
+          mb: compact ? 0.5 : 1.1,
+        }}
+      >
         {onIconClick ? (
           <Tooltip title={iconTooltip || "Abrir aba correspondente"} arrow>
             <IconButton
@@ -203,12 +283,17 @@ const OverviewPanel = ({
               onClick={onIconClick}
               aria-label={`Abrir ${title}`}
               sx={{
-                width: 34,
-                height: 34,
+                width: (compact ? 24 : 34) * (iconStyle.scale || 1),
+                height: (compact ? 24 : 34) * (iconStyle.scale || 1),
                 borderRadius: "7px",
-                color: accent,
+                color: iconStyle.color || accent,
                 bgcolor: alpha(accent, 0.14),
-                boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+                border: iconStyle.borderColor
+                  ? `1px solid ${iconStyle.borderColor}`
+                  : "none",
+                boxShadow: iconStyle.shadowColor
+                  ? `0 2px 8px ${alpha(iconStyle.shadowColor, 0.5)}`
+                  : `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
                 flexShrink: 0,
                 "&:hover": {
                   bgcolor: alpha(accent, 0.22),
@@ -221,14 +306,22 @@ const OverviewPanel = ({
         ) : (
           <Box
             sx={{
-              width: 34,
-              height: 34,
+              width: (compact ? 24 : 34) * (iconStyle.scale || 1),
+              height: (compact ? 24 : 34) * (iconStyle.scale || 1),
               borderRadius: "7px",
               display: "grid",
               placeItems: "center",
-              color: accent,
+              color: iconStyle.color || accent,
               bgcolor: alpha(accent, 0.14),
-              boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+              border: iconStyle.borderColor
+                ? `1px solid ${iconStyle.borderColor}`
+                : "none",
+              boxShadow: iconStyle.shadowColor
+                ? `0 2px 8px ${alpha(iconStyle.shadowColor, 0.5)}`
+                : `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+              "& svg": {
+                fontSize: `${1.5 * (iconStyle.scale || 1)}rem`,
+              },
             }}
           >
             {icon}
@@ -237,14 +330,24 @@ const OverviewPanel = ({
         <Box sx={{minWidth: 0}}>
           <Typography
             variant="subtitle1"
-            sx={{fontWeight: 800, color: "#0f172a", lineHeight: 1.1}}
+            sx={{
+              fontWeight: compact ? 700 : 800,
+              color: titleColor || "#0f172a",
+              lineHeight: 1.1,
+              fontSize: compact ? "0.85rem" : "1rem",
+            }}
           >
             {title}
           </Typography>
           {subtitle && (
             <Typography
               variant="caption"
-              sx={{color: "#64748b", display: "block", mt: 0.25}}
+              sx={{
+                color: subtitleColor || "#64748b",
+                display: "block",
+                mt: 0.25,
+                fontSize: compact ? "0.65rem" : "0.75rem",
+              }}
             >
               {subtitle}
             </Typography>
@@ -256,7 +359,7 @@ const OverviewPanel = ({
   </Box>
 );
 
-const SectionRow = ({label, value, helper}) => (
+const SectionRow = ({label, value, helper, labelColor, valueColor}) => (
   <Box
     sx={{
       py: 0.95,
@@ -276,7 +379,7 @@ const SectionRow = ({label, value, helper}) => (
         variant="caption"
         sx={{
           display: "block",
-          color: "#64748b",
+          color: labelColor || "#64748b",
           fontWeight: 700,
           letterSpacing: 0.35,
           textTransform: "uppercase",
@@ -296,7 +399,7 @@ const SectionRow = ({label, value, helper}) => (
     <Typography
       variant="body2"
       sx={{
-        color: "#0f172a",
+        color: valueColor || "#0f172a",
         fontWeight: 700,
         textAlign: "right",
       }}
@@ -332,14 +435,21 @@ const MetricCard = ({
   onIconClick,
   iconTooltip,
   sx = {},
+  titleColor,
+  valueColor,
+  iconStyle = {},
+  compact = false,
+  customBackground,
+  customTitleColor,
+  customTextColor,
 }) => (
   <Box
     sx={{
-      minHeight: 98,
-      p: 1.25,
+      minHeight: compact ? 60 : 90,
+      p: compact ? 0.5 : 1,
       borderRadius: "8px",
       border: `1px solid ${alpha(accent, 0.18)}`,
-      background: "rgba(255,255,255,0.82)",
+      background: customBackground || "rgba(255,255,255,0.82)",
       boxShadow: `0 10px 20px ${alpha("#0f172a", 0.06)}`,
       backdropFilter: "blur(10px)",
       ...sx,
@@ -350,17 +460,18 @@ const MetricCard = ({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
-        gap: 1.5,
+        gap: compact ? 0.5 : 1.5,
       }}
     >
       <Box sx={{minWidth: 0}}>
         <Typography
           variant="caption"
           sx={{
-            color: "#64748b",
+            color: customTitleColor || titleColor || "#64748b",
             textTransform: "uppercase",
-            letterSpacing: 0.65,
+            letterSpacing: compact ? 0 : 0.65,
             fontWeight: 700,
+            fontSize: compact ? "0.65rem" : "0.75rem",
           }}
         >
           {title}
@@ -369,14 +480,15 @@ const MetricCard = ({
           variant="h5"
           sx={{
             fontWeight: 900,
-            color: "#0f172a",
-            mt: 0.35,
-            fontSize: {xs: "1.24rem", md: "1.35rem"},
+            color: customTextColor || valueColor || "#0f172a",
+            mt: compact ? 0 : 0.35,
+            fontSize: compact ? "1rem" : {xs: "1.24rem", md: "1.35rem"},
+            lineHeight: 1.2,
           }}
         >
           {value}
         </Typography>
-        {helper && (
+        {helper && !compact && (
           <Typography
             variant="caption"
             sx={{color: "#475569", display: "block", mt: 0.5}}
@@ -392,15 +504,20 @@ const MetricCard = ({
             onClick={onIconClick}
             aria-label={`Abrir ${title}`}
             sx={{
-              width: 36,
-              height: 36,
+              width: (compact ? 28 : 36) * (iconStyle.scale || 1),
+              height: (compact ? 28 : 36) * (iconStyle.scale || 1),
               borderRadius: "7px",
               display: "grid",
               placeItems: "center",
               flexShrink: 0,
-              color: accent,
+              color: iconStyle.color || accent,
               bgcolor: alpha(accent, 0.14),
-              boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+              border: iconStyle.borderColor
+                ? `1px solid ${iconStyle.borderColor}`
+                : "none",
+              boxShadow: iconStyle.shadowColor
+                ? `0 2px 8px ${alpha(iconStyle.shadowColor, 0.5)}`
+                : `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
               "&:hover": {
                 bgcolor: alpha(accent, 0.22),
               },
@@ -412,15 +529,23 @@ const MetricCard = ({
       ) : (
         <Box
           sx={{
-            width: 36,
-            height: 36,
+            width: (compact ? 28 : 36) * (iconStyle.scale || 1),
+            height: (compact ? 28 : 36) * (iconStyle.scale || 1),
             borderRadius: "7px",
             display: "grid",
             placeItems: "center",
             flexShrink: 0,
-            color: accent,
+            color: iconStyle.color || accent,
             bgcolor: alpha(accent, 0.14),
-            boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+            border: iconStyle.borderColor
+              ? `1px solid ${iconStyle.borderColor}`
+              : "none",
+            boxShadow: iconStyle.shadowColor
+              ? `0 2px 8px ${alpha(iconStyle.shadowColor, 0.5)}`
+              : `inset 0 0 0 1px ${alpha(accent, 0.2)}`,
+            "& svg": {
+              fontSize: `${(compact ? 1.2 : 1.5) * (iconStyle.scale || 1)}rem`,
+            },
           }}
         >
           {icon}
@@ -433,8 +558,8 @@ const MetricCard = ({
         variant="determinate"
         value={Math.max(0, Math.min(progress, 100))}
         sx={{
-          mt: 1.15,
-          height: 6,
+          mt: compact ? 0.5 : 1.15,
+          height: compact ? 4 : 6,
           borderRadius: "7px",
           bgcolor: alpha(accent, 0.12),
           "& .MuiLinearProgress-bar": {
@@ -491,6 +616,36 @@ function SheetView({
   const removeItemFromList =
     propActions?.removeItemFromList || storeRemoveItemFromList;
 
+  const getColor = (key) =>
+    (character.sheetColors && character.sheetColors[key]) ||
+    DEFAULT_COLORS[key] ||
+    DEFAULT_FONT_COLORS[key];
+
+  // Icon Styles
+  const getIconStyle = () => ({
+    color: character.sheetColors?.iconColor,
+    shadowColor: character.sheetColors?.iconShadow,
+    borderColor: character.sheetColors?.iconBorder,
+    scale: parseFloat(character.sheetColors?.iconSize || 1),
+  });
+
+  // Preferences Helpers
+  const getPreferences = () => character.sheetPreferences || {};
+
+  const isCardVisible = (key) => {
+    const prefs = getPreferences();
+    return !prefs.hiddenCards?.includes(key);
+  };
+
+  const toggleCardVisibility = (key) => {
+    const prefs = getPreferences();
+    const currentHidden = prefs.hiddenCards || [];
+    const newHidden = currentHidden.includes(key)
+      ? currentHidden.filter((k) => k !== key)
+      : [...currentHidden, key];
+    updateAttribute("sheetPreferences", {...prefs, hiddenCards: newHidden});
+  };
+
   const {user} = useAuth();
 
   const gameSession = useMemo(
@@ -507,6 +662,35 @@ function SheetView({
   );
   const hasLockedFieldsNotice =
     isGameSessionLocked && gameSession.lockedFields.length > 0;
+
+  // Compact Mode
+  const isCompactMode = !!character.sheetPreferences?.compactMode;
+  const panelSx = isCompactMode ? {p: 0.5} : {};
+
+  // Background Logic for Tab 0
+  const customBackground = character.sheetColors?.background;
+  const defaultBackground = `
+    radial-gradient(circle at top left, rgba(191, 145, 61, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8f3e6 0%, #f3ecdc 55%, #efe6d4 100%)
+  `;
+
+  // Reorganization Logic
+  const visibleLeft = ["skills", "resources", "spells", "notes"].some(
+    isCardVisible,
+  );
+  const visibleRight = [
+    "weapons",
+    "armor",
+    "edges",
+    "hindrances",
+    "items",
+    "loot",
+  ].some(isCardVisible);
+
+  // Default to balanced if both are visible or both hidden (fallback)
+  const leftColWidth = !visibleRight ? 12 : 6;
+  const rightColWidth = !visibleLeft ? 12 : 6;
 
   const isFieldLocked = React.useCallback(
     (fieldKey) => isGameSessionLocked && lockedFieldSet.has(fieldKey),
@@ -713,6 +897,9 @@ Negative Prompt: ${promptData.negativePrompt}.
           } else if (effect === "Congelado") {
             Icon = FrozenIcon;
             color = "#29b6f6"; // Azul Claro
+          } else if (effect === "Queimado") {
+            Icon = BurnIcon;
+            color = "#d32f2f"; // Vermelho
           }
 
           return (
@@ -761,6 +948,104 @@ Negative Prompt: ${promptData.negativePrompt}.
       updateAttributeIfAllowed("mana_atual", newValue);
       showNotification(`Recurso usado! -${cost} Mana`, "info");
     }
+  };
+
+  // Lógica de Uso de Itens (Consumíveis)
+  const handleUseItem = (listName, index, item) => {
+    if (isFieldLocked(listName)) return;
+
+    const name = (item.name || "").toLowerCase();
+    let consumed = false;
+    let message = "";
+
+    if (name.includes("poção de cura") || name.includes("healing potion")) {
+      // Cura 1 Ferimento e remove Abalado
+      const currentWounds = character.ferimentos || 0;
+      if (currentWounds > 0 || character.abalado) {
+        updateAttributeIfAllowed("ferimentos", Math.max(0, currentWounds - 1));
+        updateAttributeIfAllowed("abalado", false);
+        message = "Poção de Cura usada! Recuperou 1 ferimento.";
+        consumed = true;
+      } else {
+        showNotification("Saúde plena. Item não gasto.", "info");
+        return;
+      }
+    } else if (name.includes("poção de mana") || name.includes("mana potion")) {
+      // Recupera 10 Mana (valor padrão aproximado)
+      if (currentMana < maxMana) {
+        const recovery = 10;
+        updateAttributeIfAllowed(
+          "mana_atual",
+          Math.min(maxMana, currentMana + recovery),
+        );
+        message = `Poção de Mana usada! +${recovery} PM.`;
+        consumed = true;
+      } else {
+        showNotification("Mana cheia. Item não gasto.", "info");
+        return;
+      }
+    } else if (name.includes("antídoto") || name.includes("antidote")) {
+      // Remove Envenenado e 1 Fadiga
+      const cleanStatus = (character.status_efeitos || []).filter(
+        (s) => s !== "Envenenado",
+      );
+      const wasPoisoned =
+        (character.status_efeitos || []).includes("Envenenado") ||
+        character.envenenado;
+
+      if (wasPoisoned) {
+        updateAttributeIfAllowed("status_efeitos", cleanStatus);
+        updateAttributeIfAllowed("envenenado", false); // legado
+        updateAttributeIfAllowed(
+          "fadiga",
+          Math.max(0, (character.fadiga || 0) - 1),
+        );
+        message = "Antídoto usado! Veneno curado.";
+        consumed = true;
+      } else {
+        showNotification("Não está envenenado.", "info");
+        return;
+      }
+    } else {
+      // Item genérico - Apenas consome com aviso
+      message = `Item "${item.name}" consumido.`;
+      consumed = true;
+    }
+
+    if (consumed) {
+      const currentQty = parseInt(item.quantity || 1, 10);
+      if (currentQty > 1) {
+        updateListItemIfAllowed(listName, listName, index, {
+          ...item,
+          quantity: (currentQty - 1).toString(),
+        });
+      } else {
+        removeItemFromListIfAllowed(listName, listName, index);
+      }
+      showNotification(message, "success");
+    }
+  };
+
+  // Lógica para consumo via Visualizar (Double Click)
+  const [useItemAnchor, setUseItemAnchor] = useState(null);
+  const [chipItemToUse, setChipItemToUse] = useState(null);
+
+  const handleChipDoubleClick = (event, listName, index, item) => {
+    if (isFieldLocked(listName)) return;
+    setUseItemAnchor(event.currentTarget);
+    setChipItemToUse({listName, index, item});
+  };
+
+  const handleConfirmChipUse = () => {
+    if (chipItemToUse) {
+      handleUseItem(
+        chipItemToUse.listName,
+        chipItemToUse.index,
+        chipItemToUse.item,
+      );
+    }
+    setUseItemAnchor(null);
+    setChipItemToUse(null);
   };
 
   // Redirecionar para Visualizar após salvar
@@ -991,6 +1276,9 @@ Negative Prompt: ${promptData.negativePrompt}.
             label={<TabLabel icon={<SpellbookIcon />} label="Magias" />}
           />
           <TabStyled label={<TabLabel icon={<NotesIcon />} label="Notas" />} />
+          <TabStyled
+            label={<TabLabel icon={<SettingsIcon />} label="Config" />}
+          />
         </Tabs>
       </TabsPaper>
 
@@ -1008,11 +1296,10 @@ Negative Prompt: ${promptData.negativePrompt}.
             pb: {xs: 12, md: 14},
             borderRadius: "8px",
             border: "1px solid rgba(148, 163, 184, 0.18)",
-            background: `
-              radial-gradient(circle at top left, rgba(191, 145, 61, 0.14), transparent 24%),
-              radial-gradient(circle at top right, rgba(79, 70, 229, 0.12), transparent 28%),
-              linear-gradient(180deg, #f8f3e6 0%, #f3ecdc 55%, #efe6d4 100%)
-            `,
+            background: customBackground || defaultBackground,
+            minHeight: "80vh", // Garante altura mínima para o bg aparecer bem
+            display: "flex",
+            flexDirection: "column",
             boxShadow: "0 24px 50px rgba(15, 23, 42, 0.08)",
             "& .MuiChip-root": {
               borderRadius: "8px",
@@ -1023,102 +1310,94 @@ Negative Prompt: ${promptData.negativePrompt}.
           }}
         >
           <Grid container spacing={1.5}>
-            <Grid item xs={12} md={3} sx={{display: "flex"}}>
-              <OverviewPanel
-                title="Retrato"
-                icon={<CharacterIcon />}
-                accent="#b88941"
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  background:
-                    "linear-gradient(180deg, rgba(191,145,61,0.16) 0%, rgba(255,255,255,0.88) 100%)",
-                }}
-              >
-                <Box
+            {isCardVisible("portrait") && (
+              <Grid item xs={12} md={3} sx={{display: "flex"}}>
+                <OverviewPanel
+                  title="Retrato"
+                  icon={<CharacterIcon />}
+                  accent={getColor("portrait")}
+                  titleColor={getColor("fontTitle")}
+                  subtitleColor={getColor("fontText")}
+                  iconStyle={getIconStyle()}
                   sx={{
-                    position: "relative",
-                    minHeight: {xs: 200, md: 248},
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    border: "1px solid rgba(148, 163, 184, 0.22)",
-                    bgcolor: "#111827",
-                    boxShadow: "0 18px 30px rgba(15, 23, 42, 0.16)",
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: `linear-gradient(180deg, ${alpha(getColor("portrait"), 0.16)} 0%, rgba(255,255,255,0.88) 100%)`,
+                    ...panelSx,
                   }}
                 >
-                  {character.imagem_url ? (
-                    <Box
-                      component="img"
-                      src={character.imagem_url}
-                      referrerPolicy="no-referrer"
-                      alt={character.nome || "Personagem"}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "grid",
-                        placeItems: "center",
-                        background:
-                          "radial-gradient(circle at top, rgba(191,145,61,0.28), transparent 38%), linear-gradient(180deg, #111827 0%, #1f2937 100%)",
-                        color: alpha("#f8fafc", 0.7),
-                      }}
-                    >
-                      <Box sx={{textAlign: "center"}}>
-                        <CharacterIcon sx={{fontSize: 56, mb: 1}} />
-                        <Typography
-                          variant="body2"
-                          sx={{fontWeight: 700, letterSpacing: 0.4}}
-                        >
-                          Sem retrato
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
-
                   <Box
                     sx={{
-                      position: "absolute",
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
+                      position: "relative",
+                      minHeight: {xs: 200, md: 248},
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      border: "1px solid rgba(148, 163, 184, 0.22)",
+                      bgcolor: "#111827",
+                      boxShadow: "0 18px 30px rgba(15, 23, 42, 0.16)",
                     }}
                   >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 900,
-                        lineHeight: 1.05,
-                        textShadow: "0 4px 16px rgba(0,0,0,0.35)",
-                      }}
-                    >
-                      {character.nome || "Sem Nome"}
-                    </Typography>
+                    {character.imagem_url ? (
+                      <Box
+                        component="img"
+                        src={character.imagem_url}
+                        referrerPolicy="no-referrer"
+                        alt={character.nome || "Personagem"}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "grid",
+                          placeItems: "center",
+                          background:
+                            "radial-gradient(circle at top, rgba(191,145,61,0.28), transparent 38%), linear-gradient(180deg, #111827 0%, #1f2937 100%)",
+                          color: alpha("#f8fafc", 0.7),
+                        }}
+                      >
+                        <Box sx={{textAlign: "center"}}>
+                          <CharacterIcon sx={{fontSize: 56, mb: 1}} />
+                          <Typography
+                            variant="body2"
+                            sx={{fontWeight: 700, letterSpacing: 0.4}}
+                          >
+                            Sem retrato
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
-                </Box>
-              </OverviewPanel>
-            </Grid>
+                </OverviewPanel>
+              </Grid>
+            )}
 
-            <Grid item xs={12} md={9} sx={{display: "flex"}}>
+            <Grid
+              item
+              xs={12}
+              md={isCardVisible("portrait") ? 9 : 12}
+              sx={{display: "flex"}}
+            >
               <OverviewPanel
                 title={null} // Título removido conforme solicitado
                 icon={null}
-                accent="#4f46e5"
+                accent={getColor("mainInfo")}
+                titleColor={getColor("fontTitle")}
+                subtitleColor={getColor("fontText")}
                 sx={{
                   width: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  background:
-                    "linear-gradient(180deg, rgba(79,70,229,0.14) 0%, rgba(255,255,255,0.92) 100%)",
-                  gap: 2,
+                  background: `linear-gradient(180deg, ${alpha(getColor("mainInfo"), 0.14)} 0%, rgba(255,255,255,0.92) 100%)`,
+                  gap: 1.5,
+                  p: 1.5,
+                  ...panelSx,
                 }}
               >
                 {/* Linha Superior: Nome/Identidade + XP/Riqueza/Bênçãos */}
@@ -1130,7 +1409,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         variant="h4"
                         sx={{
                           fontWeight: 900,
-                          color: "#0f172a",
+                          color: getColor("fontName"),
                           letterSpacing: -0.5,
                           fontSize: {xs: "1.7rem", md: "2rem"},
                         }}
@@ -1139,7 +1418,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                       </Typography>
                       <Typography
                         variant="body1"
-                        sx={{mt: 0.55, color: "#334155", fontWeight: 700}}
+                        sx={{
+                          mt: 0.55,
+                          color: getColor("fontAux"),
+                          fontWeight: 700,
+                        }}
                       >
                         {hunterIdentityLine.length > 0
                           ? hunterIdentityLine.join(" • ")
@@ -1182,11 +1465,16 @@ Negative Prompt: ${promptData.negativePrompt}.
                           value: blessingCount,
                           accent: "#b45309",
                         },
+                        {
+                          label: "Corrupção",
+                          value: character.corrupcao || 0,
+                          accent: "#7b1fa2",
+                        },
                       ].map((item) => (
-                        <Grid item xs={4} key={item.label}>
+                        <Grid item xs={3} key={item.label}>
                           <Box
                             sx={{
-                              p: 1.05,
+                              p: 0.75,
                               height: "100%",
                               borderRadius: "8px",
                               bgcolor: "rgba(255,255,255,0.72)",
@@ -1198,7 +1486,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                             <Typography
                               variant="caption"
                               sx={{
-                                color: "#64748b",
+                                color: getColor("fontAux"),
                                 textTransform: "uppercase",
                                 letterSpacing: 0.45,
                                 fontWeight: 700,
@@ -1225,17 +1513,21 @@ Negative Prompt: ${promptData.negativePrompt}.
                   </Grid>
                 </Grid>
 
-                <Divider sx={{my: 1}} />
+                <Divider sx={{my: 0.5}} />
 
                 {/* Linha Inferior: Atributos e Combate integrados */}
-                <Grid container spacing={2}>
+                <Grid container spacing={1.5}>
                   <Grid item xs={12} md={6}>
                     <OverviewPanel
                       title="Atributos"
                       subtitle="Base de dados, dano e resistência"
                       icon={<CharacterIcon />}
-                      accent="#2563eb"
+                      accent={getColor("attributes")}
+                      titleColor={getColor("fontTitle")}
+                      subtitleColor={getColor("fontText")}
+                      iconStyle={getIconStyle()}
                       sx={{height: "100%"}}
+                      compact={isCompactMode}
                     >
                       <Box
                         sx={{
@@ -1254,7 +1546,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                           <Box
                             key={attribute.label}
                             sx={{
-                              p: 1.15,
+                              p: 1,
                               borderRadius: "8px",
                               textAlign: "center",
                               bgcolor: "rgba(255,255,255,0.78)",
@@ -1265,7 +1557,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               variant="caption"
                               sx={{
                                 display: "block",
-                                color: "#64748b",
+                                color: getColor("fontText"),
                                 fontWeight: 800,
                                 letterSpacing: 0.45,
                               }}
@@ -1293,8 +1585,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                       title="Combate"
                       subtitle="Defesas e pressão de cena"
                       icon={<DefenseIcon />}
-                      accent="#b91c1c"
+                      accent={getColor("combat")}
+                      titleColor={getColor("fontTitle")}
+                      subtitleColor={getColor("fontText")}
+                      iconStyle={getIconStyle()}
                       sx={{height: "100%"}}
+                      compact={isCompactMode}
                     >
                       <Box
                         sx={{
@@ -1328,7 +1624,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                           <Box
                             key={stat.label}
                             sx={{
-                              p: 1.15,
+                              p: 1,
                               borderRadius: "8px",
                               textAlign: "center",
                               bgcolor: "rgba(255,255,255,0.78)",
@@ -1338,7 +1634,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                             <Typography
                               variant="caption"
                               sx={{
-                                color: "#64748b",
+                                color: getColor("fontAux"),
                                 textTransform: "uppercase",
                                 letterSpacing: 0.45,
                                 fontWeight: 700,
@@ -1363,7 +1659,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   </Grid>
                 </Grid>
 
-                <Divider sx={{my: 1}} />
+                <Divider sx={{my: 0.5}} />
 
                 {/* Linha Inferior 2: Widgets de Status */}
                 <Box
@@ -1386,6 +1682,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                     }
                     icon={<ShockIcon />}
                     accent={character.abalado ? "#d97706" : "#475569"}
+                    titleColor={getColor("fontText")}
+                    valueColor={getColor("fontTitle")}
+                    iconStyle={getIconStyle()}
+                    compact={isCompactMode}
+                    customBackground={getColor("widgetBackground")}
+                    customTitleColor={getColor("widgetTitle")}
+                    customTextColor={getColor("widgetText")}
                   />
                   <MetricCard
                     title="Ferimentos"
@@ -1398,6 +1701,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                     icon={<WoundIcon />}
                     accent="#b91c1c"
                     progress={woundProgress}
+                    titleColor={getColor("fontText")}
+                    valueColor={getColor("fontTitle")}
+                    iconStyle={getIconStyle()}
+                    compact={isCompactMode}
+                    customBackground={getColor("widgetBackground")}
+                    customTitleColor={getColor("widgetTitle")}
+                    customTextColor={getColor("widgetText")}
                   />
                   <MetricCard
                     title="Fadiga"
@@ -1406,6 +1716,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                     icon={<FatigueIcon />}
                     accent="#c2410c"
                     progress={fatigueProgress}
+                    titleColor={getColor("fontText")}
+                    valueColor={getColor("fontTitle")}
+                    iconStyle={getIconStyle()}
+                    compact={isCompactMode}
+                    customBackground={getColor("widgetBackground")}
+                    customTitleColor={getColor("widgetTitle")}
+                    customTextColor={getColor("widgetText")}
                   />
                   <MetricCard
                     title="Mana"
@@ -1418,6 +1735,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                     }
                     accent="#2563eb"
                     progress={manaProgress}
+                    titleColor={getColor("fontText")}
+                    valueColor={getColor("fontTitle")}
+                    iconStyle={getIconStyle()}
+                    compact={isCompactMode}
+                    customBackground={getColor("widgetBackground")}
+                    customTitleColor={getColor("widgetTitle")}
+                    customTextColor={getColor("widgetText")}
                   />
                   <MetricCard
                     title="Status"
@@ -1425,6 +1749,13 @@ Negative Prompt: ${promptData.negativePrompt}.
                     helper="Efeitos situacionais"
                     icon={<StatusIcon />}
                     accent="#a16207"
+                    titleColor={getColor("fontText")}
+                    valueColor={getColor("fontTitle")}
+                    iconStyle={getIconStyle()}
+                    compact={isCompactMode}
+                    customBackground={getColor("widgetBackground")}
+                    customTitleColor={getColor("widgetTitle")}
+                    customTextColor={getColor("widgetAux")}
                   />
                 </Box>
               </OverviewPanel>
@@ -1434,516 +1765,682 @@ Negative Prompt: ${promptData.negativePrompt}.
           <Box sx={{mt: 1.5}}>
             <Grid container spacing={1.25} alignItems="flex-start">
               {/* COLUNA ESQUERDA: Perícias, Recursos, Magias, Notas */}
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1.25}>
-                  <OverviewPanel
-                    title="Perícias"
-                    subtitle="Principais capacidades em jogo"
-                    icon={<SkillIcon />}
-                    accent="#0f766e"
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.85,
-                      }}
-                    >
-                      {(character.pericias || []).length > 0 ? (
-                        character.pericias.map((skill, index) => (
-                          <Box
-                            key={`${skill.name}-${index}`}
-                            sx={{
-                              p: 1,
-                              px: 1.5,
-                              borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.76)",
-                              border: "1px solid rgba(15, 118, 110, 0.12)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.5,
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                sx={{fontWeight: 700, color: "#0f172a"}}
+              {visibleLeft && (
+                <Grid item xs={12} md={leftColWidth}>
+                  <Stack spacing={1.25}>
+                    {isCardVisible("skills") && (
+                      <OverviewPanel
+                        title="Perícias"
+                        subtitle="Principais capacidades em jogo"
+                        icon={<SkillIcon />}
+                        accent={getColor("skills")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.85,
+                          }}
+                        >
+                          {(character.pericias || []).length > 0 ? (
+                            character.pericias.map((skill, index) => (
+                              <Box
+                                key={`${skill.name}-${index}`}
+                                sx={{
+                                  p: 1,
+                                  px: 1.5,
+                                  borderRadius: "8px",
+                                  bgcolor: "rgba(255,255,255,0.76)",
+                                  border: "1px solid rgba(15, 118, 110, 0.12)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                }}
                               >
-                                {skill.name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{color: "#64748b", fontWeight: 700}}
-                              >
-                                (
-                                {(getSkillAttribute(skill.name) || "")
-                                  .substring(0, 3)
-                                  .toUpperCase() || "—"}
-                                )
-                              </Typography>
-                            </Box>
-                            <Typography
-                              variant="body2"
-                              sx={{fontWeight: 800, color: "#0f766e"}}
-                            >
-                              {skill.die || "d4"}
-                            </Typography>
-                          </Box>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma perícia cadastrada.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Recursos do Despertar"
-                    subtitle="Poderes especiais em uso"
-                    icon={<BlessingIcon />}
-                    accent="#6d28d9"
-                  >
-                    <Box sx={{display: "grid", gap: 0.85}}>
-                      {(character.recursos_despertar || []).length > 0 ? (
-                        character.recursos_despertar.map((resource, index) => (
-                          <Box
-                            key={`${resource.name}-${index}`}
-                            sx={{
-                              p: 1.05,
-                              borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.76)",
-                              border: "1px solid rgba(124, 58, 237, 0.12)",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "flex-start",
-                                gap: 1,
-                              }}
-                            >
-                              <Box sx={{minWidth: 0}}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{fontWeight: 800, color: "#4c1d95"}}
-                                >
-                                  {resource.name || "Recurso sem nome"}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
+                                <Box
                                   sx={{
-                                    color: "#6d28d9",
-                                    fontWeight: 700,
-                                    display: "block",
-                                    mt: 0.25,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  Nv {resource.nivel || "—"} • Custo{" "}
-                                  {resource.custo || resource.pp || "—"}
-                                </Typography>
-                                {resource.descricao && (
                                   <Typography
                                     variant="body2"
-                                    sx={{mt: 0.5, color: "#475569"}}
+                                    sx={{
+                                      fontWeight: 700,
+                                      color: getColor("fontTitle"),
+                                    }}
                                   >
-                                    {resource.descricao}
+                                    {skill.name}
                                   </Typography>
-                                )}
-                                {resource.limitacao && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{color: "#64748b", fontWeight: 700}}
+                                  >
+                                    (
+                                    {(getSkillAttribute(skill.name) || "")
+                                      .substring(0, 3)
+                                      .toUpperCase() || "—"}
+                                    )
+                                  </Typography>
+                                </Box>
+                                <Typography
+                                  variant="body2"
+                                  sx={{fontWeight: 800, color: "#0f766e"}}
+                                >
+                                  {skill.die || "d4"}
+                                </Typography>
+                              </Box>
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma perícia cadastrada.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("resources") && (
+                      <OverviewPanel
+                        title="Recursos do Despertar"
+                        subtitle="Poderes especiais em uso"
+                        icon={<BlessingIcon />}
+                        accent={getColor("resources")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "grid", gap: 0.85}}>
+                          {(character.recursos_despertar || []).length > 0 ? (
+                            character.recursos_despertar.map(
+                              (resource, index) => (
+                                <Box
+                                  key={`${resource.name}-${index}`}
+                                  sx={{
+                                    p: 1.05,
+                                    borderRadius: "8px",
+                                    bgcolor: "rgba(255,255,255,0.76)",
+                                    border:
+                                      "1px solid rgba(124, 58, 237, 0.12)",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "flex-start",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Box sx={{minWidth: 0}}>
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          fontWeight: isCompactMode ? 700 : 800,
+                                          color: getColor("fontText"),
+                                        }}
+                                      >
+                                        {resource.name || "Recurso sem nome"}
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: getColor("fontAux"),
+                                          fontWeight: 700,
+                                          display: "block",
+                                          mt: 0.25,
+                                        }}
+                                      >
+                                        Nv {resource.nivel || "—"} • Custo{" "}
+                                        {resource.custo || resource.pp || "—"}
+                                      </Typography>
+                                      {resource.descricao && (
+                                        <Typography
+                                          variant="body2"
+                                          sx={{mt: 0.5, color: "#475569"}}
+                                        >
+                                          {resource.descricao}
+                                        </Typography>
+                                      )}
+                                      {resource.limitacao && (
+                                        <Typography
+                                          variant="caption"
+                                          sx={{
+                                            display: "block",
+                                            mt: 0.65,
+                                            color: "#92400e",
+                                          }}
+                                        >
+                                          Limitação: {resource.limitacao}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      color={
+                                        currentMana >=
+                                        (parseInt(
+                                          resource.custo || resource.pp,
+                                          10,
+                                        ) || 0)
+                                          ? "primary"
+                                          : "error"
+                                      }
+                                      disabled={
+                                        isFieldLocked("mana_atual") ||
+                                        currentMana <
+                                          (parseInt(
+                                            resource.custo || resource.pp,
+                                            10,
+                                          ) || 0)
+                                      }
+                                      sx={{
+                                        borderRadius: "8px",
+                                        minWidth: 68,
+                                        fontWeight: 700,
+                                      }}
+                                      onClick={() =>
+                                        handleUseAwakeningResource(resource)
+                                      }
+                                    >
+                                      Usar
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              ),
+                            )
+                          ) : (
+                            <EmptyState>
+                              Nenhum recurso do despertar cadastrado.
+                            </EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("spells") && (
+                      <OverviewPanel
+                        title="Magias"
+                        subtitle="Lista rápida para conjuração em cena"
+                        icon={<SpellbookIcon />}
+                        accent={getColor("spells")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "grid", gap: 0.85}}>
+                          {(character.magias || []).length > 0 ? (
+                            character.magias.map((spell, index) => (
+                              <Box
+                                key={`${spell.name}-${index}`}
+                                sx={{
+                                  p: 1.05,
+                                  borderRadius: "8px",
+                                  bgcolor: "rgba(255,255,255,0.76)",
+                                  border: "1px solid rgba(109, 40, 217, 0.12)",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-start",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Box sx={{minWidth: 0}}>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: isCompactMode ? 700 : 800,
+                                        color: getColor("fontText"),
+                                      }}
+                                    >
+                                      {spell.name}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        display: "block",
+                                        mt: 0.45,
+                                        color: getColor("fontAux"),
+                                      }}
+                                    >
+                                      {spell.pp || 0} PP
+                                      {spell.range ? ` • ${spell.range}` : ""}
+                                      {spell.duration
+                                        ? ` • ${spell.duration}`
+                                        : ""}
+                                    </Typography>
+                                  </Box>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color={
+                                      currentMana >=
+                                      (parseInt(spell.pp, 10) || 0)
+                                        ? "primary"
+                                        : "error"
+                                    }
+                                    disabled={
+                                      isFieldLocked("mana_atual") ||
+                                      currentMana <
+                                        (parseInt(spell.pp, 10) || 0)
+                                    }
+                                    sx={{
+                                      borderRadius: "8px",
+                                      minWidth: 68,
+                                      fontWeight: 700,
+                                    }}
+                                    onClick={() => handleCastSpell(spell)}
+                                  >
+                                    Usar
+                                  </Button>
+                                </Box>
+                              </Box>
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma magia aprendida.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("notes") && (
+                      <OverviewPanel
+                        title="Notas de Campanha"
+                        subtitle="Observações rápidas, pistas e lembretes"
+                        icon={<NotesIcon />}
+                        accent={getColor("notes")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <StyledTextField
+                          fullWidth
+                          multiline
+                          minRows={4}
+                          disabled={isFieldLocked("notas")}
+                          value={character.notas || ""}
+                          onChange={(e) =>
+                            updateAttributeIfAllowed("notas", e.target.value)
+                          }
+                          placeholder="Escreva suas anotações..."
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              bgcolor: "rgba(255,255,255,0.72)",
+                              alignItems: "flex-start",
+                            },
+                            "& textarea": {
+                              fontFamily:
+                                '"IBM Plex Sans", system-ui, sans-serif',
+                            },
+                          }}
+                        />
+                      </OverviewPanel>
+                    )}
+                  </Stack>
+                </Grid>
+              )}
+
+              {/* COLUNA DIREITA: Armas, Armaduras, Vantagens, Complicações, Itens, Espólios */}
+              {visibleRight && (
+                <Grid item xs={12} md={rightColWidth}>
+                  <Stack spacing={1.25}>
+                    {isCardVisible("weapons") && (
+                      <OverviewPanel
+                        title="Armas"
+                        subtitle="Golpes prontos para a cena"
+                        icon={<WeaponIcon />}
+                        accent={getColor("weapons")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "grid", gap: 0.85}}>
+                          {(character.armas || []).length > 0 ? (
+                            character.armas.map((weapon, index) => (
+                              <Box
+                                key={`${weapon.name}-${index}`}
+                                sx={{
+                                  p: 1.05,
+                                  borderRadius: "8px",
+                                  bgcolor: "rgba(255,255,255,0.76)",
+                                  border: "1px solid rgba(124, 45, 18, 0.12)",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    gap: 1,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: 800,
+                                      color: getColor("fontTitle"),
+                                    }}
+                                  >
+                                    {weapon.name}
+                                  </Typography>
+                                  <Box
+                                    sx={{
+                                      typography: "h6",
+                                      fontWeight: 900,
+                                      color: "#7c2d12",
+                                    }}
+                                  >
+                                    {weapon.damage || "—"}
+                                  </Box>
+                                </Box>
+                                {weapon.range && (
                                   <Typography
                                     variant="caption"
                                     sx={{
                                       display: "block",
-                                      mt: 0.65,
-                                      color: "#92400e",
+                                      mt: 0.45,
+                                      color: getColor("fontText"),
                                     }}
                                   >
-                                    Limitação: {resource.limitacao}
+                                    Alcance: {weapon.range}
                                   </Typography>
                                 )}
                               </Box>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                color={
-                                  currentMana >=
-                                  (parseInt(
-                                    resource.custo || resource.pp,
-                                    10,
-                                  ) || 0)
-                                    ? "primary"
-                                    : "error"
-                                }
-                                disabled={
-                                  isFieldLocked("mana_atual") ||
-                                  currentMana <
-                                    (parseInt(
-                                      resource.custo || resource.pp,
-                                      10,
-                                    ) || 0)
-                                }
-                                sx={{
-                                  borderRadius: "8px",
-                                  minWidth: 68,
-                                  fontWeight: 700,
-                                }}
-                                onClick={() =>
-                                  handleUseAwakeningResource(resource)
-                                }
-                              >
-                                Usar
-                              </Button>
-                            </Box>
-                          </Box>
-                        ))
-                      ) : (
-                        <EmptyState>
-                          Nenhum recurso do despertar cadastrado.
-                        </EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma arma equipada.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
 
-                  <OverviewPanel
-                    title="Magias"
-                    subtitle="Lista rápida para conjuração em cena"
-                    icon={<SpellbookIcon />}
-                    accent="#6d28d9"
-                  >
-                    <Box sx={{display: "grid", gap: 0.85}}>
-                      {(character.magias || []).length > 0 ? (
-                        character.magias.map((spell, index) => (
-                          <Box
-                            key={`${spell.name}-${index}`}
-                            sx={{
-                              p: 1.05,
-                              borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.76)",
-                              border: "1px solid rgba(109, 40, 217, 0.12)",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "flex-start",
-                                gap: 1,
-                              }}
-                            >
-                              <Box sx={{minWidth: 0}}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{fontWeight: 800, color: "#0f172a"}}
-                                >
-                                  {spell.name}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
+                    {isCardVisible("armor") && (
+                      <OverviewPanel
+                        title="Armaduras"
+                        subtitle="Proteção equipada"
+                        icon={<DefenseIcon />}
+                        accent={getColor("armor")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "grid", gap: 0.85}}>
+                          {(character.armaduras || []).length > 0 ? (
+                            character.armaduras.map((armor, index) => (
+                              <Box
+                                key={`${armor.name}-${index}`}
+                                sx={{
+                                  p: 1.05,
+                                  borderRadius: "8px",
+                                  bgcolor: "rgba(255,255,255,0.76)",
+                                  border: "1px solid rgba(34, 197, 94, 0.12)",
+                                }}
+                              >
+                                <Box
                                   sx={{
-                                    display: "block",
-                                    mt: 0.45,
-                                    color: "#64748b",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    gap: 1,
+                                    alignItems: "flex-start",
                                   }}
                                 >
-                                  {spell.pp || 0} PP
-                                  {spell.range ? ` • ${spell.range}` : ""}
-                                  {spell.duration ? ` • ${spell.duration}` : ""}
-                                </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: 800,
+                                      color: getColor("fontTitle"),
+                                    }}
+                                  >
+                                    {armor.name}
+                                  </Typography>
+                                  <Box sx={{textAlign: "right"}}>
+                                    {(parseInt(
+                                      armor.defense || armor.def,
+                                      10,
+                                    ) || 0) > 0 && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          fontWeight: 900,
+                                          color: "#166534",
+                                          fontSize: "1rem",
+                                        }}
+                                      >
+                                        Def +{armor.defense || armor.def}
+                                      </Typography>
+                                    )}
+                                    {(parseInt(armor.parry || armor.ap, 10) ||
+                                      0) > 0 && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          fontWeight: 900,
+                                          color: "#15803d",
+                                          fontSize: "1rem",
+                                        }}
+                                      >
+                                        Aparar +{armor.parry || armor.ap}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Box>
                               </Box>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                color={
-                                  currentMana >= (parseInt(spell.pp, 10) || 0)
-                                    ? "primary"
-                                    : "error"
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma armadura equipada.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("edges") && (
+                      <OverviewPanel
+                        title="Vantagens"
+                        subtitle="Benefícios permanentes ativos"
+                        icon={<TraitIcon />}
+                        accent={getColor("edges")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                          {(character.vantagens || []).length > 0 ? (
+                            character.vantagens.map((item, index) => (
+                              <Tooltip
+                                key={`${item.name}-${index}`}
+                                title={
+                                  item.description ||
+                                  EDGE_DESCRIPTION_MAP[item.name] ||
+                                  "Sem descrição disponível."
                                 }
-                                disabled={
-                                  isFieldLocked("mana_atual") ||
-                                  currentMana < (parseInt(spell.pp, 10) || 0)
+                                arrow
+                              >
+                                <Chip
+                                  label={item.name}
+                                  sx={{
+                                    bgcolor: alpha("#22c55e", 0.12),
+                                    color: "#166534",
+                                    fontWeight: 700,
+                                  }}
+                                />
+                              </Tooltip>
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma vantagem.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("hindrances") && (
+                      <OverviewPanel
+                        title="Complicações"
+                        subtitle="Fraquezas e gatilhos da ficha"
+                        icon={<TraitIcon />}
+                        accent={getColor("hindrances")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                          {(character.complicacoes || []).length > 0 ? (
+                            character.complicacoes.map((item, index) => (
+                              <Tooltip
+                                key={`${item.name}-${index}`}
+                                title={
+                                  item.description ||
+                                  HINDRANCE_DESCRIPTION_MAP[item.name] ||
+                                  "Sem descrição disponível."
                                 }
+                                arrow
+                              >
+                                <Chip
+                                  label={item.name}
+                                  sx={{
+                                    bgcolor: alpha("#f59e0b", 0.12),
+                                    color: "#92400e",
+                                    fontWeight: 700,
+                                  }}
+                                />
+                              </Tooltip>
+                            ))
+                          ) : (
+                            <EmptyState>Nenhuma complicação.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+
+                    {isCardVisible("items") && (
+                      <OverviewPanel
+                        title="Itens"
+                        subtitle="Consumíveis e utilidades"
+                        icon={<InventoryIcon />}
+                        accent={getColor("items")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                          {(character.itens || []).length > 0 ? (
+                            character.itens.map((item, index) => (
+                              <Chip
+                                key={`${item.name}-${index}`}
+                                label={item.name}
+                                onDoubleClick={(e) =>
+                                  handleChipDoubleClick(e, "itens", index, item)
+                                }
+                                title="Clique duas vezes para usar/consumir"
                                 sx={{
-                                  borderRadius: "8px",
-                                  minWidth: 68,
+                                  bgcolor: alpha("#64748b", 0.12),
+                                  color: "#334155",
                                   fontWeight: 700,
+                                  cursor: "pointer",
+                                  userSelect: "none",
                                 }}
-                                onClick={() => handleCastSpell(spell)}
-                              >
-                                Usar
-                              </Button>
-                            </Box>
-                          </Box>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma magia aprendida.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-                </Stack>
-              </Grid>
+                              />
+                            ))
+                          ) : (
+                            <EmptyState>Nenhum item cadastrado.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
 
-              {/* COLUNA DIREITA: Armas, Armaduras, Vantagens, Complicações, Itens, Espólios */}
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1.25}>
-                  <OverviewPanel
-                    title="Armas"
-                    subtitle="Golpes prontos para a cena"
-                    icon={<WeaponIcon />}
-                    accent="#7c2d12"
-                  >
-                    <Box sx={{display: "grid", gap: 0.85}}>
-                      {(character.armas || []).length > 0 ? (
-                        character.armas.map((weapon, index) => (
-                          <Box
-                            key={`${weapon.name}-${index}`}
-                            sx={{
-                              p: 1.05,
-                              borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.76)",
-                              border: "1px solid rgba(124, 45, 18, 0.12)",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 1,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                sx={{fontWeight: 800, color: "#0f172a"}}
-                              >
-                                {weapon.name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{fontWeight: 700, color: "#7c2d12"}}
-                              >
-                                {weapon.damage || "—"}
-                              </Typography>
-                            </Box>
-                            {weapon.range && (
-                              <Typography
-                                variant="caption"
+                    {isCardVisible("loot") && (
+                      <OverviewPanel
+                        title="Espólios"
+                        subtitle="Saques e recompensas"
+                        icon={<WalletIcon />}
+                        accent={getColor("loot")}
+                        titleColor={getColor("fontTitle")}
+                        subtitleColor={getColor("fontText")}
+                        iconStyle={getIconStyle()}
+                        compact={isCompactMode}
+                      >
+                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                          {(character.espolios || []).length > 0 ? (
+                            character.espolios.map((item, index) => (
+                              <Chip
+                                key={`${item.name}-${index}`}
+                                label={item.name}
+                                onDoubleClick={(e) =>
+                                  handleChipDoubleClick(
+                                    e,
+                                    "espolios",
+                                    index,
+                                    item,
+                                  )
+                                }
+                                title="Clique duas vezes para usar/consumir"
                                 sx={{
-                                  display: "block",
-                                  mt: 0.45,
-                                  color: "#64748b",
+                                  bgcolor: alpha("#14b8a6", 0.12),
+                                  color: "#0f766e",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  userSelect: "none",
                                 }}
-                              >
-                                Alcance: {weapon.range}
-                              </Typography>
-                            )}
-                          </Box>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma arma equipada.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Armaduras"
-                    subtitle="Proteção equipada"
-                    icon={<DefenseIcon />}
-                    accent="#166534"
-                  >
-                    <Box sx={{display: "grid", gap: 0.85}}>
-                      {(character.armaduras || []).length > 0 ? (
-                        character.armaduras.map((armor, index) => (
-                          <Box
-                            key={`${armor.name}-${index}`}
-                            sx={{
-                              p: 1.05,
-                              borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.76)",
-                              border: "1px solid rgba(34, 197, 94, 0.12)",
-                            }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{fontWeight: 800, color: "#0f172a"}}
-                            >
-                              {armor.name}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                display: "block",
-                                mt: 0.45,
-                                color: "#166534",
-                              }}
-                            >
-                              Defesa +{armor.defense || armor.def || 0} • Aparar
-                              +{armor.parry || armor.ap || 0}
-                            </Typography>
-                          </Box>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma armadura equipada.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Vantagens"
-                    subtitle="Benefícios permanentes ativos"
-                    icon={<TraitIcon />}
-                    accent="#166534"
-                  >
-                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
-                      {(character.vantagens || []).length > 0 ? (
-                        character.vantagens.map((item, index) => (
-                          <Tooltip
-                            key={`${item.name}-${index}`}
-                            title={
-                              item.description ||
-                              EDGE_DESCRIPTION_MAP[item.name] ||
-                              "Sem descrição disponível."
-                            }
-                            arrow
-                          >
-                            <Chip
-                              label={item.name}
-                              sx={{
-                                bgcolor: alpha("#22c55e", 0.12),
-                                color: "#166534",
-                                fontWeight: 700,
-                              }}
-                            />
-                          </Tooltip>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma vantagem.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Complicações"
-                    subtitle="Fraquezas e gatilhos da ficha"
-                    icon={<TraitIcon />}
-                    accent="#b45309"
-                  >
-                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
-                      {(character.complicacoes || []).length > 0 ? (
-                        character.complicacoes.map((item, index) => (
-                          <Tooltip
-                            key={`${item.name}-${index}`}
-                            title={
-                              item.description ||
-                              HINDRANCE_DESCRIPTION_MAP[item.name] ||
-                              "Sem descrição disponível."
-                            }
-                            arrow
-                          >
-                            <Chip
-                              label={item.name}
-                              sx={{
-                                bgcolor: alpha("#f59e0b", 0.12),
-                                color: "#92400e",
-                                fontWeight: 700,
-                              }}
-                            />
-                          </Tooltip>
-                        ))
-                      ) : (
-                        <EmptyState>Nenhuma complicação.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Itens"
-                    subtitle="Consumíveis e utilidades"
-                    icon={<InventoryIcon />}
-                    accent="#475569"
-                  >
-                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
-                      {(character.itens || []).length > 0 ? (
-                        character.itens.map((item, index) => (
-                          <Chip
-                            key={`${item.name}-${index}`}
-                            label={item.name}
-                            sx={{
-                              bgcolor: alpha("#64748b", 0.12),
-                              color: "#334155",
-                              fontWeight: 700,
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <EmptyState>Nenhum item cadastrado.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-
-                  <OverviewPanel
-                    title="Espólios"
-                    subtitle="Saques e recompensas"
-                    icon={<WalletIcon />}
-                    accent="#0f766e"
-                  >
-                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
-                      {(character.espolios || []).length > 0 ? (
-                        character.espolios.map((item, index) => (
-                          <Chip
-                            key={`${item.name}-${index}`}
-                            label={item.name}
-                            sx={{
-                              bgcolor: alpha("#14b8a6", 0.12),
-                              color: "#0f766e",
-                              fontWeight: 700,
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <EmptyState>Nenhum espólio registrado.</EmptyState>
-                      )}
-                    </Box>
-                  </OverviewPanel>
-                </Stack>
-              </Grid>
-
-              <Grid item xs={12}>
-                <OverviewPanel
-                  title="Notas de Campanha"
-                  subtitle="Observações rápidas, pistas e lembretes"
-                  icon={<NotesIcon />}
-                  accent="#0f172a"
-                >
-                  <StyledTextField
-                    fullWidth
-                    multiline
-                    minRows={4}
-                    disabled={isFieldLocked("notas")}
-                    value={character.notas || ""}
-                    onChange={(e) =>
-                      updateAttributeIfAllowed("notas", e.target.value)
-                    }
-                    placeholder="Escreva suas anotações..."
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        bgcolor: "rgba(255,255,255,0.72)",
-                        alignItems: "flex-start",
-                      },
-                      "& textarea": {
-                        fontFamily: '"IBM Plex Sans", system-ui, sans-serif',
-                      },
-                    }}
-                  />
-                </OverviewPanel>
-              </Grid>
+                              />
+                            ))
+                          ) : (
+                            <EmptyState>Nenhum espólio registrado.</EmptyState>
+                          )}
+                        </Box>
+                      </OverviewPanel>
+                    )}
+                  </Stack>
+                </Grid>
+              )}
             </Grid>
           </Box>
+
+          {/* Popover de Confirmação de Uso (Aba Visualizar) */}
+          <Popover
+            open={Boolean(useItemAnchor)}
+            anchorEl={useItemAnchor}
+            onClose={() => setUseItemAnchor(null)}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+          >
+            <Box sx={{p: 2}}>
+              <Typography sx={{mb: 2, fontWeight: 600}}>
+                Usar {chipItemToUse?.item?.name}?
+              </Typography>
+              <Box sx={{display: "flex", gap: 1, justifyContent: "flex-end"}}>
+                <Button size="small" onClick={() => setUseItemAnchor(null)}>
+                  Não
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={handleConfirmChipUse}
+                >
+                  Sim
+                </Button>
+              </Box>
+            </Box>
+          </Popover>
         </Box>
       )}
 
@@ -2625,6 +3122,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 onUpdate={(idx, item) =>
                   updateListItemIfAllowed("itens", "itens", idx, item)
                 }
+                onUse={(idx, item) => handleUseItem("itens", idx, item)}
               />
             </Grid>
 
@@ -2672,6 +3170,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 onUpdate={(idx, item) =>
                   updateListItemIfAllowed("espolios", "espolios", idx, item)
                 }
+                onUse={(idx, item) => handleUseItem("espolios", idx, item)}
               />
             </Grid>
           </Grid>
@@ -2730,6 +3229,789 @@ Negative Prompt: ${promptData.negativePrompt}.
             onChange={(e) => updateAttributeIfAllowed("notas", e.target.value)}
             placeholder="Adicione suas anotações aqui..."
           />
+        </Box>
+      )}
+
+      {/* TAB 8: CONFIG (CORES) */}
+      {tabValue === 8 && (
+        <Box
+          sx={{
+            background: "#fff",
+            borderRadius: 2,
+            p: 2,
+            pb: 16, // Aumentado para evitar overlap com footer
+            minHeight: "80vh",
+          }}
+        >
+          <Box sx={{mb: 3}}>
+            <Typography variant="h6" gutterBottom>
+              🎨 Personalização da Ficha
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Escolha as cores de destaque para os cards da aba Visualizar.
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2}>
+            {/* Coluna 1: Aparência Geral */}
+            <Grid item xs={12} md={6}>
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <DashboardCustomizeIcon fontSize="small" />
+                    <Typography fontWeight="bold">Aparência Geral</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    {/* Visibilidade de Cards */}
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{mb: 1, fontWeight: 700}}
+                      >
+                        Exibir/Ocultar Cards
+                      </Typography>
+                      <FormGroup row>
+                        {[
+                          {key: "portrait", label: "Retrato"},
+                          {key: "skills", label: "Perícias"},
+                          {key: "resources", label: "Recursos"},
+                          {key: "spells", label: "Magias"},
+                          {key: "weapons", label: "Armas"},
+                          {key: "armor", label: "Armaduras"},
+                          {key: "edges", label: "Vantagens"},
+                          {key: "hindrances", label: "Complicações"},
+                          {key: "items", label: "Itens"},
+                          {key: "loot", label: "Espólios"},
+                          {key: "notes", label: "Notas"},
+                        ].map((item) => (
+                          <FormControlLabel
+                            key={item.key}
+                            control={
+                              <Switch
+                                size="small"
+                                checked={isCardVisible(item.key)}
+                                onChange={() => toggleCardVisibility(item.key)}
+                              />
+                            }
+                            label={
+                              <Typography variant="caption">
+                                {item.label}
+                              </Typography>
+                            }
+                            sx={{width: "50%", mr: 0}}
+                          />
+                        ))}
+                      </FormGroup>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Divider />
+                    </Grid>
+
+                    {/* Outras Configurações Úteis */}
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{mb: 1, fontWeight: 700}}
+                      >
+                        Preferências de Layout
+                      </Typography>
+                      <FormGroup>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={isCompactMode}
+                              onChange={() =>
+                                updateAttribute("sheetPreferences", {
+                                  ...character.sheetPreferences,
+                                  compactMode: !isCompactMode,
+                                })
+                              }
+                            />
+                          }
+                          label="Modo Compacto (Reduz espaçamentos)"
+                        />
+                      </FormGroup>
+                    </Grid>
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+
+            {/* Coluna 2: Cores dos Cards */}
+            <Grid item xs={12} md={6}>
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <PaletteIcon fontSize="small" />
+                    <Typography fontWeight="bold">Cores dos Cards</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    {/* Todos os Cards */}
+                    <Grid item xs={12}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 1,
+                          pb: 1,
+                          borderBottom: "1px dashed #eee",
+                        }}
+                      >
+                        <Box sx={{position: "relative", width: 28, height: 28}}>
+                          <input
+                            type="color"
+                            onChange={(e) => {
+                              const color = e.target.value;
+                              const newColors = {
+                                ...(character.sheetColors || {}),
+                              };
+                              Object.keys(DEFAULT_COLORS).forEach((key) => {
+                                newColors[key] = color;
+                              });
+                              updateAttribute("sheetColors", newColors);
+                            }}
+                            style={{
+                              position: "absolute",
+                              opacity: 0,
+                              width: "100%",
+                              height: "100%",
+                              cursor: "pointer",
+                              zIndex: 2,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              background:
+                                "conic-gradient(red, yellow, lime, aqua, cyan, magenta, red)",
+                              border: "1px solid #ccc",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        </Box>
+                        <Typography variant="body2" fontWeight="700">
+                          Todos os Cards
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    {/* Custom Background Special Case */}
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                        <Box sx={{position: "relative", width: 28, height: 28}}>
+                          <input
+                            type="color"
+                            value={customBackground || "#f3ecdc"}
+                            onChange={(e) => {
+                              const newColors = {
+                                ...(character.sheetColors || {}),
+                                background: e.target.value,
+                              };
+                              updateAttribute("sheetColors", newColors);
+                            }}
+                            style={{
+                              position: "absolute",
+                              opacity: 0,
+                              width: "100%",
+                              height: "100%",
+                              cursor: "pointer",
+                              zIndex: 2,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              bgcolor: customBackground || "#f3ecdc",
+                              border: "1px solid #ccc",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        </Box>
+                        <Typography variant="caption" fontWeight="600">
+                          Fundo da Tela
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    {/* Title and Text for Cards (New) */}
+                    {[
+                      {key: "fontTitle", label: "Título do Card"},
+                      {key: "fontText", label: "Texto do Card"},
+                    ].map((item) => (
+                      <Grid item xs={12} sm={6} key={item.key}>
+                        <Box
+                          sx={{display: "flex", alignItems: "center", gap: 1}}
+                        >
+                          <Box
+                            sx={{position: "relative", width: 28, height: 28}}
+                          >
+                            <input
+                              type="color"
+                              value={getColor(item.key)}
+                              onChange={(e) => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                  [item.key]: e.target.value,
+                                };
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                              style={{
+                                position: "absolute",
+                                opacity: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                                zIndex: 2,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "50%",
+                                bgcolor: getColor(item.key),
+                                border: "1px solid #ccc",
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" fontWeight="600">
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+
+                    <Grid item xs={12}>
+                      <Divider sx={{my: 1}}>
+                        <Typography variant="caption">
+                          Temas dos Cards
+                        </Typography>
+                      </Divider>
+                    </Grid>
+
+                    {/* Individual Card Colors */}
+                    {Object.entries(DEFAULT_COLORS).map(
+                      ([key, defaultColor]) => {
+                        if (
+                          [
+                            "widgetBackground",
+                            "widgetTitle",
+                            "widgetText",
+                            "widgetAux",
+                            "footerBackground",
+                            "footerText",
+                            "footerIcon",
+                            "footerButtonBg",
+                          ].includes(key)
+                        )
+                          return null;
+
+                        return (
+                          <Grid item xs={6} key={key}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  position: "relative",
+                                  width: 28,
+                                  height: 28,
+                                }}
+                              >
+                                <input
+                                  type="color"
+                                  value={getColor(key)}
+                                  onChange={(e) => {
+                                    const newColors = {
+                                      ...(character.sheetColors || {}),
+                                      [key]: e.target.value,
+                                    };
+                                    updateAttribute("sheetColors", newColors);
+                                  }}
+                                  style={{
+                                    position: "absolute",
+                                    opacity: 0,
+                                    width: "100%",
+                                    height: "100%",
+                                    cursor: "pointer",
+                                    zIndex: 2,
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "50%",
+                                    bgcolor: getColor(key),
+                                    border: "1px solid #ccc",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                  }}
+                                />
+                              </Box>
+                              <Typography
+                                variant="caption"
+                                fontWeight="600"
+                                noWrap
+                              >
+                                {CONFIG_LABELS[key] || key}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        );
+                      },
+                    )}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+
+            {/* Coluna 3: Widgets & Texto Auxiliar */}
+            <Grid item xs={12} md={6}>
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <WidgetsIcon fontSize="small" />
+                    <Typography fontWeight="bold">
+                      Widgets & Auxiliares
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    {[
+                      {key: "widgetBackground", label: "Fundo"},
+                      {key: "widgetTitle", label: "Título"},
+                      {key: "widgetText", label: "Texto"},
+                      {key: "widgetAux", label: "Texto Auxiliar"},
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.key}>
+                        <Box
+                          sx={{display: "flex", alignItems: "center", gap: 1}}
+                        >
+                          <Box
+                            sx={{position: "relative", width: 28, height: 28}}
+                          >
+                            <input
+                              type="color"
+                              value={getColor(item.key)}
+                              onChange={(e) => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                  [item.key]: e.target.value,
+                                };
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                              style={{
+                                position: "absolute",
+                                opacity: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                                zIndex: 2,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "50%",
+                                bgcolor: getColor(item.key),
+                                border: "1px solid #ccc",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" fontWeight="600">
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+
+            {/* Coluna 4: Barra Fixa (Footer/Header) */}
+            <Grid item xs={12} md={6}>
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <FooterIcon fontSize="small" />
+                    <Typography fontWeight="bold">
+                      Barra de Navegação
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    paragraph
+                  >
+                    Configurações para a barra de navegação fixa inferior.
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Estilo</InputLabel>
+                        <Select
+                          value={
+                            character.sheetPreferences?.footerStyle || "solid"
+                          }
+                          label="Estilo"
+                          onChange={(e) =>
+                            updateAttribute("sheetPreferences", {
+                              ...character.sheetPreferences,
+                              footerStyle: e.target.value,
+                            })
+                          }
+                        >
+                          <MenuItem value="solid">Sólido</MenuItem>
+                          <MenuItem value="dual">Duas Cores</MenuItem>
+                          <MenuItem value="gradient">Gradiente</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    {[
+                      {key: "footerBackground", label: "Fundo"},
+                      {key: "footerButtonBg", label: "Fundo Botões"},
+                      {key: "footerText", label: "Texto/Ícones"},
+                      {key: "footerHover", label: "Hover/Botões"},
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.key}>
+                        <Box
+                          sx={{display: "flex", alignItems: "center", gap: 1}}
+                        >
+                          <Box
+                            sx={{position: "relative", width: 28, height: 28}}
+                          >
+                            <input
+                              type="color"
+                              value={getColor(item.key)}
+                              onChange={(e) => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                  [item.key]: e.target.value,
+                                };
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                              style={{
+                                position: "absolute",
+                                opacity: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                                zIndex: 2,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "50%",
+                                bgcolor: getColor(item.key),
+                                border: "1px solid #ccc",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" fontWeight="600">
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                  mt: 2,
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <FontIcon fontSize="small" />
+                    <Typography fontWeight="bold">Cores das Fontes</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    {/* Todas as Fontes */}
+                    <Grid item xs={12}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 1,
+                          pb: 1,
+                          borderBottom: "1px dashed #eee",
+                        }}
+                      >
+                        <Box sx={{position: "relative", width: 28, height: 28}}>
+                          <input
+                            type="color"
+                            onChange={(e) => {
+                              const color = e.target.value;
+                              const newColors = {
+                                ...(character.sheetColors || {}),
+                                fontTitle: color,
+                                fontText: color,
+                              };
+                              updateAttribute("sheetColors", newColors);
+                            }}
+                            style={{
+                              position: "absolute",
+                              opacity: 0,
+                              width: "100%",
+                              height: "100%",
+                              cursor: "pointer",
+                              zIndex: 2,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              background:
+                                "conic-gradient(red, yellow, lime, aqua, cyan, magenta, red)",
+                              border: "1px solid #ccc",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        </Box>
+                        <Typography variant="body2" fontWeight="700">
+                          Todas as Fontes
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    {/* Individual Fonts */}
+                    {[
+                      {key: "fontTitle", label: "Títulos"},
+                      {key: "fontText", label: "Texto"},
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.key}>
+                        <Box
+                          sx={{display: "flex", alignItems: "center", gap: 1}}
+                        >
+                          <Box
+                            sx={{position: "relative", width: 28, height: 28}}
+                          >
+                            <input
+                              type="color"
+                              value={getColor(item.key)}
+                              onChange={(e) => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                  [item.key]: e.target.value,
+                                };
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                              style={{
+                                position: "absolute",
+                                opacity: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                                zIndex: 2,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "50%",
+                                bgcolor: getColor(item.key),
+                                border: "1px solid #ccc",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" fontWeight="600">
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+
+            {/* Coluna 6: Ícones */}
+            <Grid item xs={12} md={6}>
+              <Accordion
+                elevation={0}
+                sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px !important",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                    <StyleIcon fontSize="small" />
+                    <Typography fontWeight="bold">Estilo dos Ícones</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2} alignItems="center">
+                    {/* Tamanho */}
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="caption"
+                        fontWeight="600"
+                        sx={{mb: 1, display: "block"}}
+                      >
+                        Tamanho (Escala)
+                      </Typography>
+                      <Box sx={{px: 1}}>
+                        <Slider
+                          size="small"
+                          min={0.8}
+                          max={1.5}
+                          step={0.1}
+                          value={parseFloat(
+                            character.sheetColors?.iconSize || 1,
+                          )}
+                          onChange={(_, val) =>
+                            updateAttribute("sheetColors", {
+                              ...(character.sheetColors || {}),
+                              iconSize: val,
+                            })
+                          }
+                          marks
+                          valueLabelDisplay="auto"
+                        />
+                      </Box>
+                    </Grid>
+
+                    {/* Cores Específicas */}
+                    {[
+                      {key: "iconColor", label: "Cor do Ícone"},
+                      {key: "iconBorder", label: "Cor da Borda"},
+                      {key: "iconShadow", label: "Cor da Sombra"},
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.key}>
+                        <Box
+                          sx={{display: "flex", alignItems: "center", gap: 1}}
+                        >
+                          <Box
+                            sx={{position: "relative", width: 28, height: 28}}
+                          >
+                            <input
+                              type="color"
+                              value={getColor(item.key) || "#000000"}
+                              onChange={(e) => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                  [item.key]: e.target.value,
+                                };
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                              style={{
+                                position: "absolute",
+                                opacity: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor: "pointer",
+                                zIndex: 2,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "50%",
+                                bgcolor: getColor(item.key) || "transparent",
+                                border: "1px solid #ccc",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                background: !getColor(item.key)
+                                  ? "conic-gradient(#eee 0% 25%, #fff 25% 50%, #eee 50% 75%, #fff 75% 100%)"
+                                  : undefined,
+                              }}
+                            />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              fontWeight="600"
+                              display="block"
+                            >
+                              {item.label}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                                fontSize: "0.65rem",
+                              }}
+                              onClick={() => {
+                                const newColors = {
+                                  ...(character.sheetColors || {}),
+                                };
+                                delete newColors[item.key];
+                                updateAttribute("sheetColors", newColors);
+                              }}
+                            >
+                              Resetar
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+          </Grid>
         </Box>
       )}
 

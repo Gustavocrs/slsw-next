@@ -7,7 +7,14 @@
 
 import React, {useState} from "react";
 import {styled} from "@mui/material/styles";
-import {Box, TextField, IconButton} from "@mui/material";
+import {
+  Box,
+  TextField,
+  IconButton,
+  Popover,
+  Typography,
+  Button as MuiButton,
+} from "@mui/material";
 import {
   Delete as DeleteIcon,
   RemoveCircleOutline as ConsumeIcon,
@@ -76,10 +83,14 @@ function EspoliosList({
   onAdd,
   onRemove,
   onUpdate,
+  onUse,
   disabled = false,
 }) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const handleAdd = () => {
     if (name) {
@@ -96,6 +107,22 @@ function EspoliosList({
     } else {
       onRemove?.(index);
     }
+  };
+
+  const handleItemClick = (event, index, item) => {
+    if (disabled) return;
+    setAnchorEl(event.currentTarget);
+    setSelectedItemIndex(index);
+    setSelectedItem(item);
+  };
+
+  const handleConfirmUse = () => {
+    if (selectedItem && selectedItemIndex !== null) {
+      onUse?.(selectedItemIndex, selectedItem);
+    }
+    setAnchorEl(null);
+    setSelectedItemIndex(null);
+    setSelectedItem(null);
   };
 
   return (
@@ -131,7 +158,11 @@ function EspoliosList({
         </Box>
       ) : (
         items.map((item, index) => (
-          <ListItem key={`${item.name}-${index}`}>
+          <ListItem
+            key={`${item.name}-${index}`}
+            onClick={(e) => handleItemClick(e, index, item)}
+            sx={{cursor: "pointer"}}
+          >
             <Box sx={{fontWeight: 500}}>
               {item.name}
               {item.quantity && item.quantity !== "1" && (
@@ -147,7 +178,10 @@ function EspoliosList({
                 size="small"
                 title="Consumir/Usar (Reduzir Qtd)"
                 disabled={disabled}
-                onClick={() => handleConsume(index, item)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConsume(index, item);
+                }}
                 sx={{padding: "4px", color: "#667eea"}}
               >
                 <ConsumeIcon fontSize="small" />
@@ -156,7 +190,10 @@ function EspoliosList({
                 size="small"
                 color="error"
                 disabled={disabled}
-                onClick={() => onRemove?.(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove?.(index);
+                }}
                 sx={{padding: "4px"}}
               >
                 <DeleteIcon fontSize="small" />
@@ -165,6 +202,38 @@ function EspoliosList({
           </ListItem>
         ))
       )}
+
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <Box sx={{p: 2}}>
+          <Typography sx={{mb: 2, fontWeight: 600}}>
+            Usar {selectedItem?.name}?
+          </Typography>
+          <Box sx={{display: "flex", gap: 1, justifyContent: "flex-end"}}>
+            <MuiButton size="small" onClick={() => setAnchorEl(null)}>
+              Não
+            </MuiButton>
+            <MuiButton
+              size="small"
+              variant="contained"
+              onClick={handleConfirmUse}
+            >
+              Sim
+            </MuiButton>
+          </Box>
+        </Box>
+      </Popover>
     </Box>
   );
 }

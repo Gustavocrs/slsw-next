@@ -4,7 +4,7 @@ import React, {useState, useEffect} from "react";
 import {styled} from "@mui/material/styles";
 import {collection, doc, onSnapshot, query} from "firebase/firestore";
 import {useAuth} from "@/hooks";
-import {useUIStore} from "@/stores/characterStore";
+import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import APIService from "@/lib/api";
 import {
   AppBar,
@@ -35,17 +35,30 @@ import InspectSheetModal from "../Table/InspectSheetModal";
 import {db} from "@/lib/firebase";
 import MessagesDashboard from "../Messages/MessagesDashboard";
 
-const StyledAppBar = styled(AppBar)(({theme}) => ({
-  position: "fixed",
-  bottom: 0,
-  top: "auto",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
-  zIndex: 1200,
-  "@media print": {
-    display: "none",
-  },
-}));
+const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
+  let bg =
+    customcolors?.bg || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+
+  if (footerstyle === "solid") {
+    bg = customcolors?.bg || "#667eea";
+  } else if (footerstyle === "dual") {
+    // Simple dual tone effect or just a solid color distinct from gradient
+    bg = customcolors?.bg || "#4a148c";
+  }
+
+  return {
+    position: "fixed",
+    bottom: 0,
+    top: "auto",
+    background: bg,
+    color: customcolors?.text || "#fff",
+    boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
+    zIndex: 1200,
+    "@media print": {
+      display: "none",
+    },
+  };
+});
 
 const HeaderContent = styled(Toolbar)(({theme}) => ({
   display: "flex",
@@ -68,11 +81,11 @@ const ControlsSection = styled(Box)(({theme}) => ({
   height: "30px",
 }));
 
-const HeaderButton = styled(Button)(({theme}) => ({
-  color: "white",
+const HeaderButton = styled(Button)(({theme, customcolors}) => ({
+  color: customcolors?.text || "white",
   textTransform: "none",
   fontWeight: 600,
-  background: "rgba(255, 255, 255, 0.1)",
+  background: customcolors?.btnBg || "rgba(255, 255, 255, 0.1)",
   backdropFilter: "blur(4px)",
   borderRadius: "8px",
   padding: "6px 16px",
@@ -111,6 +124,16 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     setSelectedTable,
   } = useUIStore();
   const setNotifications = useUIStore((state) => state.setNotifications);
+
+  // Ler cores da ficha atual para personalizar o Header
+  const character = useCharacterStore((state) => state.character);
+  const headerColors = {
+    bg: character?.sheetColors?.footerBackground,
+    text: character?.sheetColors?.footerText,
+    btnBg: character?.sheetColors?.footerButtonBg,
+  };
+  const footerStyle = character?.sheetPreferences?.footerStyle || "gradient";
+
   const [isSaving, setIsSaving] = useState(false);
 
   const theme = useTheme();
@@ -228,7 +251,12 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
 
   return (
     <>
-      <StyledAppBar position="fixed" color="primary">
+      <StyledAppBar
+        position="fixed"
+        color="primary"
+        customcolors={headerColors}
+        footerstyle={footerStyle}
+      >
         <HeaderContent>
           <UserSection>
             <UserMenu />
@@ -238,13 +266,18 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : !user ? (
-              <HeaderButton startIcon={<GoogleIcon />} onClick={handleLogin}>
+              <HeaderButton
+                startIcon={<GoogleIcon />}
+                onClick={handleLogin}
+                customcolors={headerColors}
+              >
                 {isMobile ? "" : "Login"}
               </HeaderButton>
             ) : (
               <>
                 {selectedTable && selectedTable._id && (
                   <HeaderButton
+                    customcolors={headerColors}
                     startIcon={<GameIcon />}
                     onClick={toggleGameModal}
                     sx={{mr: 1}}
@@ -254,6 +287,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                 )}
 
                 <HeaderButton
+                  customcolors={headerColors}
                   startIcon={
                     (currentView || viewMode) === "book" ? (
                       <AssignmentIcon />
@@ -273,6 +307,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                 {(currentView || viewMode) === "sheet" && (
                   <>
                     <HeaderButton
+                      customcolors={headerColors}
                       startIcon={<SaveIcon />}
                       onClick={handleSave}
                       disabled={isSaving}
