@@ -35,15 +35,33 @@ import InspectSheetModal from "../Table/InspectSheetModal";
 import {db} from "@/lib/firebase";
 import MessagesDashboard from "../Messages/MessagesDashboard";
 
+// Função auxiliar para escurecer cor para o gradiente (simples)
+const adjustColor = (color, amount) => {
+  return (
+    "#" +
+    color
+      .replace(/^#/, "")
+      .replace(/../g, (color) =>
+        (
+          "0" +
+          Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)
+        ).substr(-2),
+      )
+  );
+};
+
 const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
-  let bg =
-    customcolors?.bg || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+  const baseColor = customcolors?.bg || "#667eea";
+  let bg = baseColor;
 
   if (footerstyle === "solid") {
-    bg = customcolors?.bg || "#667eea";
+    bg = baseColor;
+  } else if (footerstyle === "gradient") {
+    // Cria um gradiente baseado na cor escolhida
+    bg = `linear-gradient(135deg, ${baseColor} 0%, ${adjustColor(baseColor, -40)} 100%)`;
   } else if (footerstyle === "dual") {
-    // Simple dual tone effect or just a solid color distinct from gradient
-    bg = customcolors?.bg || "#4a148c";
+    // Estilo Dual (borda superior colorida, fundo mais escuro)
+    bg = baseColor; // Logica simplificada, ou pode ser um gradiente vertical
   }
 
   return {
@@ -311,10 +329,17 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                       startIcon={<SaveIcon />}
                       onClick={handleSave}
                       disabled={isSaving}
-                      color="secondary"
                       sx={{
-                        background: "rgba(255, 255, 255, 0.2)",
-                        "&:hover": {background: "rgba(255, 255, 255, 0.3)"},
+                        // Força a cor personalizada no botão de salvar também
+                        color: headerColors.text,
+                        background:
+                          headerColors.btnBg || "rgba(255, 255, 255, 0.2)",
+                        border: `1px solid ${headerColors.text}40`,
+                        "&:hover": {
+                          background: headerColors.btnBg
+                            ? `${headerColors.btnBg}dd`
+                            : "rgba(255, 255, 255, 0.3)",
+                        },
                       }}
                     >
                       {isMobile ? "" : isSaving ? "..." : "Salvar"}

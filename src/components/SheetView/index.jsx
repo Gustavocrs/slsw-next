@@ -48,9 +48,6 @@ import {
   DashboardCustomize as DashboardCustomizeIcon,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -215,6 +212,92 @@ const DEFAULT_FONT_COLORS = {
   fontTitle: "#0f172a",
   fontText: "#334155",
 };
+
+const ConfigCard = ({title, icon, children}) => (
+  <Paper
+    elevation={0}
+    sx={{
+      border: "1px solid #e2e8f0",
+      borderRadius: "12px",
+      overflow: "hidden",
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+    }}
+  >
+    <Box
+      sx={{
+        px: 2,
+        py: 1.5,
+        bgcolor: "#f8fafc",
+        borderBottom: "1px solid #e2e8f0",
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+      }}
+    >
+      {icon && React.cloneElement(icon, {sx: {fontSize: 20, color: "#64748b"}})}
+      <Typography variant="subtitle2" sx={{fontWeight: 700, color: "#334155"}}>
+        {title}
+      </Typography>
+    </Box>
+    <Box sx={{p: 2, flex: 1}}>{children}</Box>
+  </Paper>
+);
+
+const ColorPickerItem = ({label, colorKey, value, onChange, onReset}) => (
+  <Box sx={{display: "flex", alignItems: "center", gap: 1.5, mb: 1.5}}>
+    <Box sx={{position: "relative", width: 32, height: 32, flexShrink: 0}}>
+      <input
+        type="color"
+        value={value || "#000000"}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          position: "absolute",
+          opacity: 0,
+          width: "100%",
+          height: "100%",
+          cursor: "pointer",
+          zIndex: 2,
+        }}
+      />
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          borderRadius: "8px",
+          bgcolor: value || "transparent",
+          border: "1px solid #cbd5e1",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+          background: !value
+            ? "conic-gradient(#eee 0% 25%, #fff 25% 50%, #eee 50% 75%, #fff 75% 100%)"
+            : undefined,
+        }}
+      />
+    </Box>
+    <Box sx={{minWidth: 0, flex: 1}}>
+      <Typography
+        variant="body2"
+        sx={{fontWeight: 600, color: "#334155", lineHeight: 1.2}}
+      >
+        {label}
+      </Typography>
+      {onReset && (
+        <Typography
+          variant="caption"
+          sx={{
+            cursor: "pointer",
+            color: "#94a3b8",
+            "&:hover": {color: "#ef4444"},
+          }}
+          onClick={onReset}
+        >
+          Restaurar
+        </Typography>
+      )}
+    </Box>
+  </Box>
+);
 
 const CONFIG_LABELS = {
   portrait: "Retrato",
@@ -3239,7 +3322,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             background: "#fff",
             borderRadius: 2,
             p: 2,
-            pb: 16, // Aumentado para evitar overlap com footer
+            pb: 20, // Aumentado bastante para evitar overlap com footer fixo
             minHeight: "80vh",
           }}
         >
@@ -3255,761 +3338,362 @@ Negative Prompt: ${promptData.negativePrompt}.
           <Grid container spacing={2}>
             {/* Coluna 1: Aparência Geral */}
             <Grid item xs={12} md={6}>
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                }}
+              <ConfigCard
+                title="Layout & Visibilidade"
+                icon={<DashboardCustomizeIcon />}
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <DashboardCustomizeIcon fontSize="small" />
-                    <Typography fontWeight="bold">Aparência Geral</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2}>
-                    {/* Visibilidade de Cards */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{mb: 1, fontWeight: 700}}
-                      >
-                        Exibir/Ocultar Cards
-                      </Typography>
-                      <FormGroup row>
-                        {[
-                          {key: "portrait", label: "Retrato"},
-                          {key: "skills", label: "Perícias"},
-                          {key: "resources", label: "Recursos"},
-                          {key: "spells", label: "Magias"},
-                          {key: "weapons", label: "Armas"},
-                          {key: "armor", label: "Armaduras"},
-                          {key: "edges", label: "Vantagens"},
-                          {key: "hindrances", label: "Complicações"},
-                          {key: "items", label: "Itens"},
-                          {key: "loot", label: "Espólios"},
-                          {key: "notes", label: "Notas"},
-                        ].map((item) => (
-                          <FormControlLabel
-                            key={item.key}
-                            control={
-                              <Switch
-                                size="small"
-                                checked={isCardVisible(item.key)}
-                                onChange={() => toggleCardVisibility(item.key)}
-                              />
-                            }
-                            label={
-                              <Typography variant="caption">
-                                {item.label}
-                              </Typography>
-                            }
-                            sx={{width: "50%", mr: 0}}
-                          />
-                        ))}
-                      </FormGroup>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Divider />
-                    </Grid>
-
-                    {/* Outras Configurações Úteis */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{mb: 1, fontWeight: 700}}
-                      >
-                        Preferências de Layout
-                      </Typography>
-                      <FormGroup>
+                <Grid container spacing={2}>
+                  {/* Visibilidade de Cards */}
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mb: 1,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        color: "#94a3b8",
+                        display: "block",
+                      }}
+                    >
+                      Exibir/Ocultar Cards
+                    </Typography>
+                    <FormGroup row sx={{gap: 1}}>
+                      {[
+                        {key: "portrait", label: "Retrato"},
+                        {key: "skills", label: "Perícias"},
+                        {key: "resources", label: "Recursos"},
+                        {key: "spells", label: "Magias"},
+                        {key: "weapons", label: "Armas"},
+                        {key: "armor", label: "Armaduras"},
+                        {key: "edges", label: "Vantagens"},
+                        {key: "hindrances", label: "Complicações"},
+                        {key: "items", label: "Itens"},
+                        {key: "loot", label: "Espólios"},
+                        {key: "notes", label: "Notas"},
+                      ].map((item) => (
                         <FormControlLabel
+                          key={item.key}
                           control={
                             <Switch
-                              checked={isCompactMode}
-                              onChange={() =>
-                                updateAttribute("sheetPreferences", {
-                                  ...character.sheetPreferences,
-                                  compactMode: !isCompactMode,
-                                })
-                              }
+                              size="small"
+                              checked={isCardVisible(item.key)}
+                              onChange={() => toggleCardVisibility(item.key)}
                             />
                           }
-                          label="Modo Compacto (Reduz espaçamentos)"
+                          label={
+                            <Typography variant="caption">
+                              {item.label}
+                            </Typography>
+                          }
+                          sx={{width: "48%", mr: 0, ml: 0}}
                         />
-                      </FormGroup>
-                    </Grid>
+                      ))}
+                    </FormGroup>
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
+
+                  <Grid item xs={12}>
+                    <Divider sx={{my: 1}} />
+                  </Grid>
+
+                  {/* Outras Configurações Úteis */}
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mb: 1,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        color: "#94a3b8",
+                        display: "block",
+                      }}
+                    >
+                      Preferências de Layout
+                    </Typography>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={isCompactMode}
+                            onChange={() =>
+                              updateAttribute("sheetPreferences", {
+                                ...character.sheetPreferences,
+                                compactMode: !isCompactMode,
+                              })
+                            }
+                          />
+                        }
+                        label="Modo Compacto (Reduz espaçamentos)"
+                      />
+                    </FormGroup>
+                  </Grid>
+                </Grid>
+              </ConfigCard>
             </Grid>
 
-            {/* Coluna 2: Cores dos Cards */}
+            {/* Coluna 2: Cores dos Cards e Fontes */}
             <Grid item xs={12} md={6}>
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                }}
+              <ConfigCard
+                title="Cores dos Cards & Textos"
+                icon={<PaletteIcon />}
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <PaletteIcon fontSize="small" />
-                    <Typography fontWeight="bold">Cores dos Cards</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2}>
-                    {/* Todos os Cards */}
-                    <Grid item xs={12}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mb: 1,
-                          pb: 1,
-                          borderBottom: "1px dashed #eee",
-                        }}
-                      >
-                        <Box sx={{position: "relative", width: 28, height: 28}}>
-                          <input
-                            type="color"
-                            onChange={(e) => {
-                              const color = e.target.value;
-                              const newColors = {
-                                ...(character.sheetColors || {}),
-                              };
-                              Object.keys(DEFAULT_COLORS).forEach((key) => {
-                                newColors[key] = color;
-                              });
-                              updateAttribute("sheetColors", newColors);
-                            }}
-                            style={{
-                              position: "absolute",
-                              opacity: 0,
-                              width: "100%",
-                              height: "100%",
-                              cursor: "pointer",
-                              zIndex: 2,
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: "50%",
-                              background:
-                                "conic-gradient(red, yellow, lime, aqua, cyan, magenta, red)",
-                              border: "1px solid #ccc",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="body2" fontWeight="700">
-                          Todos os Cards
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    {/* Custom Background Special Case */}
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                        <Box sx={{position: "relative", width: 28, height: 28}}>
-                          <input
-                            type="color"
-                            value={customBackground || "#f3ecdc"}
-                            onChange={(e) => {
-                              const newColors = {
-                                ...(character.sheetColors || {}),
-                                background: e.target.value,
-                              };
-                              updateAttribute("sheetColors", newColors);
-                            }}
-                            style={{
-                              position: "absolute",
-                              opacity: 0,
-                              width: "100%",
-                              height: "100%",
-                              cursor: "pointer",
-                              zIndex: 2,
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: "50%",
-                              bgcolor: customBackground || "#f3ecdc",
-                              border: "1px solid #ccc",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="caption" fontWeight="600">
-                          Fundo da Tela
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    {/* Title and Text for Cards (New) */}
-                    {[
-                      {key: "fontTitle", label: "Título do Card"},
-                      {key: "fontText", label: "Texto do Card"},
-                    ].map((item) => (
-                      <Grid item xs={12} sm={6} key={item.key}>
-                        <Box
-                          sx={{display: "flex", alignItems: "center", gap: 1}}
-                        >
-                          <Box
-                            sx={{position: "relative", width: 28, height: 28}}
-                          >
-                            <input
-                              type="color"
-                              value={getColor(item.key)}
-                              onChange={(e) => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                  [item.key]: e.target.value,
-                                };
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                              style={{
-                                position: "absolute",
-                                opacity: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor: "pointer",
-                                zIndex: 2,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                bgcolor: getColor(item.key),
-                                border: "1px solid #ccc",
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" fontWeight="600">
-                            {item.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-
-                    <Grid item xs={12}>
-                      <Divider sx={{my: 1}}>
-                        <Typography variant="caption">
-                          Temas dos Cards
-                        </Typography>
-                      </Divider>
-                    </Grid>
-
-                    {/* Individual Card Colors */}
-                    {Object.entries(DEFAULT_COLORS).map(
-                      ([key, defaultColor]) => {
-                        if (
-                          [
-                            "widgetBackground",
-                            "widgetTitle",
-                            "widgetText",
-                            "widgetAux",
-                            "footerBackground",
-                            "footerText",
-                            "footerIcon",
-                            "footerButtonBg",
-                          ].includes(key)
-                        )
-                          return null;
-
-                        return (
-                          <Grid item xs={6} key={key}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  position: "relative",
-                                  width: 28,
-                                  height: 28,
-                                }}
-                              >
-                                <input
-                                  type="color"
-                                  value={getColor(key)}
-                                  onChange={(e) => {
-                                    const newColors = {
-                                      ...(character.sheetColors || {}),
-                                      [key]: e.target.value,
-                                    };
-                                    updateAttribute("sheetColors", newColors);
-                                  }}
-                                  style={{
-                                    position: "absolute",
-                                    opacity: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                    cursor: "pointer",
-                                    zIndex: 2,
-                                  }}
-                                />
-                                <Box
-                                  sx={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: "50%",
-                                    bgcolor: getColor(key),
-                                    border: "1px solid #ccc",
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                                  }}
-                                />
-                              </Box>
-                              <Typography
-                                variant="caption"
-                                fontWeight="600"
-                                noWrap
-                              >
-                                {CONFIG_LABELS[key] || key}
-                              </Typography>
-                            </Box>
-                          </Grid>
-                        );
-                      },
-                    )}
+                <Grid container spacing={1}>
+                  {/* Controle Mestre */}
+                  <Grid item xs={12}>
+                    <ColorPickerItem
+                      label="Definir todos os cards"
+                      value=""
+                      onChange={(color) => {
+                        const newColors = {...(character.sheetColors || {})};
+                        Object.keys(DEFAULT_COLORS).forEach((key) => {
+                          if (
+                            ![
+                              "widgetBackground",
+                              "widgetTitle",
+                              "widgetText",
+                              "widgetAux",
+                              "footerBackground",
+                              "footerText",
+                              "footerIcon",
+                              "footerButtonBg",
+                            ].includes(key)
+                          ) {
+                            newColors[key] = color;
+                          }
+                        });
+                        updateAttribute("sheetColors", newColors);
+                      }}
+                    />
+                    <Divider sx={{mb: 2}} />
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
+
+                  {/* Fontes Específicas */}
+                  <Grid item xs={12} sm={6}>
+                    <ColorPickerItem
+                      label="Nome do Personagem"
+                      value={getColor("fontName")}
+                      onChange={(val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          fontName: val,
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <ColorPickerItem
+                      label="Título do Card"
+                      value={getColor("fontTitle")}
+                      onChange={(val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          fontTitle: val,
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Divider sx={{my: 1, borderStyle: "dashed"}}>
+                      <Typography variant="caption">Temas dos Cards</Typography>
+                    </Divider>
+                  </Grid>
+
+                  {/* Individual Card Colors */}
+                  {Object.entries(DEFAULT_COLORS).map(([key, defaultColor]) => {
+                    if (
+                      [
+                        "widgetBackground",
+                        "widgetTitle",
+                        "widgetText",
+                        "widgetAux",
+                        "footerBackground",
+                        "footerText",
+                        "footerIcon",
+                        "footerButtonBg",
+                      ].includes(key)
+                    )
+                      return null;
+
+                    return (
+                      <Grid item xs={12} sm={6} key={key}>
+                        <ColorPickerItem
+                          label={CONFIG_LABELS[key] || key}
+                          value={getColor(key)}
+                          onChange={(val) =>
+                            updateAttribute("sheetColors", {
+                              ...character.sheetColors,
+                              [key]: val,
+                            })
+                          }
+                        />
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </ConfigCard>
             </Grid>
 
             {/* Coluna 3: Widgets & Texto Auxiliar */}
             <Grid item xs={12} md={6}>
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                }}
+              <ConfigCard
+                title="Widgets (Status Pequenos)"
+                icon={<WidgetsIcon />}
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <WidgetsIcon fontSize="small" />
-                    <Typography fontWeight="bold">
-                      Widgets & Auxiliares
-                    </Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2}>
-                    {[
-                      {key: "widgetBackground", label: "Fundo"},
-                      {key: "widgetTitle", label: "Título"},
-                      {key: "widgetText", label: "Texto"},
-                      {key: "widgetAux", label: "Texto Auxiliar"},
-                    ].map((item) => (
-                      <Grid item xs={6} key={item.key}>
-                        <Box
-                          sx={{display: "flex", alignItems: "center", gap: 1}}
-                        >
-                          <Box
-                            sx={{position: "relative", width: 28, height: 28}}
-                          >
-                            <input
-                              type="color"
-                              value={getColor(item.key)}
-                              onChange={(e) => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                  [item.key]: e.target.value,
-                                };
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                              style={{
-                                position: "absolute",
-                                opacity: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor: "pointer",
-                                zIndex: 2,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                bgcolor: getColor(item.key),
-                                border: "1px solid #ccc",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" fontWeight="600">
-                            {item.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
+                <Grid container spacing={1}>
+                  {[
+                    {key: "widgetBackground", label: "Fundo"},
+                    {key: "widgetTitle", label: "Título"},
+                    {key: "widgetText", label: "Texto"},
+                    {key: "widgetAux", label: "Texto Auxiliar"},
+                  ].map((item) => (
+                    <Grid item xs={12} sm={6} key={item.key}>
+                      <ColorPickerItem
+                        label={item.label}
+                        value={getColor(item.key)}
+                        onChange={(val) =>
+                          updateAttribute("sheetColors", {
+                            ...character.sheetColors,
+                            [item.key]: val,
+                          })
+                        }
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </ConfigCard>
             </Grid>
 
             {/* Coluna 4: Barra Fixa (Footer/Header) */}
             <Grid item xs={12} md={6}>
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                }}
+              <ConfigCard
+                title="Barra de Navegação Inferior"
+                icon={<FooterIcon />}
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <FooterIcon fontSize="small" />
-                    <Typography fontWeight="bold">
-                      Barra de Navegação
-                    </Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    paragraph
-                  >
-                    Configurações para a barra de navegação fixa inferior.
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Estilo</InputLabel>
-                        <Select
-                          value={
-                            character.sheetPreferences?.footerStyle || "solid"
-                          }
-                          label="Estilo"
-                          onChange={(e) =>
-                            updateAttribute("sheetPreferences", {
-                              ...character.sheetPreferences,
-                              footerStyle: e.target.value,
-                            })
-                          }
-                        >
-                          <MenuItem value="solid">Sólido</MenuItem>
-                          <MenuItem value="dual">Duas Cores</MenuItem>
-                          <MenuItem value="gradient">Gradiente</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    {[
-                      {key: "footerBackground", label: "Fundo"},
-                      {key: "footerButtonBg", label: "Fundo Botões"},
-                      {key: "footerText", label: "Texto/Ícones"},
-                      {key: "footerHover", label: "Hover/Botões"},
-                    ].map((item) => (
-                      <Grid item xs={6} key={item.key}>
-                        <Box
-                          sx={{display: "flex", alignItems: "center", gap: 1}}
-                        >
-                          <Box
-                            sx={{position: "relative", width: 28, height: 28}}
-                          >
-                            <input
-                              type="color"
-                              value={getColor(item.key)}
-                              onChange={(e) => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                  [item.key]: e.target.value,
-                                };
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                              style={{
-                                position: "absolute",
-                                opacity: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor: "pointer",
-                                zIndex: 2,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                bgcolor: getColor(item.key),
-                                border: "1px solid #ccc",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" fontWeight="600">
-                            {item.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                  mt: 2,
-                }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <FontIcon fontSize="small" />
-                    <Typography fontWeight="bold">Cores das Fontes</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2}>
-                    {/* Todas as Fontes */}
-                    <Grid item xs={12}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mb: 1,
-                          pb: 1,
-                          borderBottom: "1px dashed #eee",
-                        }}
+                <Typography variant="caption" color="text.secondary" paragraph>
+                  Configurações para a barra de navegação fixa inferior.
+                </Typography>
+                <Grid container spacing={1}>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Estilo</InputLabel>
+                      <Select
+                        value={
+                          character.sheetPreferences?.footerStyle || "solid"
+                        }
+                        label="Estilo"
+                        onChange={(e) =>
+                          updateAttribute("sheetPreferences", {
+                            ...character.sheetPreferences,
+                            footerStyle: e.target.value,
+                          })
+                        }
                       >
-                        <Box sx={{position: "relative", width: 28, height: 28}}>
-                          <input
-                            type="color"
-                            onChange={(e) => {
-                              const color = e.target.value;
-                              const newColors = {
-                                ...(character.sheetColors || {}),
-                                fontTitle: color,
-                                fontText: color,
-                              };
-                              updateAttribute("sheetColors", newColors);
-                            }}
-                            style={{
-                              position: "absolute",
-                              opacity: 0,
-                              width: "100%",
-                              height: "100%",
-                              cursor: "pointer",
-                              zIndex: 2,
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: "50%",
-                              background:
-                                "conic-gradient(red, yellow, lime, aqua, cyan, magenta, red)",
-                              border: "1px solid #ccc",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="body2" fontWeight="700">
-                          Todas as Fontes
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    {/* Individual Fonts */}
-                    {[
-                      {key: "fontTitle", label: "Títulos"},
-                      {key: "fontText", label: "Texto"},
-                    ].map((item) => (
-                      <Grid item xs={6} key={item.key}>
-                        <Box
-                          sx={{display: "flex", alignItems: "center", gap: 1}}
-                        >
-                          <Box
-                            sx={{position: "relative", width: 28, height: 28}}
-                          >
-                            <input
-                              type="color"
-                              value={getColor(item.key)}
-                              onChange={(e) => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                  [item.key]: e.target.value,
-                                };
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                              style={{
-                                position: "absolute",
-                                opacity: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor: "pointer",
-                                zIndex: 2,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                bgcolor: getColor(item.key),
-                                border: "1px solid #ccc",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="caption" fontWeight="600">
-                            {item.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
+                        <MenuItem value="solid">Sólido</MenuItem>
+                        <MenuItem value="dual">Duas Cores</MenuItem>
+                        <MenuItem value="gradient">Gradiente</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
+                  {[
+                    {key: "footerBackground", label: "Fundo"},
+                    {key: "footerButtonBg", label: "Fundo Botões"},
+                    {key: "footerText", label: "Texto/Ícones"},
+                    {key: "footerHover", label: "Hover/Botões"},
+                  ].map((item) => (
+                    <Grid item xs={12} sm={6} key={item.key}>
+                      <ColorPickerItem
+                        label={item.label}
+                        value={getColor(item.key)}
+                        onChange={(val) =>
+                          updateAttribute("sheetColors", {
+                            ...character.sheetColors,
+                            [item.key]: val,
+                          })
+                        }
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </ConfigCard>
+            </Grid>
+
+            {/* Coluna 5: Fundo da Tela (Extra) */}
+            <Grid item xs={12} md={6}>
+              <ConfigCard title="Fundo da Tela" icon={<StyleIcon />}>
+                <Grid container spacing={1}>
+                  <Grid item xs={12}>
+                    <ColorPickerItem
+                      label="Cor de Fundo Principal"
+                      value={customBackground || "#f3ecdc"}
+                      onChange={(val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          background: val,
+                        })
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              </ConfigCard>
             </Grid>
 
             {/* Coluna 6: Ícones */}
             <Grid item xs={12} md={6}>
-              <Accordion
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px !important",
-                }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                    <StyleIcon fontSize="small" />
-                    <Typography fontWeight="bold">Estilo dos Ícones</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2} alignItems="center">
-                    {/* Tamanho */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant="caption"
-                        fontWeight="600"
-                        sx={{mb: 1, display: "block"}}
-                      >
-                        Tamanho (Escala)
-                      </Typography>
-                      <Box sx={{px: 1}}>
-                        <Slider
-                          size="small"
-                          min={0.8}
-                          max={1.5}
-                          step={0.1}
-                          value={parseFloat(
-                            character.sheetColors?.iconSize || 1,
-                          )}
-                          onChange={(_, val) =>
-                            updateAttribute("sheetColors", {
-                              ...(character.sheetColors || {}),
-                              iconSize: val,
-                            })
-                          }
-                          marks
-                          valueLabelDisplay="auto"
-                        />
-                      </Box>
-                    </Grid>
-
-                    {/* Cores Específicas */}
-                    {[
-                      {key: "iconColor", label: "Cor do Ícone"},
-                      {key: "iconBorder", label: "Cor da Borda"},
-                      {key: "iconShadow", label: "Cor da Sombra"},
-                    ].map((item) => (
-                      <Grid item xs={6} key={item.key}>
-                        <Box
-                          sx={{display: "flex", alignItems: "center", gap: 1}}
-                        >
-                          <Box
-                            sx={{position: "relative", width: 28, height: 28}}
-                          >
-                            <input
-                              type="color"
-                              value={getColor(item.key) || "#000000"}
-                              onChange={(e) => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                  [item.key]: e.target.value,
-                                };
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                              style={{
-                                position: "absolute",
-                                opacity: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor: "pointer",
-                                zIndex: 2,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                bgcolor: getColor(item.key) || "transparent",
-                                border: "1px solid #ccc",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                                background: !getColor(item.key)
-                                  ? "conic-gradient(#eee 0% 25%, #fff 25% 50%, #eee 50% 75%, #fff 75% 100%)"
-                                  : undefined,
-                              }}
-                            />
-                          </Box>
-                          <Box>
-                            <Typography
-                              variant="caption"
-                              fontWeight="600"
-                              display="block"
-                            >
-                              {item.label}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                cursor: "pointer",
-                                textDecoration: "underline",
-                                fontSize: "0.65rem",
-                              }}
-                              onClick={() => {
-                                const newColors = {
-                                  ...(character.sheetColors || {}),
-                                };
-                                delete newColors[item.key];
-                                updateAttribute("sheetColors", newColors);
-                              }}
-                            >
-                              Resetar
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Grid>
-                    ))}
+              <ConfigCard title="Estilo dos Ícones" icon={<StyleIcon />}>
+                <Grid container spacing={1} alignItems="center">
+                  {/* Tamanho */}
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      fontWeight="600"
+                      sx={{mb: 1, display: "block"}}
+                    >
+                      Tamanho (Escala)
+                    </Typography>
+                    <Box sx={{px: 1}}>
+                      <Slider
+                        size="small"
+                        min={0.8}
+                        max={1.5}
+                        step={0.1}
+                        value={parseFloat(character.sheetColors?.iconSize || 1)}
+                        onChange={(_, val) =>
+                          updateAttribute("sheetColors", {
+                            ...(character.sheetColors || {}),
+                            iconSize: val,
+                          })
+                        }
+                        marks
+                        valueLabelDisplay="auto"
+                      />
+                    </Box>
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
+
+                  {/* Cores Específicas */}
+                  {[
+                    {key: "iconColor", label: "Cor do Ícone"},
+                    {key: "iconBorder", label: "Cor da Borda"},
+                    {key: "iconShadow", label: "Cor da Sombra"},
+                  ].map((item) => (
+                    <Grid item xs={12} sm={6} key={item.key}>
+                      <ColorPickerItem
+                        label={item.label}
+                        value={getColor(item.key)}
+                        onChange={(val) =>
+                          updateAttribute("sheetColors", {
+                            ...character.sheetColors,
+                            [item.key]: val,
+                          })
+                        }
+                        onReset={() => {
+                          const newColors = {...character.sheetColors};
+                          delete newColors[item.key];
+                          updateAttribute("sheetColors", newColors);
+                        }}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </ConfigCard>
             </Grid>
           </Grid>
         </Box>
