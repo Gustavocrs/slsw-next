@@ -45,6 +45,7 @@ import {
   Widgets as WidgetsIcon,
   Web as FooterIcon,
   LocalHospital as WoundIcon,
+  RestartAlt as ResetIcon,
   DashboardCustomize as DashboardCustomizeIcon,
 } from "@mui/icons-material";
 import {
@@ -198,12 +199,14 @@ const DEFAULT_COLORS = {
   items: "#475569",
   loot: "#0f766e",
   notes: "#0f172a",
-  widgetBackground: "rgba(255,255,255,0.82)",
+  widgetBackground: "#ffffff",
   widgetTitle: "#64748b",
   widgetText: "#0f172a",
-  footerBackground: "#ffffff",
+  widgetAux: "#94a3b8",
+  widgetIcon: "#667eea",
+  footerBackground: "#667eea",
   footerText: "#ffffff",
-  footerIcon: "#666666",
+  footerIcon: "#ffffff",
 };
 
 const DEFAULT_FONT_COLORS = {
@@ -213,6 +216,26 @@ const DEFAULT_FONT_COLORS = {
   fontText: "#334155",
 };
 
+const hexToRgba = (hex, alpha = 1) => {
+  if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+  let c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split("");
+    if (c.length == 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = "0x" + c.join("");
+    return (
+      "rgba(" +
+      [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") +
+      "," +
+      alpha +
+      ")"
+    );
+  }
+  return hex;
+};
+
 const ConfigCard = ({title, icon, children}) => (
   <Paper
     elevation={0}
@@ -220,7 +243,7 @@ const ConfigCard = ({title, icon, children}) => (
       border: "1px solid #e2e8f0",
       borderRadius: "12px",
       overflow: "hidden",
-      height: "100%",
+      height: "fit-content", // Garante que o card não estique
       display: "flex",
       flexDirection: "column",
     }}
@@ -337,13 +360,14 @@ const OverviewPanel = ({
   subtitleColor,
   iconStyle = {},
   compact = false,
+  cardOpacity = 0.9,
 }) => (
   <Box
     sx={{
       p: compact ? 0.75 : {xs: 1.25, md: 1.5},
       borderRadius: "8px",
       border: `1px solid ${alpha(accent, 0.18)}`,
-      background: `linear-gradient(180deg, ${alpha(accent, 0.12)} 0%, rgba(255,255,255,0.9) 100%)`,
+      background: `linear-gradient(180deg, ${alpha(accent, 0.12)} 0%, rgba(255,255,255,${cardOpacity}) 100%)`,
       boxShadow: `0 10px 22px ${alpha("#0f172a", 0.06)}`,
       backdropFilter: "blur(8px)",
       overflow: "hidden",
@@ -525,6 +549,9 @@ const MetricCard = ({
   customBackground,
   customTitleColor,
   customTextColor,
+  customAuxColor,
+  customIconColor,
+  widgetOpacity = 0.82,
 }) => (
   <Box
     sx={{
@@ -532,7 +559,10 @@ const MetricCard = ({
       p: compact ? 0.5 : 1,
       borderRadius: "8px",
       border: `1px solid ${alpha(accent, 0.18)}`,
-      background: customBackground || "rgba(255,255,255,0.82)",
+      background:
+        customBackground && customBackground.startsWith("#")
+          ? hexToRgba(customBackground, widgetOpacity)
+          : customBackground || `rgba(255,255,255,${widgetOpacity})`,
       boxShadow: `0 10px 20px ${alpha("#0f172a", 0.06)}`,
       backdropFilter: "blur(10px)",
       ...sx,
@@ -550,7 +580,7 @@ const MetricCard = ({
         <Typography
           variant="caption"
           sx={{
-            color: customTitleColor || titleColor || "#64748b",
+            color: customTitleColor || "#64748b",
             textTransform: "uppercase",
             letterSpacing: compact ? 0 : 0.65,
             fontWeight: 700,
@@ -563,7 +593,7 @@ const MetricCard = ({
           variant="h5"
           sx={{
             fontWeight: 900,
-            color: customTextColor || valueColor || "#0f172a",
+            color: customTextColor || "#0f172a",
             mt: compact ? 0 : 0.35,
             fontSize: compact ? "1rem" : {xs: "1.24rem", md: "1.35rem"},
             lineHeight: 1.2,
@@ -574,7 +604,7 @@ const MetricCard = ({
         {helper && !compact && (
           <Typography
             variant="caption"
-            sx={{color: "#475569", display: "block", mt: 0.5}}
+            sx={{color: customAuxColor || "#475569", display: "block", mt: 0.5}}
           >
             {helper}
           </Typography>
@@ -593,8 +623,8 @@ const MetricCard = ({
               display: "grid",
               placeItems: "center",
               flexShrink: 0,
-              color: iconStyle.color || accent,
-              bgcolor: alpha(accent, 0.14),
+              color: customIconColor || iconStyle.color || accent,
+              bgcolor: iconStyle.fill || alpha(accent, 0.14),
               border: iconStyle.borderColor
                 ? `1px solid ${iconStyle.borderColor}`
                 : "none",
@@ -618,8 +648,8 @@ const MetricCard = ({
             display: "grid",
             placeItems: "center",
             flexShrink: 0,
-            color: iconStyle.color || accent,
-            bgcolor: alpha(accent, 0.14),
+            color: customIconColor || iconStyle.color || accent,
+            bgcolor: iconStyle.fill || alpha(accent, 0.14),
             border: iconStyle.borderColor
               ? `1px solid ${iconStyle.borderColor}`
               : "none",
@@ -707,10 +737,22 @@ function SheetView({
   // Icon Styles
   const getIconStyle = () => ({
     color: character.sheetColors?.iconColor,
-    shadowColor: character.sheetColors?.iconShadow,
+    fill: character.sheetColors?.iconFill,
     borderColor: character.sheetColors?.iconBorder,
     scale: parseFloat(character.sheetColors?.iconSize || 1),
   });
+
+  // Opacity Helpers
+  const getCardOpacity = () => {
+    return character.sheetColors?.cardOpacity !== undefined
+      ? parseFloat(character.sheetColors.cardOpacity)
+      : 0.9;
+  };
+  const getWidgetOpacity = () => {
+    return character.sheetColors?.widgetOpacity !== undefined
+      ? parseFloat(character.sheetColors.widgetOpacity)
+      : 0.82;
+  };
 
   // Preferences Helpers
   const getPreferences = () => character.sheetPreferences || {};
@@ -1402,6 +1444,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   titleColor={getColor("fontTitle")}
                   subtitleColor={getColor("fontText")}
                   iconStyle={getIconStyle()}
+                  cardOpacity={getCardOpacity()}
                   sx={{
                     width: "100%",
                     display: "flex",
@@ -1473,6 +1516,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 accent={getColor("mainInfo")}
                 titleColor={getColor("fontTitle")}
                 subtitleColor={getColor("fontText")}
+                cardOpacity={getCardOpacity()}
                 sx={{
                   width: "100%",
                   display: "flex",
@@ -1503,7 +1547,8 @@ Negative Prompt: ${promptData.negativePrompt}.
                         variant="body1"
                         sx={{
                           mt: 0.55,
-                          color: getColor("fontAux"),
+                          color:
+                            getColor("fontIdentity") || getColor("fontAux"),
                           fontWeight: 700,
                         }}
                       >
@@ -1560,7 +1605,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                               p: 0.75,
                               height: "100%",
                               borderRadius: "8px",
-                              bgcolor: "rgba(255,255,255,0.72)",
+                              bgcolor: getColor("widgetBackground").startsWith(
+                                "#",
+                              )
+                                ? hexToRgba(
+                                    getColor("widgetBackground"),
+                                    getWidgetOpacity(),
+                                  )
+                                : getColor("widgetBackground"),
                               border: `1px solid ${alpha(item.accent, 0.15)}`,
                               boxShadow: `inset 0 0 0 1px ${alpha("#fff", 0.6)}`,
                               textAlign: "center",
@@ -1569,7 +1621,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                             <Typography
                               variant="caption"
                               sx={{
-                                color: getColor("fontAux"),
+                                color: getColor("widgetTitle"),
                                 textTransform: "uppercase",
                                 letterSpacing: 0.45,
                                 fontWeight: 700,
@@ -1583,7 +1635,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               sx={{
                                 mt: 0.3,
                                 fontWeight: 900,
-                                color: item.accent,
+                                color: getColor("widgetText"),
                                 lineHeight: 1,
                               }}
                             >
@@ -1611,6 +1663,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       iconStyle={getIconStyle()}
                       sx={{height: "100%"}}
                       compact={isCompactMode}
+                      cardOpacity={getCardOpacity()}
                     >
                       <Box
                         sx={{
@@ -1632,7 +1685,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                               p: 1,
                               borderRadius: "8px",
                               textAlign: "center",
-                              bgcolor: "rgba(255,255,255,0.78)",
+                              bgcolor: getColor("widgetBackground").startsWith(
+                                "#",
+                              )
+                                ? hexToRgba(
+                                    getColor("widgetBackground"),
+                                    getWidgetOpacity(),
+                                  )
+                                : getColor("widgetBackground"),
                               border: "1px solid rgba(37, 99, 235, 0.12)",
                             }}
                           >
@@ -1640,7 +1700,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               variant="caption"
                               sx={{
                                 display: "block",
-                                color: getColor("fontText"),
+                                color: getColor("widgetTitle"),
                                 fontWeight: 800,
                                 letterSpacing: 0.45,
                               }}
@@ -1652,7 +1712,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               sx={{
                                 mt: 0.35,
                                 fontWeight: 900,
-                                color: "#1d4ed8",
+                                color: getColor("widgetText"),
                               }}
                             >
                               {attribute.value}
@@ -1674,6 +1734,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       iconStyle={getIconStyle()}
                       sx={{height: "100%"}}
                       compact={isCompactMode}
+                      cardOpacity={getCardOpacity()}
                     >
                       <Box
                         sx={{
@@ -1710,14 +1771,21 @@ Negative Prompt: ${promptData.negativePrompt}.
                               p: 1,
                               borderRadius: "8px",
                               textAlign: "center",
-                              bgcolor: "rgba(255,255,255,0.78)",
+                              bgcolor: getColor("widgetBackground").startsWith(
+                                "#",
+                              )
+                                ? hexToRgba(
+                                    getColor("widgetBackground"),
+                                    getWidgetOpacity(),
+                                  )
+                                : getColor("widgetBackground"),
                               border: `1px solid ${alpha(stat.accent, 0.14)}`,
                             }}
                           >
                             <Typography
                               variant="caption"
                               sx={{
-                                color: getColor("fontAux"),
+                                color: getColor("widgetTitle"),
                                 textTransform: "uppercase",
                                 letterSpacing: 0.45,
                                 fontWeight: 700,
@@ -1729,7 +1797,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               variant="h6"
                               sx={{
                                 mt: 0.3,
-                                color: stat.accent,
+                                color: getColor("widgetText"),
                                 fontWeight: 900,
                               }}
                             >
@@ -1772,6 +1840,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     customBackground={getColor("widgetBackground")}
                     customTitleColor={getColor("widgetTitle")}
                     customTextColor={getColor("widgetText")}
+                    customAuxColor={getColor("widgetAux")}
+                    customIconColor={getColor("widgetIcon")}
+                    widgetOpacity={getWidgetOpacity()}
                   />
                   <MetricCard
                     title="Ferimentos"
@@ -1791,6 +1862,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     customBackground={getColor("widgetBackground")}
                     customTitleColor={getColor("widgetTitle")}
                     customTextColor={getColor("widgetText")}
+                    customAuxColor={getColor("widgetAux")}
+                    customIconColor={getColor("widgetIcon")}
+                    widgetOpacity={getWidgetOpacity()}
                   />
                   <MetricCard
                     title="Fadiga"
@@ -1806,6 +1880,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     customBackground={getColor("widgetBackground")}
                     customTitleColor={getColor("widgetTitle")}
                     customTextColor={getColor("widgetText")}
+                    customAuxColor={getColor("widgetAux")}
+                    customIconColor={getColor("widgetIcon")}
+                    widgetOpacity={getWidgetOpacity()}
                   />
                   <MetricCard
                     title="Mana"
@@ -1825,6 +1902,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     customBackground={getColor("widgetBackground")}
                     customTitleColor={getColor("widgetTitle")}
                     customTextColor={getColor("widgetText")}
+                    customAuxColor={getColor("widgetAux")}
+                    customIconColor={getColor("widgetIcon")}
+                    widgetOpacity={getWidgetOpacity()}
                   />
                   <MetricCard
                     title="Status"
@@ -1839,6 +1919,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     customBackground={getColor("widgetBackground")}
                     customTitleColor={getColor("widgetTitle")}
                     customTextColor={getColor("widgetAux")}
+                    customAuxColor={getColor("widgetAux")}
+                    customIconColor={getColor("widgetIcon")}
+                    widgetOpacity={getWidgetOpacity()}
                   />
                 </Box>
               </OverviewPanel>
@@ -1861,6 +1944,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box
                           sx={{
@@ -1936,6 +2020,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "grid", gap: 0.85}}>
                           {(character.recursos_despertar || []).length > 0 ? (
@@ -2056,6 +2141,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "grid", gap: 0.85}}>
                           {(character.magias || []).length > 0 ? (
@@ -2145,6 +2231,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <StyledTextField
                           fullWidth
@@ -2187,6 +2274,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "grid", gap: 0.85}}>
                           {(character.armas || []).length > 0 ? (
@@ -2258,6 +2346,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "grid", gap: 0.85}}>
                           {(character.armaduras || []).length > 0 ? (
@@ -2338,6 +2427,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
                           {(character.vantagens || []).length > 0 ? (
@@ -2378,6 +2468,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
                           {(character.complicacoes || []).length > 0 ? (
@@ -2418,6 +2509,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
                           {(character.itens || []).length > 0 ? (
@@ -2455,6 +2547,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         subtitleColor={getColor("fontText")}
                         iconStyle={getIconStyle()}
                         compact={isCompactMode}
+                        cardOpacity={getCardOpacity()}
                       >
                         <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
                           {(character.espolios || []).length > 0 ? (
@@ -3326,16 +3419,50 @@ Negative Prompt: ${promptData.negativePrompt}.
             minHeight: "80vh",
           }}
         >
-          <Box sx={{mb: 3}}>
-            <Typography variant="h6" gutterBottom>
-              🎨 Personalização da Ficha
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Escolha as cores de destaque para os cards da aba Visualizar.
-            </Typography>
+          <Box
+            sx={{
+              mb: 3,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                🎨 Personalização da Ficha
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Escolha as cores de destaque para os cards da aba Visualizar.
+              </Typography>
+            </Box>
+            <Button
+              startIcon={<ResetIcon />}
+              color="error"
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                if (
+                  confirm(
+                    "Deseja restaurar todas as cores para o padrão original?",
+                  )
+                ) {
+                  const allDefaults = {
+                    ...DEFAULT_COLORS,
+                    ...DEFAULT_FONT_COLORS,
+                  };
+                  updateAttribute("sheetColors", allDefaults);
+                }
+              }}
+            >
+              Restaurar Padrões
+            </Button>
           </Box>
 
-          <Grid container spacing={2}>
+          <Grid
+            container
+            spacing={2}
+            alignItems="flex-start" // Evita que os cards estiquem para preencher a altura da linha
+          >
             {/* Coluna 1: Aparência Geral */}
             <Grid item xs={12} md={6}>
               <ConfigCard
@@ -3426,6 +3553,35 @@ Negative Prompt: ${promptData.negativePrompt}.
                       />
                     </FormGroup>
                   </Grid>
+
+                  <Grid item xs={12}>
+                    <Divider sx={{my: 1}} />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mb: 1,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        color: "#94a3b8",
+                        display: "block",
+                      }}
+                    >
+                      Fundo da Tela
+                    </Typography>
+                    <ColorPickerItem
+                      label="Cor de Fundo Principal"
+                      value={customBackground || "#f3ecdc"}
+                      onChange={(val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          background: val,
+                        })
+                      }
+                    />
+                  </Grid>
                 </Grid>
               </ConfigCard>
             </Grid>
@@ -3451,6 +3607,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                               "widgetTitle",
                               "widgetText",
                               "widgetAux",
+                              "widgetIcon",
                               "footerBackground",
                               "footerText",
                               "footerIcon",
@@ -3492,6 +3649,41 @@ Negative Prompt: ${promptData.negativePrompt}.
                     />
                   </Grid>
                   <Grid item xs={12}>
+                    <ColorPickerItem
+                      label="Título do Personagem (Novato • Classe...)"
+                      value={getColor("fontIdentity")}
+                      onChange={(val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          fontIdentity: val,
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      sx={{fontWeight: 600, display: "block", mb: 0.5}}
+                    >
+                      Opacidade dos Cards
+                    </Typography>
+                    <Slider
+                      size="small"
+                      min={0.1}
+                      max={1.0}
+                      step={0.05}
+                      value={getCardOpacity()}
+                      onChange={(_, val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          cardOpacity: val,
+                        })
+                      }
+                      valueLabelDisplay="auto"
+                      sx={{width: "95%", mx: 1}}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
                     <Divider sx={{my: 1, borderStyle: "dashed"}}>
                       <Typography variant="caption">Temas dos Cards</Typography>
                     </Divider>
@@ -3505,6 +3697,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         "widgetTitle",
                         "widgetText",
                         "widgetAux",
+                        "widgetIcon",
                         "footerBackground",
                         "footerText",
                         "footerIcon",
@@ -3514,7 +3707,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       return null;
 
                     return (
-                      <Grid item xs={12} sm={6} key={key}>
+                      <Grid item xs={4} sm={3} key={key}>
                         <ColorPickerItem
                           label={CONFIG_LABELS[key] || key}
                           value={getColor(key)}
@@ -3544,6 +3737,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     {key: "widgetTitle", label: "Título"},
                     {key: "widgetText", label: "Texto"},
                     {key: "widgetAux", label: "Texto Auxiliar"},
+                    {key: "widgetIcon", label: "Ícone"},
                   ].map((item) => (
                     <Grid item xs={12} sm={6} key={item.key}>
                       <ColorPickerItem
@@ -3558,6 +3752,39 @@ Negative Prompt: ${promptData.negativePrompt}.
                       />
                     </Grid>
                   ))}
+
+                  <Grid item xs={12}>
+                    <Divider sx={{my: 1.5}} />
+                    <Typography
+                      variant="subtitle2"
+                      sx={{mb: 1, fontWeight: 700, color: "#334155"}}
+                    >
+                      Transparência
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      sx={{fontWeight: 600, display: "block", mb: 0.5}}
+                    >
+                      Opacidade dos Widgets
+                    </Typography>
+                    <Slider
+                      size="small"
+                      min={0.1}
+                      max={1.0}
+                      step={0.05}
+                      value={getWidgetOpacity()}
+                      onChange={(_, val) =>
+                        updateAttribute("sheetColors", {
+                          ...character.sheetColors,
+                          widgetOpacity: val,
+                        })
+                      }
+                      valueLabelDisplay="auto"
+                      sx={{width: "95%", mx: 1}}
+                    />
+                  </Grid>
                 </Grid>
               </ConfigCard>
             </Grid>
@@ -3616,26 +3843,6 @@ Negative Prompt: ${promptData.negativePrompt}.
               </ConfigCard>
             </Grid>
 
-            {/* Coluna 5: Fundo da Tela (Extra) */}
-            <Grid item xs={12} md={6}>
-              <ConfigCard title="Fundo da Tela" icon={<StyleIcon />}>
-                <Grid container spacing={1}>
-                  <Grid item xs={12}>
-                    <ColorPickerItem
-                      label="Cor de Fundo Principal"
-                      value={customBackground || "#f3ecdc"}
-                      onChange={(val) =>
-                        updateAttribute("sheetColors", {
-                          ...character.sheetColors,
-                          background: val,
-                        })
-                      }
-                    />
-                  </Grid>
-                </Grid>
-              </ConfigCard>
-            </Grid>
-
             {/* Coluna 6: Ícones */}
             <Grid item xs={12} md={6}>
               <ConfigCard title="Estilo dos Ícones" icon={<StyleIcon />}>
@@ -3672,7 +3879,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   {[
                     {key: "iconColor", label: "Cor do Ícone"},
                     {key: "iconBorder", label: "Cor da Borda"},
-                    {key: "iconShadow", label: "Cor da Sombra"},
+                    {key: "iconFill", label: "Preenchimento"},
                   ].map((item) => (
                     <Grid item xs={12} sm={6} key={item.key}>
                       <ColorPickerItem

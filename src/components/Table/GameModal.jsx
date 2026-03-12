@@ -70,6 +70,7 @@ import {
   PanTool as ParalyzedIcon,
   Help as OtherStatusIcon,
   LocalFireDepartment as BurnIcon,
+  AutoFixHigh as RecalculateIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -615,6 +616,49 @@ function GameModal() {
       showNotification("Erro ao remover jogador.", "error");
     }
     handleCloseMenu();
+  };
+
+  // --- Recalcular Mana (GM) ---
+  const handleRecalculateMana = async () => {
+    if (!selectedTable || !isGM) return;
+    if (
+      !confirm(
+        "Recalcular e restaurar a Mana Máxima de todos os jogadores da mesa?",
+      )
+    )
+      return;
+
+    setSavingGameSettings(true); // Reutilizando estado de loading
+    try {
+      const promises = selectedTable.players.map(async (player) => {
+        if (player.isNpc) return; // Ignora NPCs por enquanto ou trata diferente se tiver ficha
+
+        // Buscar ficha completa
+        const charData = player.characterId
+          ? await APIService.getCharacterById(player.characterId)
+          : await APIService.getCharacter(player.uid);
+
+        if (charData) {
+          const newMaxMana = calculateMaxMana(charData);
+          // Atualiza a ficha com a nova mana atual cheia (reset)
+          await APIService.saveCharacter(charData.userId, {
+            ...charData,
+            mana_atual: newMaxMana,
+          });
+        }
+      });
+
+      await Promise.all(promises);
+      showNotification(
+        "Mana de todos os jogadores recalculada e restaurada!",
+        "success",
+      );
+    } catch (error) {
+      console.error("Erro ao recalcular mana:", error);
+      showNotification("Erro ao processar atualização em massa.", "error");
+    } finally {
+      setSavingGameSettings(false);
+    }
   };
 
   // --- Ações do GM (Refletem na Ficha) ---
@@ -1220,6 +1264,15 @@ function GameModal() {
                               {gameSession.isActive
                                 ? "Finalizar Jogo"
                                 : "Iniciar Jogo"}
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="info"
+                              startIcon={<RecalculateIcon />}
+                              onClick={handleRecalculateMana}
+                              disabled={savingGameSettings}
+                            >
+                              Resetar Mana
                             </Button>
                           </Box>
                         </Box>

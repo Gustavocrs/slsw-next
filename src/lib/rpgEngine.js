@@ -63,7 +63,7 @@ export const EDGES = [
     name: "Antecedente Arcano",
     rank: "Novato",
     source: "SWADE",
-    description: "Permite acesso a Poderes e Pontos de Poder.",
+    description: "Permite acesso a Magias e recebe +5 de Mana base.",
   },
   {
     name: "Aristocrata",
@@ -1803,11 +1803,25 @@ export function calculateMaxMana(character) {
     (v) => v.name === "Antecedente Arcano",
   );
 
+  const hasRunicFlow = (character.vantagens || []).some(
+    (v) => v.name === "Fluxo Rúnico",
+  );
+
+  // Contar quantas vezes "Pontos de Poder" foi pego
+  const powerPointsEdges = (character.vantagens || []).filter(
+    (v) => v.name === "Pontos de Poder",
+  ).length;
+
+  const hasLivingCatalyst = (character.vantagens || []).some(
+    (v) => v.name === "Catalisador Vivo",
+  );
+
   const base = vigorVal;
-  const arcaneBonus = hasArcaneBackground ? 10 : 0;
+  const arcaneBonus = hasArcaneBackground ? 5 : 0;
+  const edgeBonus = powerPointsEdges * 5 + (hasLivingCatalyst ? 10 : 0);
   const tempBonus = parseInt(character.mana_bonus || 0, 10);
 
-  return base + arcaneBonus + tempBonus;
+  return base + arcaneBonus + edgeBonus + tempBonus;
 }
 
 export function calculateStats(character) {

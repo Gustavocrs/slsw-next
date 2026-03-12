@@ -53,6 +53,7 @@ const adjustColor = (color, amount) => {
 const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
   const baseColor = customcolors?.bg || "#667eea";
   let bg = baseColor;
+  let borderTop = "none";
 
   if (footerstyle === "solid") {
     bg = baseColor;
@@ -61,7 +62,8 @@ const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
     bg = `linear-gradient(135deg, ${baseColor} 0%, ${adjustColor(baseColor, -40)} 100%)`;
   } else if (footerstyle === "dual") {
     // Estilo Dual (borda superior colorida, fundo mais escuro)
-    bg = baseColor; // Logica simplificada, ou pode ser um gradiente vertical
+    bg = "#0f172a";
+    borderTop = `3px solid ${baseColor}`;
   }
 
   return {
@@ -69,6 +71,7 @@ const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
     bottom: 0,
     top: "auto",
     background: bg,
+    borderTop: borderTop,
     color: customcolors?.text || "#fff",
     boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.15)",
     zIndex: 1200,
@@ -110,7 +113,7 @@ const HeaderButton = styled(Button)(({theme, customcolors}) => ({
   minWidth: "auto",
 
   "&:hover": {
-    background: "rgba(255, 255, 255, 0.2)",
+    background: customcolors?.btnHover || "rgba(255, 255, 255, 0.2)",
   },
 
   "&.Mui-disabled": {
@@ -149,6 +152,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
     bg: character?.sheetColors?.footerBackground,
     text: character?.sheetColors?.footerText,
     btnBg: character?.sheetColors?.footerButtonBg,
+    btnHover: character?.sheetColors?.footerHover,
   };
   const footerStyle = character?.sheetPreferences?.footerStyle || "gradient";
 
@@ -335,11 +339,8 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                         background:
                           headerColors.btnBg || "rgba(255, 255, 255, 0.2)",
                         border: `1px solid ${headerColors.text}40`,
-                        "&:hover": {
-                          background: headerColors.btnBg
-                            ? `${headerColors.btnBg}dd`
-                            : "rgba(255, 255, 255, 0.3)",
-                        },
+                        // O hover já é tratado pelo styled component via customcolors,
+                        // mas se precisarmos forçar algo específico para o botão Salvar, mantemos aqui ou removemos para consistência.
                       }}
                     >
                       {isMobile ? "" : isSaving ? "..." : "Salvar"}
