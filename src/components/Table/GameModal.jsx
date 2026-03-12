@@ -1265,15 +1265,6 @@ function GameModal() {
                                 ? "Finalizar Jogo"
                                 : "Iniciar Jogo"}
                             </Button>
-                            <Button
-                              variant="outlined"
-                              color="info"
-                              startIcon={<RecalculateIcon />}
-                              onClick={handleRecalculateMana}
-                              disabled={savingGameSettings}
-                            >
-                              Resetar Mana
-                            </Button>
                           </Box>
                         </Box>
                         <Typography

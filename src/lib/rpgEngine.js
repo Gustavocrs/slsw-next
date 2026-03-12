@@ -1817,7 +1817,7 @@ export function calculateMaxMana(character) {
   );
 
   const base = vigorVal;
-  const arcaneBonus = hasArcaneBackground ? 5 : 0;
+  const arcaneBonus = hasArcaneBackground ? 10 : 0;
   const edgeBonus = powerPointsEdges * 5 + (hasLivingCatalyst ? 10 : 0);
   const tempBonus = parseInt(character.mana_bonus || 0, 10);
 
