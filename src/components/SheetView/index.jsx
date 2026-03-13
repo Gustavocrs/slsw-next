@@ -939,6 +939,8 @@ function SheetView({
       showNotification("Erro ao enviar imagem.", "error");
     } finally {
       setImgLoading(false);
+      // Limpa o valor do input para permitir upload do mesmo arquivo se necessário
+      e.target.value = "";
     }
   };
 
@@ -1457,6 +1459,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     sx={{
                       position: "relative",
                       minHeight: {xs: 200, md: 248},
+                      maxHeight: {xs: 320, md: 380},
                       borderRadius: "8px",
                       overflow: "hidden",
                       border: "1px solid rgba(148, 163, 184, 0.22)",
@@ -1473,7 +1476,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                         sx={{
                           width: "100%",
                           height: "100%",
+                          maxHeight: {xs: 320, md: 380},
                           objectFit: "cover",
+                          display: "block",
                         }}
                       />
                     ) : (
