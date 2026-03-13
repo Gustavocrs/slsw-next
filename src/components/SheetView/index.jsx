@@ -961,14 +961,14 @@ function SheetView({
 
     const data = {
       artStyle:
-        "Solo Leveling Manhwa Style, Anime, High Fantasy, 8k, Detailed, Cinematic Lighting, Portrait Orientation (9:16)",
+        "Solo Leveling Manhwa Style, Anime, High Fantasy, Character Concept Art, 8k, Detailed, Portrait Orientation",
       characterDetails: `Name: ${character.nome || "Unknown Hunter"}, Rank: ${character.rank || "Novice"}, Archetype: ${character.arquetipo || "Hunter"}, Concept: ${character.conceito || "Adventurer"}, Guild: ${character.guilda || "None"}, Age: ${character.idade || "Unknown"}, Height: ${character.altura || "Unknown"}, Weight: ${character.peso || "Unknown"}, Hair: ${character.cabelos || "Unknown"}, Eyes: ${character.olhos || "Unknown"}, Skin: ${character.pele || "Unknown"}`,
       awakeningDetails: `Awakening Origin: ${character.despertar_origem || "Unknown"}, Sensation: ${character.despertar_sensacao || "Unknown"}, Mana Affinity: ${character.despertar_afinidade || "Blue"}, Mark: ${character.despertar_marca || "None"}, Unique Power: ${awakeningResources || "None"}`,
       equipmentDetails: `Weapons: ${weapons || "None"}, Armor: ${armor || "Standard Hunter Gear"}, Items: ${items || "None"}, Loot/Artifacts: ${loot || "None"}`,
       traits: `Advantages: ${advantages || "None"}, Complications: ${complications || "None"}`,
-      visualContext: `The character is standing in a dynamic pose, ready for battle, surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. IMPORTANT: Ensure the full character and all weapons are fully visible within the vertical frame, avoiding cropping on the sides.`,
+      visualContext: `The character is centered in the frame, waist-up or full body, standing in a dynamic heroic pose. Surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. CRITICAL: The character must be fully contained within the canvas. Do NOT crop the head, arms, or weapons. Leave empty space around the character.`,
       negativePrompt:
-        "No text, no watermarks, no signatures, no seals, no writing, no UI elements. Clean artwork only. No cropped weapons.",
+        "cropped, out of frame, out of bounds, cut off, close-up, text, watermarks, signatures, UI elements, bad anatomy, missing limbs.",
     };
 
     setPromptData(data);
