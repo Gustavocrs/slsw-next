@@ -5,7 +5,7 @@ import {Box} from "@mui/material";
 import BookView from "@/components/BookView";
 import SheetView from "@/components/SheetView";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import Header from "@/components/Header/Header";
+import Footer from "@/components/Footer/Footer";
 import {useAuth} from "@/hooks";
 import {useCharacterStore} from "@/stores/characterStore";
 import {useCharacterAPI} from "@/hooks";
@@ -53,8 +53,16 @@ export default function PageLayout() {
   };
 
   return (
-    <div id="DIVV" style={{padding: "0", width: "100%", height: "100%"}}>
-      <Header
+    <div
+      id="DIVV"
+      style={{
+        padding: "0",
+        width: "100%",
+        minHeight: "100vh",
+        paddingBottom: "60px",
+      }}
+    >
+      <Footer
         onToggleSidebar={handleToggleSidebar}
         currentView={currentView}
         onViewChange={setCurrentView}

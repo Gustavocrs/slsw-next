@@ -8,7 +8,7 @@
 import React, {useEffect, useState} from "react";
 import styled from "styled-components";
 import {Box} from "@mui/material";
-import Header from "@/components/Header/Header";
+import Footer from "@/components/Footer/Footer";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import SheetView from "./SheetView";
 import BookView from "./BookView";
@@ -79,7 +79,7 @@ function PageLayout() {
   if (loading) {
     return (
       <PageContainer>
-        <Header onSave={handleSave} />
+        <Footer onSave={handleSave} />
         <MainContent
           sx={{
             display: "flex",
@@ -96,7 +96,7 @@ function PageLayout() {
 
   return (
     <PageContainer>
-      <Header onSave={handleSave} />
+      <Footer onSave={handleSave} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <MainContent>

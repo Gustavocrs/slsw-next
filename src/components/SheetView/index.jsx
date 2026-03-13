@@ -3820,25 +3820,40 @@ Negative Prompt: ${promptData.negativePrompt}.
                       </Select>
                     </FormControl>
                   </Grid>
-                  {[
-                    {key: "footerBackground", label: "Fundo"},
-                    {key: "footerButtonBg", label: "Fundo Botões"},
-                    {key: "footerText", label: "Texto/Ícones"},
-                    {key: "footerHover", label: "Hover/Botões"},
-                  ].map((item) => (
-                    <Grid item xs={12} sm={6} key={item.key}>
-                      <ColorPickerItem
-                        label={item.label}
-                        value={getColor(item.key)}
-                        onChange={(val) =>
-                          updateAttribute("sheetColors", {
-                            ...character.sheetColors,
-                            [item.key]: val,
-                          })
-                        }
-                      />
-                    </Grid>
-                  ))}
+                  {(() => {
+                    const footerStyle =
+                      character.sheetPreferences?.footerStyle || "solid";
+                    const isDual =
+                      footerStyle === "dual" || footerStyle === "gradient";
+
+                    const inputList = [
+                      {
+                        key: "footerBackground",
+                        label: isDual ? "Fundo 1" : "Fundo",
+                      },
+                      ...(isDual
+                        ? [{key: "footerBackground2", label: "Fundo 2"}]
+                        : []),
+                      {key: "footerButtonBg", label: "Fundo Botões"},
+                      {key: "footerText", label: "Texto/Ícones"},
+                      {key: "footerHover", label: "Hover/Botões"},
+                    ];
+
+                    return inputList.map((item) => (
+                      <Grid item xs={12} sm={6} key={item.key}>
+                        <ColorPickerItem
+                          label={item.label}
+                          value={getColor(item.key)}
+                          onChange={(val) =>
+                            updateAttribute("sheetColors", {
+                              ...character.sheetColors,
+                              [item.key]: val,
+                            })
+                          }
+                        />
+                      </Grid>
+                    ));
+                  })()}
                 </Grid>
               </ConfigCard>
             </Grid>

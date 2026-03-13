@@ -52,18 +52,18 @@ const adjustColor = (color, amount) => {
 
 const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
   const baseColor = customcolors?.bg || "#667eea";
+  const secColor = customcolors?.bg2 || "#764ba2";
   let bg = baseColor;
   let borderTop = "none";
 
   if (footerstyle === "solid") {
     bg = baseColor;
   } else if (footerstyle === "gradient") {
-    // Cria um gradiente baseado na cor escolhida
-    bg = `linear-gradient(135deg, ${baseColor} 0%, ${adjustColor(baseColor, -40)} 100%)`;
+    // Gradiente suave entre as duas cores escolhidas
+    bg = `linear-gradient(to right, ${baseColor}, ${secColor})`;
   } else if (footerstyle === "dual") {
-    // Estilo Dual (borda superior colorida, fundo mais escuro)
-    bg = "#0f172a";
-    borderTop = `3px solid ${baseColor}`;
+    // Divide a barra visualmente em duas metades (Hard Stop)
+    bg = `linear-gradient(to right, ${baseColor} 50%, ${secColor} 50%)`;
   }
 
   return {
@@ -130,7 +130,7 @@ const HeaderButton = styled(Button)(({theme, customcolors}) => ({
   },
 }));
 
-function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
+function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {user, loading, loginWithGoogle} = useAuth();
   const {
     viewMode,
@@ -150,6 +150,7 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const character = useCharacterStore((state) => state.character);
   const headerColors = {
     bg: character?.sheetColors?.footerBackground,
+    bg2: character?.sheetColors?.footerBackground2,
     text: character?.sheetColors?.footerText,
     btnBg: character?.sheetColors?.footerButtonBg,
     btnHover: character?.sheetColors?.footerHover,
@@ -381,4 +382,4 @@ function Header({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   );
 }
 
-export default Header;
+export default Footer;
