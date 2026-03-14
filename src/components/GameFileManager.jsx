@@ -145,10 +145,10 @@ export default function GameFileManager({
     }
   };
 
-  const getFileIcon = (file) => {
+  const getFileIcon = (file, customSize = 26) => {
     const type = file.type?.toLowerCase() || "";
     const name = file.name?.toLowerCase() || "";
-    const size = 26;
+    const size = customSize;
 
     if (type.includes("pdf") || name.endsWith(".pdf"))
       return <BsFiletypePdf size={size} color="#d32f2f" />;
@@ -206,76 +206,165 @@ export default function GameFileManager({
       )}
 
       {!hideList && (
-        <Paper sx={{borderRadius: 2, overflow: "hidden"}} elevation={0}>
-          <List disablePadding>
-            {filteredFiles.length > 0 ? (
-              filteredFiles.map((file, index) => (
-                <React.Fragment key={index}>
-                  {index > 0 && <Divider />}
-                  <ListItem
-                    secondaryAction={
-                      <Box sx={{display: "flex", gap: 1}}>
-                        <IconButton
-                          edge="end"
-                          href={file.url}
-                          download
-                          target="_blank"
-                          title="Baixar"
-                        >
-                          <DownloadIcon />
-                        </IconButton>
-                        {isGM && (
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleDeleteFile(file)}
-                            color="error"
-                            title="Excluir"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        )}
-                      </Box>
-                    }
+        <Box>
+          {filteredFiles.length > 0 ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  sm: "repeat(3, 1fr)",
+                  md: "repeat(5, 1fr)",
+                },
+                gap: 2,
+              }}
+            >
+              {filteredFiles.map((file, index) => {
+                const isImg =
+                  file.type?.startsWith("image/") ||
+                  file.name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+
+                return (
+                  <Paper
+                    key={index}
+                    elevation={0}
+                    sx={{
+                      position: "relative",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        borderColor: "primary.main",
+                      },
+                      "&:hover .action-btn": {
+                        opacity: 1,
+                      },
+                    }}
                   >
-                    <ListItemIcon
-                      sx={{minWidth: 40, cursor: "pointer"}}
+                    {/* Botão de Excluir Flutuante */}
+                    {isGM && (
+                      <IconButton
+                        className="action-btn"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(file);
+                        }}
+                        title="Excluir"
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          right: 4,
+                          opacity: {xs: 1, md: 0}, // No mobile aparece sempre
+                          transition: "all 0.2s",
+                          bgcolor: "rgba(255, 255, 255, 0.85)",
+                          color: "error.main",
+                          zIndex: 10,
+                          "&:hover": {
+                            bgcolor: "error.main",
+                            color: "white",
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+
+                    {/* Botão de Download Flutuante */}
+                    <IconButton
+                      className="action-btn"
+                      size="small"
+                      href={file.url}
+                      download
+                      target="_blank"
+                      title="Baixar"
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{
+                        position: "absolute",
+                        bottom: 4,
+                        right: 4,
+                        opacity: {xs: 1, md: 0}, // No mobile aparece sempre
+                        transition: "all 0.2s",
+                        color: "primary.main",
+                        zIndex: 10,
+                        "&:hover": {
+                          bgcolor: "primary.main",
+                          color: "white",
+                        },
+                      }}
+                    >
+                      <DownloadIcon fontSize="small" />
+                    </IconButton>
+
+                    {/* Área do Ícone em Destaque */}
+                    <Box
+                      sx={{
+                        height: 100,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: "#f5f7fa",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                      }}
                       onClick={() => handleViewFile(file)}
                     >
-                      {getFileIcon(file)}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography
-                          component="span"
-                          variant="body1"
-                          onClick={() => handleViewFile(file)}
-                          sx={{
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            color: "primary.main",
-                            textDecoration: "underline",
-                            "&:hover": {color: "primary.dark"},
+                      {isImg ? (
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
                           }}
-                        >
-                          {file.name}
-                        </Typography>
-                      }
-                      secondary={new Date(file.uploadedAt).toLocaleDateString()}
-                    />
-                  </ListItem>
-                </React.Fragment>
-              ))
-            ) : (
-              <Box sx={{p: 3, textAlign: "center", color: "text.secondary"}}>
-                <Typography variant="body2">
-                  {forceSecretUpload
-                    ? "Nenhum arquivo secreto."
-                    : "Nenhum material público anexado."}
-                </Typography>
-              </Box>
-            )}
-          </List>
-        </Paper>
+                        />
+                      ) : (
+                        getFileIcon(file, 48)
+                      )}
+                    </Box>
+                    <Divider />
+                    {/* Área de Informações e Ações */}
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        pr: 5,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        noWrap
+                        title={file.name}
+                        onClick={() => handleViewFile(file)}
+                        sx={{
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          "&:hover": {color: "primary.main"},
+                        }}
+                      >
+                        {file.name}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                );
+              })}
+            </Box>
+          ) : (
+            <Box sx={{p: 3, textAlign: "center", color: "text.secondary"}}>
+              <Typography variant="body2">
+                {forceSecretUpload
+                  ? "Nenhum arquivo secreto."
+                  : "Nenhum material público anexado."}
+              </Typography>
+            </Box>
+          )}
+        </Box>
       )}
 
       {/* Modal de Upload */}

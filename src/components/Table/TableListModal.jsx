@@ -36,6 +36,7 @@ import {
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
+import {ConfirmDialog} from "@/components/ConfirmDialog";
 
 function TableListModal() {
   const {
@@ -51,6 +52,8 @@ function TableListModal() {
 
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [declineModalOpen, setDeclineModalOpen] = useState(false);
+  const [tableToDecline, setTableToDecline] = useState(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -113,16 +116,23 @@ function TableListModal() {
     }
   };
 
-  const handleDeclineInvite = async (e, table) => {
+  const handleDeclineClick = (e, table) => {
     e.stopPropagation();
-    if (!confirm("Tem certeza que deseja recusar este convite?")) return;
+    setTableToDecline(table);
+    setDeclineModalOpen(true);
+  };
+
+  const handleConfirmDecline = async () => {
+    if (!tableToDecline) return;
+    setDeclineModalOpen(false);
     try {
-      await APIService.declineInvite(table._id, user.email);
+      await APIService.declineInvite(tableToDecline._id, user.email);
       showNotification("Convite recusado.", "info");
       useUIStore.getState().notifyTablesUpdated();
     } catch (error) {
       showNotification("Erro ao recusar: " + error.message, "error");
     }
+    setTableToDecline(null);
   };
 
   return (
@@ -255,7 +265,7 @@ function TableListModal() {
                           color="error"
                           size="small"
                           startIcon={<CloseIcon />}
-                          onClick={(e) => handleDeclineInvite(e, table)}
+                          onClick={(e) => handleDeclineClick(e, table)}
                         >
                           Recusar
                         </Button>
@@ -301,6 +311,15 @@ function TableListModal() {
           <AddIcon />
         </Fab>
       </DialogContent>
+
+      <ConfirmDialog
+        isOpen={declineModalOpen}
+        onClose={() => setDeclineModalOpen(false)}
+        onConfirm={handleConfirmDecline}
+        title="Recusar Convite"
+      >
+        <p>Tem certeza que deseja recusar este convite?</p>
+      </ConfirmDialog>
     </Dialog>
   );
 }

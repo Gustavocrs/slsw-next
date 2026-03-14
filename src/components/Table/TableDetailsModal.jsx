@@ -47,6 +47,7 @@ import {
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
+import {ConfirmDialog} from "@/components/ConfirmDialog";
 
 function TableDetailsModal() {
   const {
@@ -73,6 +74,7 @@ function TableDetailsModal() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [invites, setInvites] = useState([]);
   const [myCharacters, setMyCharacters] = useState([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -219,14 +221,12 @@ function TableDetailsModal() {
     }
   };
 
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        "Tem certeza que deseja EXCLUIR esta mesa? Esta ação não pode ser desfeita.",
-      )
-    )
-      return;
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    setDeleteModalOpen(false);
     setLoading(true);
     try {
       await APIService.deleteTable(selectedTable._id);
@@ -554,7 +554,7 @@ function TableDetailsModal() {
       {isGM && (
         <DialogActions sx={{p: 2, justifyContent: "space-between"}}>
           <Button
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             color="error"
             startIcon={<DeleteIcon />}
             disabled={loading}
@@ -585,6 +585,18 @@ function TableDetailsModal() {
           <Button onClick={toggleTableDetailsModal}>Fechar</Button>
         </DialogActions>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Excluir Mesa"
+      >
+        <p>
+          Tem certeza que deseja EXCLUIR esta mesa? Esta ação não pode ser
+          desfeita.
+        </p>
+      </ConfirmDialog>
     </Dialog>
   );
 }

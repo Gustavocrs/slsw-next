@@ -72,7 +72,6 @@ export default function UserMenu() {
     handleClose();
     setSelectedTable(null); // Limpa a mesa selecionada ao sair
     await logoutUser();
-    window.location.reload();
   };
 
   const handleOpenTables = () => {
