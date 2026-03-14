@@ -14,18 +14,28 @@ import {EDGES, RANKS} from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
-    padding: 40px;
-    padding-bottom: 100px;
-    max-width: 900px;
+    padding: ${(props) => (props.$twoPage ? "30px 40px" : "40px")};
+    padding-bottom: ${(props) => (props.$twoPage ? "30px" : "100px")};
+    max-width: ${(props) => (props.$twoPage ? "100%" : "900px")};
     margin: 0 auto;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: ${(props) => (props.$twoPage ? "0" : "12px")};
+    box-shadow: ${(props) =>
+      props.$twoPage ? "none" : "0 4px 12px rgba(0, 0, 0, 0.1)"};
+    height: ${(props) => (props.$twoPage ? "100%" : "auto")};
+
+    ${(props) =>
+      props.$twoPage &&
+      `
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    `}
 
     @media (max-width: 900px) {
       padding: 20px;
-      padding-top: 80px;
-      padding-bottom: 100px;
+      padding-top: ${(props) => (props.$twoPage ? "20px" : "80px")};
+      padding-bottom: ${(props) => (props.$twoPage ? "20px" : "100px")};
       width: 100%;
       border-radius: 0;
       box-shadow: none;
@@ -173,17 +183,23 @@ const safeHighlightHtml = (html, term) => {
     .join("");
 };
 
-function BookView({onOpenSidebar}) {
+function BookView({onOpenSidebar, twoPageMode = false}) {
   const [searchTerm, setSearchTerm] = React.useState("");
 
   return (
     <>
-      <MenuButton onClick={onOpenSidebar}>
-        <MenuIcon />
-      </MenuButton>
+      {!twoPageMode && (
+        <MenuButton onClick={onOpenSidebar}>
+          <MenuIcon />
+        </MenuButton>
+      )}
 
-      <BookContainer>
-        <Box sx={{mb: 4}}>
+      <BookContainer $twoPage={twoPageMode}>
+        <Box
+          sx={{
+            mb: 4,
+          }}
+        >
           <TextField
             fullWidth
             placeholder="Pesquisar no manual (regras, vantagens, itens)..."

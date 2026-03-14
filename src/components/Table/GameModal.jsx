@@ -73,6 +73,11 @@ import {
   AutoFixHigh as RecalculateIcon,
   PlayArrow as PlayIcon,
   Stop as StopIcon,
+  EmojiEvents as QuestIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  HelpOutline as HelpOutlineIcon,
+  MenuBook as MenuBookIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -88,6 +93,7 @@ import {
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
 import ChatModal from "./ChatModal";
+import BookView from "@/components/BookView";
 import {calculateMaxMana} from "@/lib/rpgEngine";
 import {
   getTableGameSession,
@@ -106,8 +112,39 @@ const TRACKED_STATUSES = [
   {label: "Queimado", icon: BurnIcon, color: "#d32f2f"},
 ];
 
+// Helper para determinar o ícone de presença no Avatar
+const getPresenceBadgeIcon = (status) => {
+  if (status === "confirmed") {
+    return (
+      <CheckCircleIcon
+        sx={{
+          width: 16,
+          height: 16,
+          color: "#4caf50",
+          bgcolor: "white",
+          borderRadius: "50%",
+        }}
+      />
+    );
+  }
+  if (status === "declined") {
+    return (
+      <CancelIcon
+        sx={{
+          width: 16,
+          height: 16,
+          color: "#f44336",
+          bgcolor: "white",
+          borderRadius: "50%",
+        }}
+      />
+    );
+  }
+  return null;
+};
+
 // Sub-componente para item da lista de jogadores com listener em tempo real
-const PlayerListItem = ({player, isGMView, onClick}) => {
+const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
   const [charData, setCharData] = useState(null);
 
   useEffect(() => {
@@ -194,26 +231,33 @@ const PlayerListItem = ({player, isGMView, onClick}) => {
       <Badge
         overlap="circular"
         anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-        badgeContent={
-          player.isGM ? (
-            <GmIcon
-              sx={{
-                width: 14,
-                height: 14,
-                color: "#f57c00",
-                bgcolor: "white",
-                borderRadius: "50%",
-              }}
-            />
-          ) : null
-        }
+        badgeContent={getPresenceBadgeIcon(presenceStatus)}
+        sx={{"& .MuiBadge-badge": {p: 0, minWidth: "auto", height: "auto"}}}
       >
-        <Avatar
-          src={safePhotoURL}
-          alt={player.name}
-          sx={{width: 40, height: 40}}
-          imgProps={{referrerPolicy: "no-referrer"}}
-        />
+        <Badge
+          overlap="circular"
+          anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+          badgeContent={
+            player.isGM ? (
+              <GmIcon
+                sx={{
+                  width: 14,
+                  height: 14,
+                  color: "#f57c00",
+                  bgcolor: "white",
+                  borderRadius: "50%",
+                }}
+              />
+            ) : null
+          }
+        >
+          <Avatar
+            src={safePhotoURL}
+            alt={player.name}
+            sx={{width: 40, height: 40}}
+            imgProps={{referrerPolicy: "no-referrer"}}
+          />
+        </Badge>
       </Badge>
 
       <Grid container alignItems="center">
@@ -412,6 +456,7 @@ function GameModal() {
   const [gameSettingsOpen, setGameSettingsOpen] = useState(false);
   const [selectedGameLocks, setSelectedGameLocks] = useState([]);
   const [savingGameSettings, setSavingGameSettings] = useState(false);
+  const [isBookOpen, setIsBookOpen] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -467,6 +512,41 @@ function GameModal() {
     setSelectedTable,
     showNotification,
   ]);
+
+  // --- Lógica de Presença na Próxima Sessão ---
+  const handleTogglePresence = async () => {
+    if (!selectedTable?._id || !user) return;
+
+    let currentPresence = "pending";
+    if (isGM) {
+      currentPresence = selectedTable.gmPresence || "pending";
+    } else {
+      const me = selectedTable.players?.find((p) => p.uid === user.uid);
+      if (me) currentPresence = me.presence || "pending";
+    }
+
+    // Ciclo: pending -> confirmed -> declined -> pending
+    let nextPresence = "confirmed";
+    if (currentPresence === "confirmed") nextPresence = "declined";
+    if (currentPresence === "declined") nextPresence = "pending";
+
+    try {
+      if (isGM) {
+        await APIService.updateTable(selectedTable._id, {
+          gmPresence: nextPresence,
+        });
+      } else {
+        const updatedPlayers = (selectedTable.players || []).map((p) =>
+          p.uid === user.uid ? {...p, presence: nextPresence} : p,
+        );
+        await APIService.updateTable(selectedTable._id, {
+          players: updatedPlayers,
+        });
+      }
+    } catch (error) {
+      showNotification("Erro ao atualizar presença.", "error");
+    }
+  };
 
   const handlePlayerClick = (event, player, status = {}) => {
     // 1. Permitir clicar em si mesmo (para ver ficha ou configurar)
@@ -1109,6 +1189,21 @@ function GameModal() {
   const npcList = allPlayers.filter((p) => p.isNpc);
   const realPlayerList = allPlayers.filter((p) => !p.isNpc);
 
+  // Computar presença atual do usuário para a TopBar
+  let myPresence = "pending";
+  if (isGM) {
+    myPresence = selectedTable?.gmPresence || "pending";
+  } else {
+    const me = selectedTable?.players?.find((p) => p.uid === user?.uid);
+    myPresence = me?.presence || "pending";
+  }
+
+  const getTopBarPresenceIcon = (status) => {
+    if (status === "confirmed") return <CheckCircleIcon color="success" />;
+    if (status === "declined") return <CancelIcon color="error" />;
+    return <HelpOutlineIcon color="disabled" />;
+  };
+
   return (
     <>
       <Dialog
@@ -1127,7 +1222,7 @@ function GameModal() {
             borderBottom: "1px solid #e0e0e0",
           }}
         >
-          <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+          <Box sx={{display: "flex", alignItems: "center", gap: 1, flex: 1}}>
             {isGM ? (
               <>
                 <GmIcon color="secondary" />
@@ -1169,7 +1264,55 @@ function GameModal() {
               <Chip label="Jogador" color="primary" size="small" />
             )}
           </Box>
-          <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+
+          {/* Próxima Sessão no Centro da Barra */}
+          <Box
+            sx={{
+              display: {xs: "none", md: "flex"},
+              flexDirection: "column",
+              alignItems: "center",
+              flex: 1,
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight="bold"
+            >
+              Próxima Sessão
+            </Typography>
+            <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+              <Typography variant="body2" fontWeight="bold">
+                {selectedTable?.nextSession
+                  ? new Date(selectedTable.nextSession).toLocaleString("pt-BR")
+                  : "Não agendada"}
+              </Typography>
+              <IconButton
+                size="small"
+                sx={{p: 0}}
+                onClick={handleTogglePresence}
+                title={
+                  myPresence === "confirmed"
+                    ? "Presença: Confirmada (Clique para alterar)"
+                    : myPresence === "declined"
+                      ? "Presença: Ausente (Clique para alterar)"
+                      : "Presença: Pendente (Clique para alterar)"
+                }
+              >
+                {getTopBarPresenceIcon(myPresence)}
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flex: 1,
+              justifyContent: "flex-end",
+            }}
+          >
             {!isGM && (
               <IconButton
                 onClick={handleViewMySheet}
@@ -1200,6 +1343,13 @@ function GameModal() {
                 <RecalculateIcon />
               </IconButton>
             )}
+            <IconButton
+              onClick={() => setIsBookOpen(!isBookOpen)}
+              title="Manual do Jogo"
+              color={isBookOpen ? "primary" : "default"}
+            >
+              <MenuBookIcon />
+            </IconButton>
             <IconButton onClick={handleOpenTablesMenu} title="Trocar de Mesa">
               <SwitchTableIcon />
             </IconButton>
@@ -1221,289 +1371,329 @@ function GameModal() {
             overflowY: "hidden",
           }}
         >
-          {/* Navegação Mobile */}
-          {isMobile && (
-            <Tabs
-              value={mobileTab}
-              onChange={(e, v) => setMobileTab(v)}
-              variant="fullWidth"
-              sx={{bgcolor: "white", borderBottom: "1px solid #e0e0e0"}}
-            >
-              <Tab label={isGM ? "Mestre" : "Mesa"} />
-              <Tab label="Jogadores" />
-            </Tabs>
-          )}
-
-          <Grid container sx={{flexGrow: 1, overflow: "hidden"}}>
-            {/* Coluna Esquerda: Área do Mestre / Informações */}
-            <Grid
-              item
-              xs={12}
-              md={6}
+          {isBookOpen ? (
+            <Box
               sx={{
                 height: "100%",
-                overflowY: "auto",
-                p: {xs: 2, md: 3},
-                display: {
-                  xs: mobileTab === 0 ? "block" : "none",
-                  md: "block",
-                },
-                ...(isGM
-                  ? {
-                      bgcolor: "#faf5ff",
-                      borderRight: "2px solid #e1bee7",
-                      "&::-webkit-scrollbar": {width: "8px"},
-                      "&::-webkit-scrollbar-track": {background: "transparent"},
-                      "&::-webkit-scrollbar-thumb": {
-                        background: "#e1bee7",
-                        borderRadius: "4px",
-                      },
-                      "&::-webkit-scrollbar-thumb:hover": {
-                        background: "#ce93d8",
-                      },
-                    }
-                  : {
-                      bgcolor: "#e3f2fd",
-                      borderRight: "2px solid #bbdefb",
-                      "&::-webkit-scrollbar": {width: "8px"},
-                      "&::-webkit-scrollbar-track": {background: "transparent"},
-                      "&::-webkit-scrollbar-thumb": {
-                        background: "rgba(144, 202, 249, 0.5)",
-                        borderRadius: "4px",
-                      },
-                      "&::-webkit-scrollbar-thumb:hover": {
-                        background: "rgba(144, 202, 249, 0.8)",
-                      },
-                    }),
+                overflow: "hidden",
+                bgcolor: "#e0e0e0",
+                p: {xs: 0, md: 4},
               }}
             >
-              {/* Abas de Navegação do Painel */}
-              <Tabs
-                value={panelTab}
-                onChange={(e, v) => setPanelTab(v)}
-                variant="scrollable"
-                scrollButtons="auto"
+              <Paper
                 sx={{
-                  mb: 3,
-                  minHeight: 36,
-                  "& .MuiTab-root": {
-                    minHeight: 36,
-                    textTransform: "none",
-                    fontWeight: "bold",
-                  },
+                  height: "100%",
+                  width: "100%",
+                  maxWidth: "100%",
+                  margin: "0 auto",
+                  overflow: "hidden",
+                  position: "relative",
+                  borderRadius: {xs: 0, md: 2},
+                  boxShadow: {xs: "none", md: "0 10px 30px rgba(0,0,0,0.2)"},
                 }}
               >
-                <Tab label="Dados da Campanha" />
-                {isGM && <Tab label="Materiais Secretos" />}
-                <Tab label="Materiais Públicos" />
-              </Tabs>
+                <BookView twoPageMode={true} />
+              </Paper>
+            </Box>
+          ) : (
+            <>
+              {/* Navegação Mobile */}
+              {isMobile && (
+                <Tabs
+                  value={mobileTab}
+                  onChange={(e, v) => setMobileTab(v)}
+                  variant="fullWidth"
+                  sx={{bgcolor: "white", borderBottom: "1px solid #e0e0e0"}}
+                >
+                  <Tab label={isGM ? "Mestre" : "Mesa"} />
+                  <Tab label="Jogadores" />
+                </Tabs>
+              )}
 
-              {/* Conteúdo das Abas */}
-              {panelTab === 0 && (
-                <Box id="section-dados-campanha" sx={{mb: 4}}>
-                  <Paper
-                    elevation={0}
+              <Grid container sx={{flexGrow: 1, overflow: "hidden"}}>
+                {/* Coluna Esquerda: Área do Mestre / Informações */}
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  sx={{
+                    height: "100%",
+                    overflowY: "auto",
+                    p: {xs: 2, md: 3},
+                    display: {
+                      xs: mobileTab === 0 ? "block" : "none",
+                      md: "block",
+                    },
+                    ...(isGM
+                      ? {
+                          bgcolor: "#faf5ff",
+                          borderRight: "2px solid #e1bee7",
+                          "&::-webkit-scrollbar": {width: "8px"},
+                          "&::-webkit-scrollbar-track": {
+                            background: "transparent",
+                          },
+                          "&::-webkit-scrollbar-thumb": {
+                            background: "#e1bee7",
+                            borderRadius: "4px",
+                          },
+                          "&::-webkit-scrollbar-thumb:hover": {
+                            background: "#ce93d8",
+                          },
+                        }
+                      : {
+                          bgcolor: "#e3f2fd",
+                          borderRight: "2px solid #bbdefb",
+                          "&::-webkit-scrollbar": {width: "8px"},
+                          "&::-webkit-scrollbar-track": {
+                            background: "transparent",
+                          },
+                          "&::-webkit-scrollbar-thumb": {
+                            background: "rgba(144, 202, 249, 0.5)",
+                            borderRadius: "4px",
+                          },
+                          "&::-webkit-scrollbar-thumb:hover": {
+                            background: "rgba(144, 202, 249, 0.8)",
+                          },
+                        }),
+                  }}
+                >
+                  {/* Abas de Navegação do Painel */}
+                  <Tabs
+                    value={panelTab}
+                    onChange={(e, v) => setPanelTab(v)}
+                    variant="scrollable"
+                    scrollButtons="auto"
                     sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: "1px solid #e0e0e0",
-                      bgcolor: "#fff",
+                      mb: 3,
+                      minHeight: 36,
+                      "& .MuiTab-root": {
+                        minHeight: 36,
+                        textTransform: "none",
+                        fontWeight: "bold",
+                      },
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        color: "text.secondary",
-                        mb: 2,
-                      }}
-                    >
-                      <GmIcon fontSize="small" />
-                      <Typography variant="body2">
-                        GM: <strong>{selectedTable?.gmName}</strong>
-                      </Typography>
+                    <Tab label="Dados da Campanha" />
+                    {isGM && <Tab label="Materiais Secretos" />}
+                    <Tab label="Materiais Públicos" />
+                  </Tabs>
+
+                  {/* Conteúdo das Abas */}
+                  {panelTab === 0 && (
+                    <Box id="section-dados-campanha" sx={{mb: 4}}>
+                      <Accordion
+                        defaultExpanded
+                        sx={{
+                          borderRadius: "8px",
+                          border: "1px solid #e0e0e0",
+                          boxShadow: "none",
+                          "&:before": {display: "none"},
+                        }}
+                      >
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Box
+                            sx={{display: "flex", alignItems: "center", gap: 1}}
+                          >
+                            <QuestIcon color="primary" />
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              Quests & Informações
+                            </Typography>
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              color: "text.secondary",
+                              mb: 2,
+                            }}
+                          >
+                            <GmIcon fontSize="small" />
+                            <Typography variant="body2">
+                              GM: <strong>{selectedTable?.gmName}</strong>
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            paragraph
+                            sx={{whiteSpace: "pre-wrap"}}
+                          >
+                            {selectedTable?.description ||
+                              "Sem descrição disponível."}
+                          </Typography>
+                        </AccordionDetails>
+                      </Accordion>
                     </Box>
-                    <Typography
-                      variant="body2"
-                      paragraph
-                      sx={{whiteSpace: "pre-wrap"}}
-                    >
-                      {selectedTable?.description ||
-                        "Sem descrição disponível."}
-                    </Typography>
-                    <Divider sx={{my: 2}} />
-                    <Typography variant="caption" color="text.secondary">
-                      Próxima Sessão
-                    </Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {selectedTable?.nextSession
-                        ? new Date(selectedTable.nextSession).toLocaleString()
-                        : "Não agendada"}
-                    </Typography>
-                  </Paper>
-                </Box>
-              )}
+                  )}
 
-              {/* Mestre: Materiais Secretos */}
-              {isGM && panelTab === 1 && (
-                <Box id="section-materiais-secretos" sx={{mb: 4}}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{display: "block", mb: 2}}
+                  {/* Mestre: Materiais Secretos */}
+                  {isGM && panelTab === 1 && (
+                    <Box id="section-materiais-secretos" sx={{mb: 4}}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{display: "block", mb: 2}}
+                      >
+                        Visível apenas para o Mestre.
+                      </Typography>
+                      <GameFileManager
+                        tableId={selectedTable?._id}
+                        files={selectedTable?.files || []}
+                        isGM={true}
+                        hideList={false}
+                        onlySecret={true}
+                        forceSecretUpload={true}
+                      />
+                    </Box>
+                  )}
+
+                  {/* Materiais Públicos */}
+                  {panelTab === (isGM ? 2 : 1) && (
+                    <Box id="section-materiais-publicos" sx={{mb: 4}}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{display: "block", mb: 2}}
+                      >
+                        Visível para todos os jogadores.
+                      </Typography>
+                      <GameFileManager
+                        tableId={selectedTable?._id}
+                        files={selectedTable?.files || []}
+                        isGM={isGM}
+                        hideUpload={!isGM}
+                        excludeSecret={true}
+                      />
+                    </Box>
+                  )}
+                </Grid>
+
+                {/* Coluna Direita: Lista de Jogadores */}
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  sx={{
+                    height: "100%",
+                    bgcolor: "#fff",
+                    borderLeft: {md: "1px solid #e0e0e0"},
+                    p: 2,
+                    overflowY: "auto",
+                    display: {
+                      xs: mobileTab === 1 ? "block" : "none",
+                      md: "block",
+                    },
+                    "&::-webkit-scrollbar": {width: "8px"},
+                    "&::-webkit-scrollbar-track": {background: "transparent"},
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "rgba(144, 202, 249, 0.5)",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                      background: "rgba(144, 202, 249, 0.8)",
+                    },
+                  }}
+                >
+                  {/* Seção do Game Master */}
+                  <Divider
+                    textAlign="left"
+                    sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
                   >
-                    Visível apenas para o Mestre.
-                  </Typography>
-                  <GameFileManager
-                    tableId={selectedTable?._id}
-                    files={selectedTable?.files || []}
-                    isGM={true}
-                    hideList={false}
-                    onlySecret={true}
-                    forceSecretUpload={true}
-                  />
-                </Box>
-              )}
+                    <Chip label="Game Master" size="small" color="secondary" />
+                  </Divider>
 
-              {/* Materiais Públicos */}
-              {panelTab === (isGM ? 2 : 1) && (
-                <Box id="section-materiais-publicos" sx={{mb: 4}}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{display: "block", mb: 2}}
-                  >
-                    Visível para todos os jogadores.
-                  </Typography>
-                  <GameFileManager
-                    tableId={selectedTable?._id}
-                    files={selectedTable?.files || []}
-                    isGM={isGM}
-                    hideUpload={!isGM}
-                    excludeSecret={true}
-                  />
-                </Box>
-              )}
-            </Grid>
+                  <Box sx={{mb: 2}}>
+                    <PlayerListItem
+                      player={gmData}
+                      isGMView={isGM}
+                      presenceStatus={selectedTable?.gmPresence || "pending"}
+                      onClick={handlePlayerClick}
+                    />
+                  </Box>
 
-            {/* Coluna Direita: Lista de Jogadores */}
-            <Grid
-              item
-              xs={12}
-              md={6}
-              sx={{
-                height: "100%",
-                bgcolor: "#fff",
-                borderLeft: {md: "1px solid #e0e0e0"},
-                p: 2,
-                overflowY: "auto",
-                display: {
-                  xs: mobileTab === 1 ? "block" : "none",
-                  md: "block",
-                },
-                "&::-webkit-scrollbar": {width: "8px"},
-                "&::-webkit-scrollbar-track": {background: "transparent"},
-                "&::-webkit-scrollbar-thumb": {
-                  background: "rgba(144, 202, 249, 0.5)",
-                  borderRadius: "4px",
-                },
-                "&::-webkit-scrollbar-thumb:hover": {
-                  background: "rgba(144, 202, 249, 0.8)",
-                },
-              }}
-            >
-              {/* Seção do Game Master */}
-              <Divider
-                textAlign="left"
-                sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
-              >
-                <Chip label="Game Master" size="small" color="secondary" />
-              </Divider>
+                  {gmCharacterData && (
+                    <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{mb: 0.5, display: "block"}}
+                      >
+                        Personagem do Mestre
+                      </Typography>
+                      <PlayerListItem
+                        player={gmCharacterData}
+                        isGMView={isGM}
+                        presenceStatus={null}
+                        onClick={handlePlayerClick}
+                      />
+                    </Box>
+                  )}
 
-              <Box sx={{mb: 2}}>
-                <PlayerListItem
-                  player={gmData}
-                  isGMView={isGM}
-                  onClick={handlePlayerClick}
-                />
-              </Box>
+                  {/* Seção de NPCs (Abaixo do GM) */}
+                  {npcList.length > 0 && (
+                    <>
+                      <Divider
+                        textAlign="left"
+                        sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                      >
+                        <Chip
+                          label="NPCs & Invocados"
+                          size="small"
+                          sx={{
+                            bgcolor: "#e1bee7",
+                            color: "#4a148c",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Divider>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                          mb: 3,
+                        }}
+                      >
+                        {npcList.map((player) => (
+                          <PlayerListItem
+                            key={player.uid}
+                            player={player}
+                            isGMView={isGM}
+                            presenceStatus={null}
+                            onClick={handlePlayerClick}
+                          />
+                        ))}
+                      </Box>
+                    </>
+                  )}
 
-              {gmCharacterData && (
-                <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{mb: 0.5, display: "block"}}
-                  >
-                    Personagem do Mestre
-                  </Typography>
-                  <PlayerListItem
-                    player={gmCharacterData}
-                    isGMView={isGM}
-                    onClick={handlePlayerClick}
-                  />
-                </Box>
-              )}
-
-              {/* Seção de NPCs (Abaixo do GM) */}
-              {npcList.length > 0 && (
-                <>
+                  {/* Seção dos Jogadores */}
                   <Divider
                     textAlign="left"
                     sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
                   >
-                    <Chip
-                      label="NPCs & Invocados"
-                      size="small"
-                      sx={{
-                        bgcolor: "#e1bee7",
-                        color: "#4a148c",
-                        fontWeight: "bold",
-                      }}
-                    />
+                    <Chip label="Jogadores" size="small" />
                   </Divider>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2,
-                      mb: 3,
-                    }}
-                  >
-                    {npcList.map((player) => (
-                      <PlayerListItem
-                        key={player.uid}
-                        player={player}
-                        isGMView={isGM}
-                        onClick={handlePlayerClick}
-                      />
-                    ))}
+                  <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
+                    {realPlayerList.map((player) => {
+                      return (
+                        <PlayerListItem
+                          key={player.uid}
+                          player={player}
+                          isGMView={isGM}
+                          presenceStatus={player.presence || "pending"}
+                          onClick={handlePlayerClick}
+                        />
+                      );
+                    })}
                   </Box>
-                </>
-              )}
+                </Grid>
+              </Grid>
+            </>
+          )}
 
-              {/* Seção dos Jogadores */}
-              <Divider
-                textAlign="left"
-                sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
-              >
-                <Chip label="Jogadores" size="small" />
-              </Divider>
-              <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-                {realPlayerList.map((player) => {
-                  return (
-                    <PlayerListItem
-                      key={player.uid}
-                      player={player}
-                      isGMView={isGM}
-                      onClick={handlePlayerClick}
-                    />
-                  );
-                })}
-              </Box>
-            </Grid>
-          </Grid>
           {/* Menu de Opções do Jogador */}
           <Menu
             anchorEl={anchorEl}

@@ -958,14 +958,18 @@ function SheetView({
     const awakeningResources = (character.recursos_despertar || [])
       .map((r) => `${r.name} (Nv ${r.nivel})`)
       .join(", ");
+    const skills = (character.pericias || [])
+      .map((s) => `${s.name} (${s.die})`)
+      .join(", ");
+    const spells = (character.magias || []).map((m) => m.name).join(", ");
 
     const data = {
       artStyle:
         "Solo Leveling Manhwa Style, Anime, High Fantasy, Character Concept Art, 8k, Detailed, Portrait Orientation",
-      characterDetails: `Name: ${character.nome || "Unknown Hunter"}, Rank: ${character.rank || "Novice"}, Archetype: ${character.arquetipo || "Hunter"}, Concept: ${character.conceito || "Adventurer"}, Guild: ${character.guilda || "None"}, Age: ${character.idade || "Unknown"}, Height: ${character.altura || "Unknown"}, Weight: ${character.peso || "Unknown"}, Hair: ${character.cabelos || "Unknown"}, Eyes: ${character.olhos || "Unknown"}, Skin: ${character.pele || "Unknown"}`,
-      awakeningDetails: `Awakening Origin: ${character.despertar_origem || "Unknown"}, Sensation: ${character.despertar_sensacao || "Unknown"}, Mana Affinity: ${character.despertar_afinidade || "Blue"}, Mark: ${character.despertar_marca || "None"}, Unique Power: ${awakeningResources || "None"}`,
+      characterDetails: `Name: ${character.nome || "Unknown Hunter"}, Gender: ${character.genero || "Unknown"}, Rank: ${character.rank || "Novice"}, Archetype: ${character.arquetipo || "Hunter"}, Concept: ${character.conceito || "Adventurer"}, Guild: ${character.guilda || "None"}. Appearance -> Age: ${character.idade || "Unknown"}, Height: ${character.altura || "Unknown"}, Weight: ${character.peso || "Unknown"}, Hair: ${character.cabelos || "Unknown"}, Eyes: ${character.olhos || "Unknown"}, Skin: ${character.pele || "Unknown"}. Personality/History: ${character.descricao || "None"}`,
+      awakeningDetails: `Awakening Origin: ${character.despertar_origem || "Unknown"}, Sensation: ${character.despertar_sensacao || "Unknown"}, Mana Affinity: ${character.despertar_afinidade || "Blue"}, Mark: ${character.despertar_marca || "None"}. Unique Power Structure -> Source: ${character.poder_unico_fonte || "Unknown"}, Expression: ${character.poder_unico_expressao || "Unknown"}, Trigger: ${character.poder_unico_gatilho || "Unknown"}. Resources: ${awakeningResources || "None"}`,
       equipmentDetails: `Weapons: ${weapons || "None"}, Armor: ${armor || "Standard Hunter Gear"}, Items: ${items || "None"}, Loot/Artifacts: ${loot || "None"}`,
-      traits: `Advantages: ${advantages || "None"}, Complications: ${complications || "None"}`,
+      traits: `Attributes: Agi ${character.agilidade || "d4"}, Int ${character.intelecto || "d4"}, Spi ${character.espirito || "d4"}, Str ${character.forca || "d4"}, Vig ${character.vigor || "d4"}. Skills: ${skills || "None"}. Spells: ${spells || "None"}. Advantages: ${advantages || "None"}, Complications: ${complications || "None"}`,
       visualContext: `The character is centered in the frame, waist-up or full body, standing in a dynamic heroic pose. Surrounded by magical energy reflecting their Mana Affinity (${character.despertar_afinidade || "Blue"}). Their Awakening Mark (${character.despertar_marca || "None"}) is visible. CRITICAL: The character must be fully contained within the canvas. Do NOT crop the head, arms, or weapons. Leave empty space around the character.`,
       negativePrompt:
         "cropped, out of frame, out of bounds, cut off, close-up, text, watermarks, signatures, UI elements, bad anatomy, missing limbs.",
@@ -2816,7 +2820,26 @@ Negative Prompt: ${promptData.negativePrompt}.
                 Aparência Física
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Gênero</InputLabel>
+                    <StyledSelect
+                      disabled={isFieldLocked("genero")}
+                      value={character.genero || ""}
+                      label="Gênero"
+                      onChange={(e) =>
+                        updateAttributeIfAllowed("genero", e.target.value)
+                      }
+                    >
+                      <MenuItem value="">Não especificado</MenuItem>
+                      <MenuItem value="Masculino">Masculino</MenuItem>
+                      <MenuItem value="Feminino">Feminino</MenuItem>
+                      <MenuItem value="Não-binário">Não-binário</MenuItem>
+                      <MenuItem value="Outro">Outro</MenuItem>
+                    </StyledSelect>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Idade"
@@ -2828,7 +2851,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Altura"
@@ -2840,7 +2863,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Peso"
@@ -2852,7 +2875,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Cabelos"
@@ -2865,7 +2888,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     placeholder="Curto / Castanho"
                   />
                 </Grid>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Olhos"
@@ -2878,7 +2901,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     placeholder="Brilhantes"
                   />
                 </Grid>
-                <Grid item xs={6} sm={2}>
+                <Grid item xs={6} sm={4} md>
                   <StyledTextField
                     fullWidth
                     label="Pele"

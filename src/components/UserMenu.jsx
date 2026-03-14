@@ -5,7 +5,7 @@
 
 "use client";
 
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 // CORREÇÃO: Importando do lugar certo (hooks)
 import {useAuth} from "@/hooks";
 import {useUIStore} from "@/stores/characterStore";
@@ -45,11 +45,15 @@ export default function UserMenu() {
     notifyTablesUpdated,
     toggleMessagesDashboard,
     notifications,
+    showNotification,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
   const [sheetManagerOpen, setSheetManagerOpen] = useState(false);
+
+  const prevInvitesRef = useRef(0);
+  const prevUnreadRef = useRef(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -86,6 +90,19 @@ export default function UserMenu() {
     toggleMessagesDashboard();
   };
 
+  // Monitora novas notificações e mensagens
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current && prevUnreadRef.current !== 0) {
+      // Dispara o alerta indicando a nova notificação.
+      // Dica: Se quiser que ele fique fixo até ser clicado, você pode precisar ajustar o UIStore para aceitar uma prop como `duration: null` ou `persistent: true`.
+      showNotification(
+        "Nova notificação recebida! Clique aqui para ver.",
+        "info",
+      );
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount, showNotification]);
+
   // Verifica convites pendentes
   useEffect(() => {
     const checkInvites = async () => {
@@ -98,6 +115,14 @@ export default function UserMenu() {
             ),
           ).length;
           setPendingInvites(count);
+
+          if (count > prevInvitesRef.current && prevInvitesRef.current !== 0) {
+            showNotification(
+              `Você recebeu um novo convite de mesa! Acesse 'Minhas Mesas' para confirmar presença.`,
+              "info",
+            );
+          }
+          prevInvitesRef.current = count;
         } catch (e) {
           console.error("Erro ao verificar convites:", e);
         }
