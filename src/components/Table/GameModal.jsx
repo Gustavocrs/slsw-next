@@ -94,6 +94,7 @@ import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
 import ChatModal from "./ChatModal";
 import BookView from "@/components/BookView";
+import UserMenu from "@/components/UserMenu";
 import {calculateMaxMana} from "@/lib/rpgEngine";
 import {
   getTableGameSession,
@@ -422,8 +423,6 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
 
 function GameModal() {
   const {
-    gameModalOpen,
-    toggleGameModal,
     selectedTable,
     showNotification,
     toggleTableDetailsModal,
@@ -469,7 +468,7 @@ function GameModal() {
 
   // Efeito para sincronização em tempo real e verificação de segurança
   useEffect(() => {
-    if (!gameModalOpen || !selectedTable?._id || !user) return;
+    if (!selectedTable?._id || !user) return;
 
     const tableRef = doc(db, "tables", selectedTable._id);
 
@@ -504,14 +503,7 @@ function GameModal() {
     );
 
     return () => unsubscribe();
-  }, [
-    gameModalOpen,
-    selectedTable?._id,
-    user,
-    toggleGameModal,
-    setSelectedTable,
-    showNotification,
-  ]);
+  }, [selectedTable?._id, user, setSelectedTable, showNotification]);
 
   // --- Lógica de Presença na Próxima Sessão ---
   const handleTogglePresence = async () => {
@@ -1206,1269 +1198,1320 @@ function GameModal() {
 
   return (
     <>
-      <Dialog
-        open={gameModalOpen}
-        onClose={toggleGameModal}
-        fullScreen
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
+      {!selectedTable ? (
+        <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "column",
             alignItems: "center",
-            bgcolor: isGM ? "#faf5ff" : "#e3f2fd",
-            borderBottom: "1px solid #e0e0e0",
+            justifyContent: "center",
+            height: "100%",
+            gap: 3,
+            bgcolor: "#f5f7fa",
           }}
         >
-          <Box sx={{display: "flex", alignItems: "center", gap: 1, flex: 1}}>
-            {isGM ? (
-              <>
-                <GmIcon color="secondary" />
-                <Typography
-                  variant="h6"
-                  color="secondary"
-                  fontWeight="bold"
-                  sx={{display: {xs: "none", sm: "block"}}}
-                >
-                  Área do Mestre
-                </Typography>
-              </>
-            ) : (
-              <>
-                <InfoIcon color="primary" />
-                <Typography
-                  variant="h6"
-                  color="primary"
-                  fontWeight="bold"
-                  sx={{display: {xs: "none", sm: "block"}}}
-                >
-                  Mesa de Jogo
-                </Typography>
-              </>
-            )}
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{display: {xs: "none", sm: "block"}}}
+          <Typography variant="h5" color="text.secondary">
+            Nenhuma mesa selecionada
+          </Typography>
+          <Box sx={{display: "flex", gap: 2}}>
+            <Button
+              variant="contained"
+              onClick={handleOpenTablesMenu}
+              startIcon={<SwitchTableIcon />}
             >
-              |
-            </Typography>
-            <Typography variant="h6" component="span" fontWeight="bold">
-              {selectedTable?.name || "Mesa de Jogo"}
-            </Typography>
-            {isGM ? (
-              <Chip label="GM" color="secondary" size="small" />
-            ) : (
-              <Chip label="Jogador" color="primary" size="small" />
-            )}
-          </Box>
-
-          {/* Próxima Sessão no Centro da Barra */}
-          <Box
-            sx={{
-              display: {xs: "none", md: "flex"},
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight="bold"
+              Minhas Mesas
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => useUIStore.getState().toggleTableCreateModal()}
             >
-              Próxima Sessão
-            </Typography>
-            <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-              <Typography variant="body2" fontWeight="bold">
-                {selectedTable?.nextSession
-                  ? new Date(selectedTable.nextSession).toLocaleString("pt-BR")
-                  : "Não agendada"}
-              </Typography>
-              <IconButton
-                size="small"
-                sx={{p: 0}}
-                onClick={handleTogglePresence}
-                title={
-                  myPresence === "confirmed"
-                    ? "Presença: Confirmada (Clique para alterar)"
-                    : myPresence === "declined"
-                      ? "Presença: Ausente (Clique para alterar)"
-                      : "Presença: Pendente (Clique para alterar)"
-                }
-              >
-                {getTopBarPresenceIcon(myPresence)}
-              </IconButton>
-            </Box>
+              Criar Mesa
+            </Button>
           </Box>
-
+          <UserMenu />
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            width: "100%",
+            bgcolor: "#fff",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
+              justifyContent: "space-between",
               alignItems: "center",
-              gap: 1,
-              flex: 1,
-              justifyContent: "flex-end",
+              bgcolor: isGM ? "#faf5ff" : "#e3f2fd",
+              borderBottom: "1px solid #e0e0e0",
+              px: 2,
+              py: 1.5,
             }}
           >
-            {!isGM && (
-              <IconButton
-                onClick={handleViewMySheet}
-                title="Ver Minha Ficha"
-                color="primary"
+            <Box sx={{display: "flex", alignItems: "center", gap: 1, flex: 1}}>
+              {isGM ? (
+                <>
+                  <GmIcon color="secondary" />
+                  <Typography
+                    variant="h6"
+                    color="secondary"
+                    fontWeight="bold"
+                    sx={{display: {xs: "none", sm: "block"}}}
+                  >
+                    Área do Mestre
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <InfoIcon color="primary" />
+                  <Typography
+                    variant="h6"
+                    color="primary"
+                    fontWeight="bold"
+                    sx={{display: {xs: "none", sm: "block"}}}
+                  >
+                    Mesa de Jogo
+                  </Typography>
+                </>
+              )}
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{display: {xs: "none", sm: "block"}}}
               >
-                <SheetIcon />
-              </IconButton>
-            )}
-            {isGM && (
-              <IconButton
-                onClick={handleOpenGameSettings}
-                color={gameSession.isActive ? "error" : "success"}
-                title={gameSession.isActive ? "Finalizar Jogo" : "Iniciar Jogo"}
-              >
-                {gameSession.isActive ? (
-                  <StopIcon fontSize="large" />
-                ) : (
-                  <PlayIcon fontSize="large" />
-                )}
-              </IconButton>
-            )}
-            {isGM && (
-              <IconButton
-                onClick={handleRecalculateMana}
-                title="Restaurar Mana de Todos"
-              >
-                <RecalculateIcon />
-              </IconButton>
-            )}
-            <IconButton
-              onClick={() => setIsBookOpen(!isBookOpen)}
-              title="Manual do Jogo"
-              color={isBookOpen ? "primary" : "default"}
-            >
-              <MenuBookIcon />
-            </IconButton>
-            <IconButton onClick={handleOpenTablesMenu} title="Trocar de Mesa">
-              <SwitchTableIcon />
-            </IconButton>
-            <IconButton onClick={toggleChat} title="Abrir Chat">
-              <MessageIcon />
-            </IconButton>
-            <IconButton onClick={toggleGameModal} edge="end">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent
-          dividers
-          sx={{
-            bgcolor: "#f5f7fa",
-            p: 0,
-            display: "flex",
-            flexDirection: "column",
-            overflowY: "hidden",
-          }}
-        >
-          {isBookOpen ? (
+                |
+              </Typography>
+              <Typography variant="h6" component="span" fontWeight="bold">
+                {selectedTable?.name || "Mesa de Jogo"}
+              </Typography>
+              {isGM ? (
+                <Chip label="GM" color="secondary" size="small" />
+              ) : (
+                <Chip label="Jogador" color="primary" size="small" />
+              )}
+            </Box>
+
+            {/* Próxima Sessão no Centro da Barra */}
             <Box
               sx={{
-                height: "100%",
-                overflow: "hidden",
-                bgcolor: "#e0e0e0",
-                p: {xs: 0, md: 4},
+                display: {xs: "none", md: "flex"},
+                flexDirection: "column",
+                alignItems: "center",
+                flex: 1,
               }}
             >
-              <Paper
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight="bold"
+              >
+                Próxima Sessão
+              </Typography>
+              <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                <Typography variant="body2" fontWeight="bold">
+                  {selectedTable?.nextSession
+                    ? new Date(selectedTable.nextSession).toLocaleString(
+                        "pt-BR",
+                      )
+                    : "Não agendada"}
+                </Typography>
+                <IconButton
+                  size="small"
+                  sx={{p: 0}}
+                  onClick={handleTogglePresence}
+                  title={
+                    myPresence === "confirmed"
+                      ? "Presença: Confirmada (Clique para alterar)"
+                      : myPresence === "declined"
+                        ? "Presença: Ausente (Clique para alterar)"
+                        : "Presença: Pendente (Clique para alterar)"
+                  }
+                >
+                  {getTopBarPresenceIcon(myPresence)}
+                </IconButton>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flex: 1,
+                justifyContent: "flex-end",
+              }}
+            >
+              {!isGM && (
+                <IconButton
+                  onClick={handleViewMySheet}
+                  title="Ver Minha Ficha"
+                  color="primary"
+                >
+                  <SheetIcon />
+                </IconButton>
+              )}
+              {isGM && (
+                <IconButton
+                  onClick={handleOpenGameSettings}
+                  color={gameSession.isActive ? "error" : "success"}
+                  title={
+                    gameSession.isActive ? "Finalizar Jogo" : "Iniciar Jogo"
+                  }
+                >
+                  {gameSession.isActive ? (
+                    <StopIcon fontSize="large" />
+                  ) : (
+                    <PlayIcon fontSize="large" />
+                  )}
+                </IconButton>
+              )}
+              {isGM && (
+                <IconButton
+                  onClick={handleRecalculateMana}
+                  title="Restaurar Mana de Todos"
+                >
+                  <RecalculateIcon />
+                </IconButton>
+              )}
+              <IconButton
+                onClick={() => setIsBookOpen(!isBookOpen)}
+                title="Manual do Jogo"
+                color={isBookOpen ? "primary" : "default"}
+              >
+                <MenuBookIcon />
+              </IconButton>
+              <IconButton onClick={handleOpenTablesMenu} title="Trocar de Mesa">
+                <SwitchTableIcon />
+              </IconButton>
+              <IconButton onClick={toggleChat} title="Abrir Chat">
+                <MessageIcon />
+              </IconButton>
+              <UserMenu />
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              bgcolor: "#f5f7fa",
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "hidden",
+            }}
+          >
+            {isBookOpen ? (
+              <Box
                 sx={{
                   height: "100%",
-                  width: "100%",
-                  maxWidth: "100%",
-                  margin: "0 auto",
                   overflow: "hidden",
-                  position: "relative",
-                  borderRadius: {xs: 0, md: 2},
-                  boxShadow: {xs: "none", md: "0 10px 30px rgba(0,0,0,0.2)"},
+                  bgcolor: "#e0e0e0",
+                  p: {xs: 0, md: 4},
                 }}
               >
-                <BookView twoPageMode={true} />
-              </Paper>
-            </Box>
-          ) : (
-            <>
-              {/* Navegação Mobile */}
-              {isMobile && (
-                <Tabs
-                  value={mobileTab}
-                  onChange={(e, v) => setMobileTab(v)}
-                  variant="fullWidth"
-                  sx={{bgcolor: "white", borderBottom: "1px solid #e0e0e0"}}
-                >
-                  <Tab label={isGM ? "Mestre" : "Mesa"} />
-                  <Tab label="Jogadores" />
-                </Tabs>
-              )}
-
-              <Grid container sx={{flexGrow: 1, overflow: "hidden"}}>
-                {/* Coluna Esquerda: Área do Mestre / Informações */}
-                <Grid
-                  item
-                  xs={12}
-                  md={6}
+                <Paper
                   sx={{
                     height: "100%",
-                    overflowY: "auto",
-                    p: {xs: 2, md: 3},
-                    display: {
-                      xs: mobileTab === 0 ? "block" : "none",
-                      md: "block",
-                    },
-                    ...(isGM
-                      ? {
-                          bgcolor: "#faf5ff",
-                          borderRight: "2px solid #e1bee7",
-                          "&::-webkit-scrollbar": {width: "8px"},
-                          "&::-webkit-scrollbar-track": {
-                            background: "transparent",
-                          },
-                          "&::-webkit-scrollbar-thumb": {
-                            background: "#e1bee7",
-                            borderRadius: "4px",
-                          },
-                          "&::-webkit-scrollbar-thumb:hover": {
-                            background: "#ce93d8",
-                          },
-                        }
-                      : {
-                          bgcolor: "#e3f2fd",
-                          borderRight: "2px solid #bbdefb",
-                          "&::-webkit-scrollbar": {width: "8px"},
-                          "&::-webkit-scrollbar-track": {
-                            background: "transparent",
-                          },
-                          "&::-webkit-scrollbar-thumb": {
-                            background: "rgba(144, 202, 249, 0.5)",
-                            borderRadius: "4px",
-                          },
-                          "&::-webkit-scrollbar-thumb:hover": {
-                            background: "rgba(144, 202, 249, 0.8)",
-                          },
-                        }),
+                    width: "100%",
+                    maxWidth: "100%",
+                    margin: "0 auto",
+                    overflow: "hidden",
+                    position: "relative",
+                    borderRadius: {xs: 0, md: 2},
+                    boxShadow: {xs: "none", md: "0 10px 30px rgba(0,0,0,0.2)"},
                   }}
                 >
-                  {/* Abas de Navegação do Painel */}
+                  <BookView twoPageMode={true} />
+                </Paper>
+              </Box>
+            ) : (
+              <>
+                {/* Navegação Mobile */}
+                {isMobile && (
                   <Tabs
-                    value={panelTab}
-                    onChange={(e, v) => setPanelTab(v)}
-                    variant="scrollable"
-                    scrollButtons="auto"
+                    value={mobileTab}
+                    onChange={(e, v) => setMobileTab(v)}
+                    variant="fullWidth"
+                    sx={{bgcolor: "white", borderBottom: "1px solid #e0e0e0"}}
+                  >
+                    <Tab label={isGM ? "Mestre" : "Mesa"} />
+                    <Tab label="Jogadores" />
+                  </Tabs>
+                )}
+
+                <Grid container sx={{flexGrow: 1, overflow: "hidden"}}>
+                  {/* Coluna Esquerda: Área do Mestre / Informações */}
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
                     sx={{
-                      mb: 3,
-                      minHeight: 36,
-                      "& .MuiTab-root": {
+                      height: "100%",
+                      overflowY: "auto",
+                      p: {xs: 2, md: 3},
+                      display: {
+                        xs: mobileTab === 0 ? "block" : "none",
+                        md: "block",
+                      },
+                      ...(isGM
+                        ? {
+                            bgcolor: "#faf5ff",
+                            borderRight: "2px solid #e1bee7",
+                            "&::-webkit-scrollbar": {width: "8px"},
+                            "&::-webkit-scrollbar-track": {
+                              background: "transparent",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                              background: "#e1bee7",
+                              borderRadius: "4px",
+                            },
+                            "&::-webkit-scrollbar-thumb:hover": {
+                              background: "#ce93d8",
+                            },
+                          }
+                        : {
+                            bgcolor: "#e3f2fd",
+                            borderRight: "2px solid #bbdefb",
+                            "&::-webkit-scrollbar": {width: "8px"},
+                            "&::-webkit-scrollbar-track": {
+                              background: "transparent",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                              background: "rgba(144, 202, 249, 0.5)",
+                              borderRadius: "4px",
+                            },
+                            "&::-webkit-scrollbar-thumb:hover": {
+                              background: "rgba(144, 202, 249, 0.8)",
+                            },
+                          }),
+                    }}
+                  >
+                    {/* Abas de Navegação do Painel */}
+                    <Tabs
+                      value={panelTab}
+                      onChange={(e, v) => setPanelTab(v)}
+                      variant="scrollable"
+                      scrollButtons="auto"
+                      sx={{
+                        mb: 3,
                         minHeight: 36,
-                        textTransform: "none",
-                        fontWeight: "bold",
+                        "& .MuiTab-root": {
+                          minHeight: 36,
+                          textTransform: "none",
+                          fontWeight: "bold",
+                        },
+                      }}
+                    >
+                      <Tab label="Dados da Campanha" />
+                      {isGM && <Tab label="Materiais Secretos" />}
+                      <Tab label="Materiais Públicos" />
+                    </Tabs>
+
+                    {/* Conteúdo das Abas */}
+                    {panelTab === 0 && (
+                      <Box id="section-dados-campanha" sx={{mb: 4}}>
+                        <Accordion
+                          defaultExpanded
+                          sx={{
+                            borderRadius: "8px",
+                            border: "1px solid #e0e0e0",
+                            boxShadow: "none",
+                            "&:before": {display: "none"},
+                          }}
+                        >
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <QuestIcon color="primary" />
+                              <Typography variant="subtitle1" fontWeight="bold">
+                                Quests & Informações
+                              </Typography>
+                            </Box>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                color: "text.secondary",
+                                mb: 2,
+                              }}
+                            >
+                              <GmIcon fontSize="small" />
+                              <Typography variant="body2">
+                                GM: <strong>{selectedTable?.gmName}</strong>
+                              </Typography>
+                            </Box>
+                            <Typography
+                              variant="body2"
+                              paragraph
+                              sx={{whiteSpace: "pre-wrap"}}
+                            >
+                              {selectedTable?.description ||
+                                "Sem descrição disponível."}
+                            </Typography>
+                          </AccordionDetails>
+                        </Accordion>
+                      </Box>
+                    )}
+
+                    {/* Mestre: Materiais Secretos */}
+                    {isGM && panelTab === 1 && (
+                      <Box id="section-materiais-secretos" sx={{mb: 4}}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{display: "block", mb: 2}}
+                        >
+                          Visível apenas para o Mestre.
+                        </Typography>
+                        <GameFileManager
+                          tableId={selectedTable?._id}
+                          files={selectedTable?.files || []}
+                          isGM={true}
+                          hideList={false}
+                          onlySecret={true}
+                          forceSecretUpload={true}
+                        />
+                      </Box>
+                    )}
+
+                    {/* Materiais Públicos */}
+                    {panelTab === (isGM ? 2 : 1) && (
+                      <Box id="section-materiais-publicos" sx={{mb: 4}}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{display: "block", mb: 2}}
+                        >
+                          Visível para todos os jogadores.
+                        </Typography>
+                        <GameFileManager
+                          tableId={selectedTable?._id}
+                          files={selectedTable?.files || []}
+                          isGM={isGM}
+                          hideUpload={!isGM}
+                          excludeSecret={true}
+                        />
+                      </Box>
+                    )}
+                  </Grid>
+
+                  {/* Coluna Direita: Lista de Jogadores */}
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{
+                      height: "100%",
+                      bgcolor: "#fff",
+                      borderLeft: {md: "1px solid #e0e0e0"},
+                      p: 2,
+                      overflowY: "auto",
+                      display: {
+                        xs: mobileTab === 1 ? "block" : "none",
+                        md: "block",
+                      },
+                      "&::-webkit-scrollbar": {width: "8px"},
+                      "&::-webkit-scrollbar-track": {background: "transparent"},
+                      "&::-webkit-scrollbar-thumb": {
+                        background: "rgba(144, 202, 249, 0.5)",
+                        borderRadius: "4px",
+                      },
+                      "&::-webkit-scrollbar-thumb:hover": {
+                        background: "rgba(144, 202, 249, 0.8)",
                       },
                     }}
                   >
-                    <Tab label="Dados da Campanha" />
-                    {isGM && <Tab label="Materiais Secretos" />}
-                    <Tab label="Materiais Públicos" />
-                  </Tabs>
-
-                  {/* Conteúdo das Abas */}
-                  {panelTab === 0 && (
-                    <Box id="section-dados-campanha" sx={{mb: 4}}>
-                      <Accordion
-                        defaultExpanded
-                        sx={{
-                          borderRadius: "8px",
-                          border: "1px solid #e0e0e0",
-                          boxShadow: "none",
-                          "&:before": {display: "none"},
-                        }}
-                      >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Box
-                            sx={{display: "flex", alignItems: "center", gap: 1}}
-                          >
-                            <QuestIcon color="primary" />
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              Quests & Informações
-                            </Typography>
-                          </Box>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              color: "text.secondary",
-                              mb: 2,
-                            }}
-                          >
-                            <GmIcon fontSize="small" />
-                            <Typography variant="body2">
-                              GM: <strong>{selectedTable?.gmName}</strong>
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant="body2"
-                            paragraph
-                            sx={{whiteSpace: "pre-wrap"}}
-                          >
-                            {selectedTable?.description ||
-                              "Sem descrição disponível."}
-                          </Typography>
-                        </AccordionDetails>
-                      </Accordion>
-                    </Box>
-                  )}
-
-                  {/* Mestre: Materiais Secretos */}
-                  {isGM && panelTab === 1 && (
-                    <Box id="section-materiais-secretos" sx={{mb: 4}}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{display: "block", mb: 2}}
-                      >
-                        Visível apenas para o Mestre.
-                      </Typography>
-                      <GameFileManager
-                        tableId={selectedTable?._id}
-                        files={selectedTable?.files || []}
-                        isGM={true}
-                        hideList={false}
-                        onlySecret={true}
-                        forceSecretUpload={true}
+                    {/* Seção do Game Master */}
+                    <Divider
+                      textAlign="left"
+                      sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
+                    >
+                      <Chip
+                        label="Game Master"
+                        size="small"
+                        color="secondary"
                       />
-                    </Box>
-                  )}
+                    </Divider>
 
-                  {/* Materiais Públicos */}
-                  {panelTab === (isGM ? 2 : 1) && (
-                    <Box id="section-materiais-publicos" sx={{mb: 4}}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{display: "block", mb: 2}}
-                      >
-                        Visível para todos os jogadores.
-                      </Typography>
-                      <GameFileManager
-                        tableId={selectedTable?._id}
-                        files={selectedTable?.files || []}
-                        isGM={isGM}
-                        hideUpload={!isGM}
-                        excludeSecret={true}
-                      />
-                    </Box>
-                  )}
-                </Grid>
-
-                {/* Coluna Direita: Lista de Jogadores */}
-                <Grid
-                  item
-                  xs={12}
-                  md={6}
-                  sx={{
-                    height: "100%",
-                    bgcolor: "#fff",
-                    borderLeft: {md: "1px solid #e0e0e0"},
-                    p: 2,
-                    overflowY: "auto",
-                    display: {
-                      xs: mobileTab === 1 ? "block" : "none",
-                      md: "block",
-                    },
-                    "&::-webkit-scrollbar": {width: "8px"},
-                    "&::-webkit-scrollbar-track": {background: "transparent"},
-                    "&::-webkit-scrollbar-thumb": {
-                      background: "rgba(144, 202, 249, 0.5)",
-                      borderRadius: "4px",
-                    },
-                    "&::-webkit-scrollbar-thumb:hover": {
-                      background: "rgba(144, 202, 249, 0.8)",
-                    },
-                  }}
-                >
-                  {/* Seção do Game Master */}
-                  <Divider
-                    textAlign="left"
-                    sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
-                  >
-                    <Chip label="Game Master" size="small" color="secondary" />
-                  </Divider>
-
-                  <Box sx={{mb: 2}}>
-                    <PlayerListItem
-                      player={gmData}
-                      isGMView={isGM}
-                      presenceStatus={selectedTable?.gmPresence || "pending"}
-                      onClick={handlePlayerClick}
-                    />
-                  </Box>
-
-                  {gmCharacterData && (
-                    <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{mb: 0.5, display: "block"}}
-                      >
-                        Personagem do Mestre
-                      </Typography>
+                    <Box sx={{mb: 2}}>
                       <PlayerListItem
-                        player={gmCharacterData}
+                        player={gmData}
                         isGMView={isGM}
-                        presenceStatus={null}
+                        presenceStatus={selectedTable?.gmPresence || "pending"}
                         onClick={handlePlayerClick}
                       />
                     </Box>
-                  )}
 
-                  {/* Seção de NPCs (Abaixo do GM) */}
-                  {npcList.length > 0 && (
-                    <>
-                      <Divider
-                        textAlign="left"
-                        sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
-                      >
-                        <Chip
-                          label="NPCs & Invocados"
-                          size="small"
-                          sx={{
-                            bgcolor: "#e1bee7",
-                            color: "#4a148c",
-                            fontWeight: "bold",
-                          }}
+                    {gmCharacterData && (
+                      <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{mb: 0.5, display: "block"}}
+                        >
+                          Personagem do Mestre
+                        </Typography>
+                        <PlayerListItem
+                          player={gmCharacterData}
+                          isGMView={isGM}
+                          presenceStatus={null}
+                          onClick={handlePlayerClick}
                         />
-                      </Divider>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 2,
-                          mb: 3,
-                        }}
-                      >
-                        {npcList.map((player) => (
+                      </Box>
+                    )}
+
+                    {/* Seção de NPCs (Abaixo do GM) */}
+                    {npcList.length > 0 && (
+                      <>
+                        <Divider
+                          textAlign="left"
+                          sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                        >
+                          <Chip
+                            label="NPCs & Invocados"
+                            size="small"
+                            sx={{
+                              bgcolor: "#e1bee7",
+                              color: "#4a148c",
+                              fontWeight: "bold",
+                            }}
+                          />
+                        </Divider>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            mb: 3,
+                          }}
+                        >
+                          {npcList.map((player) => (
+                            <PlayerListItem
+                              key={player.uid}
+                              player={player}
+                              isGMView={isGM}
+                              presenceStatus={null}
+                              onClick={handlePlayerClick}
+                            />
+                          ))}
+                        </Box>
+                      </>
+                    )}
+
+                    {/* Seção dos Jogadores */}
+                    <Divider
+                      textAlign="left"
+                      sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                    >
+                      <Chip label="Jogadores" size="small" />
+                    </Divider>
+                    <Box
+                      sx={{display: "flex", flexDirection: "column", gap: 2}}
+                    >
+                      {realPlayerList.map((player) => {
+                        return (
                           <PlayerListItem
                             key={player.uid}
                             player={player}
                             isGMView={isGM}
-                            presenceStatus={null}
+                            presenceStatus={player.presence || "pending"}
                             onClick={handlePlayerClick}
                           />
-                        ))}
-                      </Box>
+                        );
+                      })}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </>
+            )}
+
+            {/* Menu de Opções do Jogador */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleCloseMenu}
+              PaperProps={{
+                elevation: 3,
+                sx: {minWidth: 240},
+              }}
+            >
+              {/* Opções para o próprio usuário (Self) */}
+              {selectedPlayer?.uid === user?.uid && (
+                <div>
+                  {!isGM && (
+                    <>
+                      <MenuItem onClick={handleViewSheet}>
+                        <ListItemIcon>
+                          <SheetIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Ver Minha Ficha</ListItemText>
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleCloseMenu();
+                          toggleTableDetailsModal();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <SettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Trocar Personagem</ListItemText>
+                      </MenuItem>
                     </>
                   )}
-
-                  {/* Seção dos Jogadores */}
-                  <Divider
-                    textAlign="left"
-                    sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
-                  >
-                    <Chip label="Jogadores" size="small" />
-                  </Divider>
-                  <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-                    {realPlayerList.map((player) => {
-                      return (
-                        <PlayerListItem
-                          key={player.uid}
-                          player={player}
-                          isGMView={isGM}
-                          presenceStatus={player.presence || "pending"}
-                          onClick={handlePlayerClick}
-                        />
-                      );
-                    })}
-                  </Box>
-                </Grid>
-              </Grid>
-            </>
-          )}
-
-          {/* Menu de Opções do Jogador */}
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleCloseMenu}
-            PaperProps={{
-              elevation: 3,
-              sx: {minWidth: 240},
-            }}
-          >
-            {/* Opções para o próprio usuário (Self) */}
-            {selectedPlayer?.uid === user?.uid && (
-              <div>
-                {!isGM && (
-                  <>
-                    <MenuItem onClick={handleViewSheet}>
+                  {isGM && (
+                    <MenuItem onClick={handleOpenNpcModal}>
                       <ListItemIcon>
-                        <SheetIcon fontSize="small" />
+                        <AddNpcIcon fontSize="small" />
                       </ListItemIcon>
-                      <ListItemText>Ver Minha Ficha</ListItemText>
+                      <ListItemText>Convocar NPC</ListItemText>
                     </MenuItem>
+                  )}
+                  <Divider />
+                </div>
+              )}
+
+              {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
+              {isGM &&
+                (!selectedPlayer?.isGM ||
+                  (selectedPlayer.isNpc &&
+                    selectedPlayer.uid === selectedTable?.gmId)) && [
+                  <MenuItem key="view-sheet" onClick={handleViewSheet}>
+                    <ListItemIcon>
+                      <SheetIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Ver Ficha</ListItemText>
+                  </MenuItem>,
+
+                  // AÇÕES
+                  <MenuItem
+                    key="menu-actions"
+                    onClick={(e) => handleOpenSubmenu("actions", e)}
+                  >
+                    <ListItemIcon>
+                      <SendIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Ações</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  <Divider key="div-actions" />,
+
+                  // ABALAR / REMOVER ABALADO
+                  selectedPlayerStatus.isShaken ? (
                     <MenuItem
-                      onClick={() => {
-                        handleCloseMenu();
-                        toggleTableDetailsModal();
-                      }}
+                      key="act-remove-stun"
+                      onClick={() => handleGMAction("remove_stun")}
                     >
                       <ListItemIcon>
-                        <SettingsIcon fontSize="small" />
+                        <HealIcon fontSize="small" color="success" />
                       </ListItemIcon>
-                      <ListItemText>Trocar Personagem</ListItemText>
+                      <ListItemText>Remover Abalado</ListItemText>
                     </MenuItem>
-                  </>
-                )}
-                {isGM && (
-                  <MenuItem onClick={handleOpenNpcModal}>
-                    <ListItemIcon>
-                      <AddNpcIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Convocar NPC</ListItemText>
-                  </MenuItem>
-                )}
-                <Divider />
-              </div>
-            )}
-
-            {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
-            {isGM &&
-              (!selectedPlayer?.isGM ||
-                (selectedPlayer.isNpc &&
-                  selectedPlayer.uid === selectedTable?.gmId)) && [
-                <MenuItem key="view-sheet" onClick={handleViewSheet}>
-                  <ListItemIcon>
-                    <SheetIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Ver Ficha</ListItemText>
-                </MenuItem>,
-
-                // AÇÕES
-                <MenuItem
-                  key="menu-actions"
-                  onClick={(e) => handleOpenSubmenu("actions", e)}
-                >
-                  <ListItemIcon>
-                    <SendIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Ações</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                <Divider key="div-actions" />,
-
-                // ABALAR / REMOVER ABALADO
-                selectedPlayerStatus.isShaken ? (
-                  <MenuItem
-                    key="act-remove-stun"
-                    onClick={() => handleGMAction("remove_stun")}
-                  >
-                    <ListItemIcon>
-                      <HealIcon fontSize="small" color="success" />
-                    </ListItemIcon>
-                    <ListItemText>Remover Abalado</ListItemText>
-                  </MenuItem>
-                ) : (
-                  <MenuItem
-                    key="act-stun"
-                    onClick={() => handleGMAction("stun")}
-                  >
-                    <ListItemIcon>
-                      <StunIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Abalar</ListItemText>
-                  </MenuItem>
-                ),
-
-                // DANO
-                <MenuItem
-                  key="menu-damage"
-                  onClick={(e) => handleOpenSubmenu("damage", e)}
-                >
-                  <ListItemIcon>
-                    <DamageIcon fontSize="small" color="error" />
-                  </ListItemIcon>
-                  <ListItemText sx={{color: "error.main"}}>Dano</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                // DESCANSO
-                <MenuItem
-                  key="menu-rest"
-                  onClick={(e) => handleOpenSubmenu("rest", e)}
-                >
-                  <ListItemIcon>
-                    <RestIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Descanso</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                <Divider key="div-sit" />,
-
-                // CORRUPÇÃO
-                <MenuItem
-                  key="menu-corruption"
-                  onClick={(e) => handleOpenSubmenu("corruption", e)}
-                >
-                  <ListItemIcon>
-                    <CorruptionIcon fontSize="small" sx={{color: "#7b1fa2"}} />
-                  </ListItemIcon>
-                  <ListItemText sx={{color: "#7b1fa2"}}>Corrupção</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                // POÇÕES
-                <MenuItem
-                  key="menu-potions"
-                  onClick={(e) => handleOpenSubmenu("potions", e)}
-                >
-                  <ListItemIcon>
-                    <HealthPotionIcon fontSize="small" color="primary" />
-                  </ListItemIcon>
-                  <ListItemText>Poções</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                // EFEITOS
-                <MenuItem
-                  key="act-effects"
-                  onClick={(event) => handleOpenSubmenu("effects", event)}
-                >
-                  <ListItemIcon>
-                    <PoisonIcon fontSize="small" sx={{color: "#9c27b0"}} />
-                  </ListItemIcon>
-                  <ListItemText sx={{color: "#9c27b0"}}>Efeitos</ListItemText>
-                  <ChevronRightIcon fontSize="small" />
-                </MenuItem>,
-
-                <Divider key="divider-kick" />,
-                <MenuItem key="remove-player" onClick={handleRemovePlayer}>
-                  <ListItemIcon>
-                    <PersonRemoveIcon fontSize="small" color="error" />
-                  </ListItemIcon>
-                  <ListItemText sx={{color: "error.main"}}>
-                    Remover Jogador
-                  </ListItemText>
-                </MenuItem>,
-              ]}
-
-            {/* A opção de enviar mensagem só aparece se não for o próprio usuário */}
-            {selectedPlayer?.uid !== user?.uid &&
-              !(isGM && !selectedPlayer?.isGM) && (
-                <MenuItem onClick={handleSendMessage}>
-                  <ListItemIcon>
-                    <MessageIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Enviar Msg</ListItemText>
-                </MenuItem>
-              )}
-          </Menu>
-
-          {/* SUBMENU: Ações */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "actions"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={handleSendMessage}>
-              <ListItemIcon>
-                <MessageIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Enviar Msg</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={handleRequestFile}>
-              <ListItemIcon>
-                <FileIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Solicitar Arquivo</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Dano */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "damage"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("damage")}>
-              <ListItemIcon>
-                <DamageIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText color="error">Causar Dano</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("heal_damage")}>
-              <ListItemIcon>
-                <HealIcon fontSize="small" color="success" />
-              </ListItemIcon>
-              <ListItemText color="success">Curar Dano</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Descanso */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "rest"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("short_rest")}>
-              <ListItemIcon>
-                <RestIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Curto</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("long_rest")}>
-              <ListItemIcon>
-                <SleepIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Longo</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Corrupção */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "corruption"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("corruption_add")}>
-              <ListItemIcon>
-                <CorruptionIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Causar</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("corruption_remove")}>
-              <ListItemIcon>
-                <PurifyIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Curar</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Poções */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "potions"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
-              <ListItemIcon>
-                <HealthPotionIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Cura</ListItemText>
-              <ChevronRightIcon fontSize="small" />
-            </MenuItem>
-            <MenuItem onClick={(e) => handleOpenSubmenu("mana-potion", e)}>
-              <ListItemIcon>
-                <ManaPotionIcon fontSize="small" color="primary" />
-              </ListItemIcon>
-              <ListItemText>Mana</ListItemText>
-              <ChevronRightIcon fontSize="small" />
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("antidote")}>
-              <ListItemIcon>
-                <AntidoteIcon fontSize="small" color="success" />
-              </ListItemIcon>
-              <ListItemText>Antídoto</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Ações */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "actions"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={handleSendMessage}>
-              <ListItemIcon>
-                <MessageIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Enviar Msg</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={handleRequestFile}>
-              <ListItemIcon>
-                <FileIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Solicitar Arquivo</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Dano */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "damage"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("damage")}>
-              <ListItemIcon>
-                <DamageIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText color="error">Causar Dano</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("heal_damage")}>
-              <ListItemIcon>
-                <HealIcon fontSize="small" color="success" />
-              </ListItemIcon>
-              <ListItemText color="success">Curar Dano</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Descanso */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "rest"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("short_rest")}>
-              <ListItemIcon>
-                <RestIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Curto</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("long_rest")}>
-              <ListItemIcon>
-                <SleepIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Longo</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Corrupção */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "corruption"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={() => handleGMAction("corruption_add")}>
-              <ListItemIcon>
-                <CorruptionIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Causar</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("corruption_remove")}>
-              <ListItemIcon>
-                <PurifyIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Curar</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Poções */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "potions"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem onClick={(e) => handleOpenTertiary("heal-potion", e)}>
-              <ListItemIcon>
-                <HealthPotionIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Cura</ListItemText>
-              <ChevronRightIcon fontSize="small" />
-            </MenuItem>
-            <MenuItem onClick={(e) => handleOpenTertiary("mana-potion", e)}>
-              <ListItemIcon>
-                <ManaPotionIcon fontSize="small" color="primary" />
-              </ListItemIcon>
-              <ListItemText>Mana</ListItemText>
-              <ChevronRightIcon fontSize="small" />
-            </MenuItem>
-            <MenuItem onClick={() => handleGMAction("antidote")}>
-              <ListItemIcon>
-                <AntidoteIcon fontSize="small" color="success" />
-              </ListItemIcon>
-              <ListItemText>Antídoto</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Poção de Cura */}
-          <Menu
-            anchorEl={tertiaryAnchorEl}
-            open={tertiaryType === "heal-potion"}
-            onClose={handleCloseTertiary}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 5})}
-            >
-              <ListItemText>+1 Ferimento</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 10})}
-            >
-              <ListItemText>+2 Ferimentos</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 15})}
-            >
-              <ListItemText>+3 Ferimentos</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Poção de Mana */}
-          <Menu
-            anchorEl={tertiaryAnchorEl}
-            open={tertiaryType === "mana-potion"}
-            onClose={handleCloseTertiary}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
-          >
-            <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 3})}
-            >
-              <ListItemText>+3 Mana</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 5})}
-            >
-              <ListItemText>+5 Mana</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 10})}
-            >
-              <ListItemText>+10 Mana</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: "total"})}
-            >
-              <ListItemText>Total</ListItemText>
-            </MenuItem>
-          </Menu>
-
-          {/* SUBMENU: Efeitos (Status) */}
-          <Menu
-            anchorEl={submenuAnchorEl}
-            open={submenuType === "effects"}
-            onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3, sx: {minWidth: 220}}}
-          >
-            <MenuItem
-              onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Envenenado"})
-              }
-            >
-              <ListItemText>Envenenar</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Paralisado"})
-              }
-            >
-              <ListItemText>Paralisar</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Congelado"})
-              }
-            >
-              <ListItemText>Congelar</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Queimado"})
-              }
-            >
-              <ListItemText>Queimar</ListItemText>
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                setAnchorEl(null);
-                setSubmenuAnchorEl(null);
-                setSubmenuType(null);
-                setCustomEffectModalOpen(true);
-              }}
-            >
-              <ListItemText>Outros status de RPG</ListItemText>
-            </MenuItem>
-          </Menu>
-        </DialogContent>
-
-        {/* Menu de Troca de Mesa */}
-        <Menu
-          anchorEl={tablesMenuAnchor}
-          open={Boolean(tablesMenuAnchor)}
-          onClose={() => setTablesMenuAnchor(null)}
-        >
-          {myTables.length === 0 ? (
-            <MenuItem disabled>Carregando mesas...</MenuItem>
-          ) : (
-            myTables.map((table) => (
-              <MenuItem
-                key={table._id}
-                selected={table._id === selectedTable._id}
-                onClick={() => handleSwitchTable(table)}
-              >
-                {table.name}
-              </MenuItem>
-            ))
-          )}
-        </Menu>
-
-        {/* Modal de Controle da Sessão */}
-        <Dialog
-          open={gameSettingsOpen}
-          onClose={handleCloseGameSettings}
-          fullWidth
-          maxWidth="md"
-        >
-          <DialogTitle>
-            {gameSession.isActive ? "Finalizar Jogo" : "Iniciar Jogo"}
-          </DialogTitle>
-          <DialogContent dividers>
-            <Box
-              sx={{
-                mb: 2,
-                p: 2,
-                borderRadius: 2,
-                bgcolor: "#f5f7fa",
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <Typography variant="body2" sx={{mb: 1}}>
-                Selecione os pontos da ficha que ficarão bloqueados enquanto o
-                jogo estiver em andamento.
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                A lista abaixo cobre todos os pontos editáveis da Ficha de
-                Personagem.
-              </Typography>
-              <Box sx={{display: "flex", gap: 1, mt: 2, flexWrap: "wrap"}}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setSelectedGameLocks(SHEET_LOCK_KEYS)}
-                >
-                  Marcar Tudo
-                </Button>
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={() => setSelectedGameLocks([])}
-                >
-                  Limpar Seleção
-                </Button>
-                <Chip
-                  size="small"
-                  color={gameSession.isActive ? "secondary" : "default"}
-                  label={`${selectedGameLocks.length} bloqueio(s) selecionado(s)`}
-                />
-              </Box>
-            </Box>
-
-            <Grid container spacing={2}>
-              {SHEET_LOCK_GROUPS.map((group) => (
-                <Grid item xs={12} md={6} key={group.id}>
-                  <Paper
-                    variant="outlined"
-                    sx={{p: 2, height: "100%", bgcolor: "#fff"}}
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      fontWeight="bold"
-                      color="primary"
-                      sx={{mb: 1.5}}
+                  ) : (
+                    <MenuItem
+                      key="act-stun"
+                      onClick={() => handleGMAction("stun")}
                     >
-                      {group.title}
-                    </Typography>
-                    <Box sx={{display: "flex", flexDirection: "column"}}>
-                      {group.items.map((item) => (
-                        <FormControlLabel
-                          key={item.key}
-                          control={
-                            <Checkbox
-                              checked={selectedGameLocks.includes(item.key)}
-                              onChange={() => handleToggleGameLock(item.key)}
-                            />
-                          }
-                          label={item.label}
-                        />
-                      ))}
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </DialogContent>
-          <DialogActions
+                      <ListItemIcon>
+                        <StunIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Abalar</ListItemText>
+                    </MenuItem>
+                  ),
+
+                  // DANO
+                  <MenuItem
+                    key="menu-damage"
+                    onClick={(e) => handleOpenSubmenu("damage", e)}
+                  >
+                    <ListItemIcon>
+                      <DamageIcon fontSize="small" color="error" />
+                    </ListItemIcon>
+                    <ListItemText sx={{color: "error.main"}}>Dano</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  // DESCANSO
+                  <MenuItem
+                    key="menu-rest"
+                    onClick={(e) => handleOpenSubmenu("rest", e)}
+                  >
+                    <ListItemIcon>
+                      <RestIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Descanso</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  <Divider key="div-sit" />,
+
+                  // CORRUPÇÃO
+                  <MenuItem
+                    key="menu-corruption"
+                    onClick={(e) => handleOpenSubmenu("corruption", e)}
+                  >
+                    <ListItemIcon>
+                      <CorruptionIcon
+                        fontSize="small"
+                        sx={{color: "#7b1fa2"}}
+                      />
+                    </ListItemIcon>
+                    <ListItemText sx={{color: "#7b1fa2"}}>
+                      Corrupção
+                    </ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  // POÇÕES
+                  <MenuItem
+                    key="menu-potions"
+                    onClick={(e) => handleOpenSubmenu("potions", e)}
+                  >
+                    <ListItemIcon>
+                      <HealthPotionIcon fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    <ListItemText>Poções</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  // EFEITOS
+                  <MenuItem
+                    key="act-effects"
+                    onClick={(event) => handleOpenSubmenu("effects", event)}
+                  >
+                    <ListItemIcon>
+                      <PoisonIcon fontSize="small" sx={{color: "#9c27b0"}} />
+                    </ListItemIcon>
+                    <ListItemText sx={{color: "#9c27b0"}}>Efeitos</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
+                  <Divider key="divider-kick" />,
+                  <MenuItem key="remove-player" onClick={handleRemovePlayer}>
+                    <ListItemIcon>
+                      <PersonRemoveIcon fontSize="small" color="error" />
+                    </ListItemIcon>
+                    <ListItemText sx={{color: "error.main"}}>
+                      Remover Jogador
+                    </ListItemText>
+                  </MenuItem>,
+                ]}
+
+              {/* A opção de enviar mensagem só aparece se não for o próprio usuário */}
+              {selectedPlayer?.uid !== user?.uid &&
+                !(isGM && !selectedPlayer?.isGM) && (
+                  <MenuItem onClick={handleSendMessage}>
+                    <ListItemIcon>
+                      <MessageIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Enviar Msg</ListItemText>
+                  </MenuItem>
+                )}
+            </Menu>
+
+            {/* SUBMENU: Ações */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "actions"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={handleSendMessage}>
+                <ListItemIcon>
+                  <MessageIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Enviar Msg</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={handleRequestFile}>
+                <ListItemIcon>
+                  <FileIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Solicitar Arquivo</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Dano */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "damage"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("damage")}>
+                <ListItemIcon>
+                  <DamageIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText color="error">Causar Dano</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("heal_damage")}>
+                <ListItemIcon>
+                  <HealIcon fontSize="small" color="success" />
+                </ListItemIcon>
+                <ListItemText color="success">Curar Dano</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Descanso */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "rest"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("short_rest")}>
+                <ListItemIcon>
+                  <RestIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Curto</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("long_rest")}>
+                <ListItemIcon>
+                  <SleepIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Longo</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Corrupção */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "corruption"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("corruption_add")}>
+                <ListItemIcon>
+                  <CorruptionIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Causar</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("corruption_remove")}>
+                <ListItemIcon>
+                  <PurifyIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Curar</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Poções */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "potions"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
+                <ListItemIcon>
+                  <HealthPotionIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText>Cura</ListItemText>
+                <ChevronRightIcon fontSize="small" />
+              </MenuItem>
+              <MenuItem onClick={(e) => handleOpenSubmenu("mana-potion", e)}>
+                <ListItemIcon>
+                  <ManaPotionIcon fontSize="small" color="primary" />
+                </ListItemIcon>
+                <ListItemText>Mana</ListItemText>
+                <ChevronRightIcon fontSize="small" />
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("antidote")}>
+                <ListItemIcon>
+                  <AntidoteIcon fontSize="small" color="success" />
+                </ListItemIcon>
+                <ListItemText>Antídoto</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Ações */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "actions"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={handleSendMessage}>
+                <ListItemIcon>
+                  <MessageIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Enviar Msg</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={handleRequestFile}>
+                <ListItemIcon>
+                  <FileIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Solicitar Arquivo</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Dano */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "damage"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("damage")}>
+                <ListItemIcon>
+                  <DamageIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText color="error">Causar Dano</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("heal_damage")}>
+                <ListItemIcon>
+                  <HealIcon fontSize="small" color="success" />
+                </ListItemIcon>
+                <ListItemText color="success">Curar Dano</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Descanso */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "rest"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("short_rest")}>
+                <ListItemIcon>
+                  <RestIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Curto</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("long_rest")}>
+                <ListItemIcon>
+                  <SleepIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Longo</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Corrupção */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "corruption"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("corruption_add")}>
+                <ListItemIcon>
+                  <CorruptionIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Causar</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("corruption_remove")}>
+                <ListItemIcon>
+                  <PurifyIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Curar</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Poções */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "potions"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={(e) => handleOpenTertiary("heal-potion", e)}>
+                <ListItemIcon>
+                  <HealthPotionIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText>Cura</ListItemText>
+                <ChevronRightIcon fontSize="small" />
+              </MenuItem>
+              <MenuItem onClick={(e) => handleOpenTertiary("mana-potion", e)}>
+                <ListItemIcon>
+                  <ManaPotionIcon fontSize="small" color="primary" />
+                </ListItemIcon>
+                <ListItemText>Mana</ListItemText>
+                <ChevronRightIcon fontSize="small" />
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("antidote")}>
+                <ListItemIcon>
+                  <AntidoteIcon fontSize="small" color="success" />
+                </ListItemIcon>
+                <ListItemText>Antídoto</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Poção de Cura */}
+            <Menu
+              anchorEl={tertiaryAnchorEl}
+              open={tertiaryType === "heal-potion"}
+              onClose={handleCloseTertiary}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem
+                onClick={() => handleGMAction("potion_heal", {amount: 5})}
+              >
+                <ListItemText>+1 Ferimento</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleGMAction("potion_heal", {amount: 10})}
+              >
+                <ListItemText>+2 Ferimentos</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleGMAction("potion_heal", {amount: 15})}
+              >
+                <ListItemText>+3 Ferimentos</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Poção de Mana */}
+            <Menu
+              anchorEl={tertiaryAnchorEl}
+              open={tertiaryType === "mana-potion"}
+              onClose={handleCloseTertiary}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem
+                onClick={() => handleGMAction("potion_mana", {amount: 3})}
+              >
+                <ListItemText>+3 Mana</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleGMAction("potion_mana", {amount: 5})}
+              >
+                <ListItemText>+5 Mana</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleGMAction("potion_mana", {amount: 10})}
+              >
+                <ListItemText>+10 Mana</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleGMAction("potion_mana", {amount: "total"})}
+              >
+                <ListItemText>Total</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: Efeitos (Status) */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "effects"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3, sx: {minWidth: 220}}}
+            >
+              <MenuItem
+                onClick={() =>
+                  handleGMAction("toggle_effect", {effectLabel: "Envenenado"})
+                }
+              >
+                <ListItemText>Envenenar</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  handleGMAction("toggle_effect", {effectLabel: "Paralisado"})
+                }
+              >
+                <ListItemText>Paralisar</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  handleGMAction("toggle_effect", {effectLabel: "Congelado"})
+                }
+              >
+                <ListItemText>Congelar</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  handleGMAction("toggle_effect", {effectLabel: "Queimado"})
+                }
+              >
+                <ListItemText>Queimar</ListItemText>
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  setAnchorEl(null);
+                  setSubmenuAnchorEl(null);
+                  setSubmenuType(null);
+                  setCustomEffectModalOpen(true);
+                }}
+              >
+                <ListItemText>Outros status de RPG</ListItemText>
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Box>
+      )}
+
+      {/* Menu de Troca de Mesa */}
+      <Menu
+        anchorEl={tablesMenuAnchor}
+        open={Boolean(tablesMenuAnchor)}
+        onClose={() => setTablesMenuAnchor(null)}
+      >
+        {myTables.length === 0 ? (
+          <MenuItem disabled>Carregando mesas...</MenuItem>
+        ) : (
+          myTables.map((table) => (
+            <MenuItem
+              key={table._id}
+              selected={selectedTable && table._id === selectedTable._id}
+              onClick={() => handleSwitchTable(table)}
+            >
+              {table.name}
+            </MenuItem>
+          ))
+        )}
+      </Menu>
+
+      {/* Modal de Controle da Sessão */}
+      <Dialog
+        open={gameSettingsOpen}
+        onClose={handleCloseGameSettings}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>
+          {gameSession.isActive ? "Finalizar Jogo" : "Iniciar Jogo"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box
             sx={{
-              px: 3,
-              py: 2,
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 1,
+              mb: 2,
+              p: 2,
+              borderRadius: 2,
+              bgcolor: "#f5f7fa",
+              border: "1px solid #e0e0e0",
             }}
           >
-            <Button
-              onClick={handleCloseGameSettings}
-              disabled={savingGameSettings}
-            >
-              Fechar
-            </Button>
-            <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
-              {gameSession.isActive && (
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleFinishGame}
-                  disabled={savingGameSettings}
-                >
-                  Finalizar Jogo
-                </Button>
-              )}
+            <Typography variant="body2" sx={{mb: 1}}>
+              Selecione os pontos da ficha que ficarão bloqueados enquanto o
+              jogo estiver em andamento.
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              A lista abaixo cobre todos os pontos editáveis da Ficha de
+              Personagem.
+            </Typography>
+            <Box sx={{display: "flex", gap: 1, mt: 2, flexWrap: "wrap"}}>
               <Button
-                variant="contained"
-                onClick={
-                  gameSession.isActive ? handleUpdateGameLocks : handleStartGame
-                }
+                size="small"
+                variant="outlined"
+                onClick={() => setSelectedGameLocks(SHEET_LOCK_KEYS)}
+              >
+                Marcar Tudo
+              </Button>
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setSelectedGameLocks([])}
+              >
+                Limpar Seleção
+              </Button>
+              <Chip
+                size="small"
+                color={gameSession.isActive ? "secondary" : "default"}
+                label={`${selectedGameLocks.length} bloqueio(s) selecionado(s)`}
+              />
+            </Box>
+          </Box>
+
+          <Grid container spacing={2}>
+            {SHEET_LOCK_GROUPS.map((group) => (
+              <Grid item xs={12} md={6} key={group.id}>
+                <Paper
+                  variant="outlined"
+                  sx={{p: 2, height: "100%", bgcolor: "#fff"}}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="primary"
+                    sx={{mb: 1.5}}
+                  >
+                    {group.title}
+                  </Typography>
+                  <Box sx={{display: "flex", flexDirection: "column"}}>
+                    {group.items.map((item) => (
+                      <FormControlLabel
+                        key={item.key}
+                        control={
+                          <Checkbox
+                            checked={selectedGameLocks.includes(item.key)}
+                            onChange={() => handleToggleGameLock(item.key)}
+                          />
+                        }
+                        label={item.label}
+                      />
+                    ))}
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2,
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 1,
+          }}
+        >
+          <Button
+            onClick={handleCloseGameSettings}
+            disabled={savingGameSettings}
+          >
+            Fechar
+          </Button>
+          <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
+            {gameSession.isActive && (
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleFinishGame}
                 disabled={savingGameSettings}
               >
-                {gameSession.isActive ? "Salvar Bloqueios" : "Iniciar Jogo"}
+                Finalizar Jogo
               </Button>
-            </Box>
-          </DialogActions>
-        </Dialog>
-
-        {/* Modal de Convocar NPC */}
-        <Dialog
-          open={npcModalOpen}
-          onClose={() => setNpcModalOpen(false)}
-          fullWidth
-          maxWidth="sm"
-        >
-          <DialogTitle>Convocar NPC para o Grupo</DialogTitle>
-          <DialogContent>
-            {loadingNpcs ? (
-              <Typography sx={{p: 2, textAlign: "center"}}>
-                Carregando seus personagens...
-              </Typography>
-            ) : myCharacters.length === 0 ? (
-              <Typography
-                sx={{p: 2, textAlign: "center", color: "text.secondary"}}
-              >
-                Você não tem personagens disponíveis ou todos já estão nesta
-                mesa.
-              </Typography>
-            ) : (
-              <List>
-                {myCharacters.map((char) => (
-                  <ListItem
-                    key={char._id}
-                    secondaryAction={
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleAddNpc(char)}
-                      >
-                        Adicionar
-                      </Button>
-                    }
-                  >
-                    <ListItemAvatar>
-                      <Avatar src={char.imagem_url} alt={char.nome}>
-                        {char.nome?.charAt(0)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={char.nome}
-                      secondary={`${char.arquetipo || "Sem classe"} • Rank ${char.rank || "Novato"}`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
             )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Componente de Chat */}
-        <ChatModal />
-
-        {/* Modal de Status Personalizado */}
-        <Dialog
-          open={customEffectModalOpen}
-          onClose={() => {
-            setCustomEffectModalOpen(false);
-            handleCloseMenu();
-          }}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle>Status Personalizado</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" sx={{mb: 2, color: "text.secondary"}}>
-              Digite o nome do status. Se ele já existir na ficha, será
-              removido.
-            </Typography>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Nome do Status"
-              fullWidth
-              variant="outlined"
-              value={customEffectText}
-              onChange={(e) => setCustomEffectText(e.target.value)}
-              onKeyPress={(e) =>
-                e.key === "Enter" && handleConfirmCustomEffect()
-              }
-            />
-          </DialogContent>
-          <DialogActions>
             <Button
-              onClick={() => {
-                setCustomEffectModalOpen(false);
-                handleCloseMenu();
-              }}
+              variant="contained"
+              onClick={
+                gameSession.isActive ? handleUpdateGameLocks : handleStartGame
+              }
+              disabled={savingGameSettings}
             >
-              Cancelar
+              {gameSession.isActive ? "Salvar Bloqueios" : "Iniciar Jogo"}
             </Button>
-            <Button onClick={handleConfirmCustomEffect} variant="contained">
-              Confirmar
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de Convocar NPC */}
+      <Dialog
+        open={npcModalOpen}
+        onClose={() => setNpcModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Convocar NPC para o Grupo</DialogTitle>
+        <DialogContent>
+          {loadingNpcs ? (
+            <Typography sx={{p: 2, textAlign: "center"}}>
+              Carregando seus personagens...
+            </Typography>
+          ) : myCharacters.length === 0 ? (
+            <Typography
+              sx={{p: 2, textAlign: "center", color: "text.secondary"}}
+            >
+              Você não tem personagens disponíveis ou todos já estão nesta mesa.
+            </Typography>
+          ) : (
+            <List>
+              {myCharacters.map((char) => (
+                <ListItem
+                  key={char._id}
+                  secondaryAction={
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => handleAddNpc(char)}
+                    >
+                      Adicionar
+                    </Button>
+                  }
+                >
+                  <ListItemAvatar>
+                    <Avatar src={char.imagem_url} alt={char.nome}>
+                      {char.nome?.charAt(0)}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={char.nome}
+                    secondary={`${char.arquetipo || "Sem classe"} • Rank ${char.rank || "Novato"}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Componente de Chat */}
+      <ChatModal />
+
+      {/* Modal de Status Personalizado */}
+      <Dialog
+        open={customEffectModalOpen}
+        onClose={() => {
+          setCustomEffectModalOpen(false);
+          handleCloseMenu();
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Status Personalizado</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{mb: 2, color: "text.secondary"}}>
+            Digite o nome do status. Se ele já existir na ficha, será removido.
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome do Status"
+            fullWidth
+            variant="outlined"
+            value={customEffectText}
+            onChange={(e) => setCustomEffectText(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleConfirmCustomEffect()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCustomEffectModalOpen(false);
+              handleCloseMenu();
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirmCustomEffect} variant="contained">
+            Confirmar
+          </Button>
+        </DialogActions>
       </Dialog>
     </>
   );

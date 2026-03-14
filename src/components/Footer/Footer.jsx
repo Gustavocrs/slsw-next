@@ -26,11 +26,9 @@ import {
   Menu as MenuIcon,
   SportsEsports as GameIcon,
 } from "@mui/icons-material";
-import UserMenu from "../UserMenu";
 import CreateTableModal from "../Table/CreateTableModal";
 import TableListModal from "../Table/TableListModal";
 import TableDetailsModal from "../Table/TableDetailsModal";
-import GameModal from "../Table/GameModal";
 import InspectSheetModal from "../Table/InspectSheetModal";
 import {db} from "@/lib/firebase";
 import MessagesDashboard from "../Messages/MessagesDashboard";
@@ -281,9 +279,7 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
         footerstyle={footerStyle}
       >
         <HeaderContent>
-          <UserSection>
-            <UserMenu />
-          </UserSection>
+          <UserSection></UserSection>
 
           <ControlsSection>
             {loading ? (
@@ -298,17 +294,6 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
               </HeaderButton>
             ) : (
               <>
-                {selectedTable && selectedTable._id && (
-                  <HeaderButton
-                    customcolors={headerColors}
-                    startIcon={<GameIcon />}
-                    onClick={toggleGameModal}
-                    sx={{mr: 1}}
-                  >
-                    {isMobile ? "" : "Jogo"}
-                  </HeaderButton>
-                )}
-
                 {/* <HeaderButton
                   customcolors={headerColors}
                   startIcon={
@@ -358,7 +343,6 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
       <CreateTableModal />
       <TableListModal />
       <TableDetailsModal />
-      <GameModal />
       <InspectSheetModal />
       <MessagesDashboard />
 

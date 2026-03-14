@@ -2,28 +2,20 @@
 
 import React, {useState, useEffect} from "react";
 import {Box} from "@mui/material";
-import BookView from "@/components/BookView";
-import SheetView from "@/components/SheetView";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import Footer from "@/components/Footer/Footer";
 import {useAuth} from "@/hooks";
 import {useCharacterStore} from "@/stores/characterStore";
 import {useCharacterAPI} from "@/hooks";
+import GameModal from "@/components/Table/GameModal";
 
 export default function PageLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentView, setCurrentView] = useState("book");
-  const [saveStatus, setSaveStatus] = useState(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const {user} = useAuth();
-  // Pegamos o create e update, mas NÃO vamos passar o list para o Header agora
-  const {update, create, list} = useCharacterAPI();
-  const character = useCharacterStore((s) => s.character);
-  const loadCharacter = useCharacterStore((s) => s.loadCharacter);
+  const {list} = useCharacterAPI();
 
   // EFEITO DE CARREGAMENTO ÚNICO
-  // Só carrega a ficha UMA vez quando o usuário loga, e não toda hora
   useEffect(() => {
     if (user?.uid) {
       console.log("Usuário logado, tentando buscar ficha uma única vez...");
@@ -35,48 +27,25 @@ export default function PageLayout() {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const handleSave = async () => {
-    try {
-      if (!user?.uid) return;
-
-      if (character?._id) {
-        await update(character._id, character);
-      } else {
-        const {_id, ...dataToCreate} = character;
-        await create(dataToCreate);
-      }
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-    } catch (error) {
-      console.error("Erro ao salvar:", error);
-    }
-  };
-
   return (
     <div
       id="DIVV"
       style={{
         padding: "0",
         width: "100%",
-        minHeight: "100vh",
-        paddingBottom: "60px",
+        height: "100vh",
+        paddingBottom: "15px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <Footer
-        onToggleSidebar={handleToggleSidebar}
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onSave={handleSave}
-      />
+      {/* <Footer onToggleSidebar={handleToggleSidebar} currentView="game" /> */}
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <Box>
-        {currentView === "book" ? (
-          <BookView onOpenSidebar={handleToggleSidebar} />
-        ) : (
-          <SheetView saveSuccess={saveSuccess} />
-        )}
+      <Box sx={{flex: 1, overflow: "hidden"}}>
+        <GameModal />
       </Box>
     </div>
   );
