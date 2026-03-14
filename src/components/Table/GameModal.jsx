@@ -469,6 +469,33 @@ function GameModal() {
   const gameSession = getTableGameSession(selectedTable);
   const lockedFieldsCount = gameSession.lockedFields.length;
 
+  // Efeito para exclusividade: Livro
+  useEffect(() => {
+    if (isBookOpen) {
+      if (inspectModalOpen) toggleInspectModal();
+      if (chatOpen) toggleChat();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBookOpen]);
+
+  // Efeito para exclusividade: Ficha
+  useEffect(() => {
+    if (inspectModalOpen) {
+      if (isBookOpen) setIsBookOpen(false);
+      if (chatOpen) toggleChat();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inspectModalOpen]);
+
+  // Efeito para exclusividade: Chat
+  useEffect(() => {
+    if (chatOpen) {
+      if (isBookOpen) setIsBookOpen(false);
+      if (inspectModalOpen) toggleInspectModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatOpen]);
+
   // Efeito para fechar o livro ou a ficha ao pressionar Esc
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -639,7 +666,7 @@ function GameModal() {
 
       if (charData) {
         setInspectedCharacter(charData);
-        toggleInspectModal();
+        if (!inspectModalOpen) toggleInspectModal();
         showNotification(
           `Visualizando ficha de ${selectedPlayer.name}`,
           "success",
@@ -670,8 +697,7 @@ function GameModal() {
 
       if (charData) {
         setInspectedCharacter(charData);
-        toggleInspectModal();
-        showNotification("Visualizando sua ficha", "success");
+        if (!inspectModalOpen) toggleInspectModal();
       } else {
         showNotification("Nenhuma ficha vinculada encontrada.", "warning");
       }
@@ -1116,6 +1142,10 @@ function GameModal() {
   };
 
   const handleOpenGameSettings = () => {
+    if (isBookOpen) setIsBookOpen(false);
+    if (inspectModalOpen) toggleInspectModal();
+    if (chatOpen) toggleChat();
+
     const currentSession = getTableGameSession(selectedTable);
     setSelectedGameLocks(currentSession.lockedFields);
     setGameSettingsOpen(true);
@@ -1361,7 +1391,13 @@ function GameModal() {
             >
               {!isGM && (
                 <IconButton
-                  onClick={handleViewMySheet}
+                  onClick={() => {
+                    if (inspectModalOpen) {
+                      toggleInspectModal();
+                    } else {
+                      handleViewMySheet();
+                    }
+                  }}
                   title="Ver Minha Ficha"
                   sx={{
                     color: inspectModalOpen ? "primary.main" : "action.active",

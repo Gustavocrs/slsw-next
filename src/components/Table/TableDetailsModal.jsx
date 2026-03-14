@@ -57,6 +57,7 @@ function TableDetailsModal() {
     showNotification,
     setSelectedTable,
     toggleInspectModal,
+    inspectModalOpen,
   } = useUIStore();
   const {loadCharacter, setInspectedCharacter} = useCharacterStore();
   const {user} = useAuth();
@@ -292,7 +293,7 @@ function TableDetailsModal() {
 
       if (charData) {
         setInspectedCharacter(charData);
-        toggleInspectModal();
+        if (!inspectModalOpen) toggleInspectModal();
         toggleTableDetailsModal();
         showNotification(`Visualizando ficha de ${player.name}`, "success");
       } else {
