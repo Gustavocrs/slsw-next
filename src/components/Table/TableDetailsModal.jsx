@@ -293,6 +293,7 @@ function TableDetailsModal() {
       if (charData) {
         setInspectedCharacter(charData);
         toggleInspectModal();
+        toggleTableDetailsModal();
         showNotification(`Visualizando ficha de ${player.name}`, "success");
       } else {
         showNotification("Jogador sem ficha vinculada.", "warning");

@@ -3851,7 +3851,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             </Grid>
 
             {/* Coluna 4: Barra Fixa (Footer/Header) */}
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <ConfigCard
                 title="Barra de Navegação Inferior"
                 icon={<FooterIcon />}
@@ -3917,7 +3917,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   })()}
                 </Grid>
               </ConfigCard>
-            </Grid>
+            </Grid> */}
 
             {/* Coluna 6: Ícones */}
             <Grid item xs={12} md={6}>

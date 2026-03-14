@@ -6,33 +6,15 @@
 "use client";
 
 import React, {useState, useEffect} from "react";
-import {
-  Dialog,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Slide,
-  useMediaQuery,
-  useTheme,
-  Button,
-} from "@mui/material";
-import {Close as CloseIcon} from "@mui/icons-material";
+import {Box} from "@mui/material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import SheetView from "@/components/SheetView";
 import APIService from "@/lib/api";
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
-function InspectSheetModal() {
+function InspectSheetModal({isEmbedded}) {
   const {inspectModalOpen, toggleInspectModal} = useUIStore();
   const {inspectedCharacter} = useCharacterStore();
   const [localChar, setLocalChar] = useState(null);
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     if (inspectedCharacter) {
@@ -93,40 +75,14 @@ function InspectSheetModal() {
     },
   };
 
-  if (!localChar) return null;
+  if (!localChar || !inspectModalOpen) return null;
+
+  if (!isEmbedded) return null;
 
   return (
-    <Dialog
-      fullScreen
-      fullWidth
-      maxWidth="lg"
-      open={inspectModalOpen}
-      onClose={toggleInspectModal}
-      TransitionComponent={Transition}
-    >
-      <AppBar
-        sx={{
-          position: "relative",
-          bgcolor: "#333",
-          "@media print": {display: "none"},
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={toggleInspectModal}
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-          <Typography sx={{ml: 2, flex: 1}} variant="h6" component="div">
-            Ficha de {localChar.nome || "Personagem"}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{width: "100%", height: "100%"}}>
       <SheetView character={localChar} actions={actions} />
-    </Dialog>
+    </Box>
   );
 }
 

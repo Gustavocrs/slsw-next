@@ -95,6 +95,7 @@ import GameFileManager from "@/components/GameFileManager";
 import ChatModal from "./ChatModal";
 import BookView from "@/components/BookView";
 import UserMenu from "@/components/UserMenu";
+import InspectSheetModal from "./InspectSheetModal";
 import {calculateMaxMana} from "@/lib/rpgEngine";
 import {
   getTableGameSession,
@@ -427,7 +428,9 @@ function GameModal() {
     showNotification,
     toggleTableDetailsModal,
     setSelectedTable,
+    inspectModalOpen,
     toggleInspectModal,
+    chatOpen,
     toggleChat,
     openChatWith,
   } = useUIStore();
@@ -466,16 +469,17 @@ function GameModal() {
   const gameSession = getTableGameSession(selectedTable);
   const lockedFieldsCount = gameSession.lockedFields.length;
 
-  // Efeito para fechar o livro ao pressionar Esc
+  // Efeito para fechar o livro ou a ficha ao pressionar Esc
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && isBookOpen) {
-        setIsBookOpen(false);
+      if (e.key === "Escape") {
+        if (isBookOpen) setIsBookOpen(false);
+        else if (inspectModalOpen) toggleInspectModal();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isBookOpen]);
+  }, [isBookOpen, inspectModalOpen, toggleInspectModal]);
 
   // Efeito para sincronização em tempo real e verificação de segurança
   useEffect(() => {
@@ -1359,7 +1363,9 @@ function GameModal() {
                 <IconButton
                   onClick={handleViewMySheet}
                   title="Ver Minha Ficha"
-                  color="primary"
+                  sx={{
+                    color: inspectModalOpen ? "primary.main" : "action.active",
+                  }}
                 >
                   <SheetIcon />
                 </IconButton>
@@ -1367,10 +1373,15 @@ function GameModal() {
               {isGM && (
                 <IconButton
                   onClick={handleOpenGameSettings}
-                  color={gameSession.isActive ? "error" : "success"}
                   title={
                     gameSession.isActive ? "Finalizar Jogo" : "Iniciar Jogo"
                   }
+                  sx={{
+                    color:
+                      gameSession.isActive || gameSettingsOpen
+                        ? "primary.main"
+                        : "action.active",
+                  }}
                 >
                   {gameSession.isActive ? (
                     <StopIcon fontSize="large" />
@@ -1383,6 +1394,7 @@ function GameModal() {
                 <IconButton
                   onClick={handleRecalculateMana}
                   title="Restaurar Mana de Todos"
+                  sx={{color: "action.active"}}
                 >
                   <RecalculateIcon />
                 </IconButton>
@@ -1390,14 +1402,26 @@ function GameModal() {
               <IconButton
                 onClick={() => setIsBookOpen(!isBookOpen)}
                 title="Manual do Jogo"
-                color={isBookOpen ? "primary" : "default"}
+                sx={{color: isBookOpen ? "primary.main" : "action.active"}}
               >
                 <MenuBookIcon />
               </IconButton>
-              <IconButton onClick={handleOpenTablesMenu} title="Trocar de Mesa">
+              <IconButton
+                onClick={handleOpenTablesMenu}
+                title="Trocar de Mesa"
+                sx={{
+                  color: Boolean(tablesMenuAnchor)
+                    ? "primary.main"
+                    : "action.active",
+                }}
+              >
                 <SwitchTableIcon />
               </IconButton>
-              <IconButton onClick={toggleChat} title="Abrir Chat">
+              <IconButton
+                onClick={toggleChat}
+                title="Abrir Chat"
+                sx={{color: chatOpen ? "primary.main" : "action.active"}}
+              >
                 <MessageIcon />
               </IconButton>
               <UserMenu />
@@ -1434,6 +1458,17 @@ function GameModal() {
                 >
                   <BookView twoPageMode={true} />
                 </Box>
+              </Box>
+            ) : inspectModalOpen ? (
+              <Box
+                sx={{
+                  height: "100%",
+                  overflow: "auto",
+                  bgcolor: "#fff",
+                  p: 0,
+                }}
+              >
+                <InspectSheetModal isEmbedded={true} />
               </Box>
             ) : (
               <>
