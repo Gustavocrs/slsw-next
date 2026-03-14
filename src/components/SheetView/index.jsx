@@ -1463,7 +1463,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       borderRadius: "8px",
                       overflow: "hidden",
                       border: "1px solid rgba(148, 163, 184, 0.22)",
-                      bgcolor: "#111827",
+                      bgcolor: "transparent",
                       boxShadow: "0 18px 30px rgba(15, 23, 42, 0.16)",
                     }}
                   >
@@ -1474,10 +1474,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                         referrerPolicy="no-referrer"
                         alt={character.nome || "Personagem"}
                         sx={{
+                          borderRadius: "25%",
                           width: "100%",
                           height: "100%",
                           maxHeight: {xs: 320, md: 380},
-                          objectFit: "cover",
+                          objectFit: "contain",
+                          objectPosition: "top center",
                           display: "block",
                         }}
                       />
@@ -1488,9 +1490,8 @@ Negative Prompt: ${promptData.negativePrompt}.
                           inset: 0,
                           display: "grid",
                           placeItems: "center",
-                          background:
-                            "radial-gradient(circle at top, rgba(191,145,61,0.28), transparent 38%), linear-gradient(180deg, #111827 0%, #1f2937 100%)",
-                          color: alpha("#f8fafc", 0.7),
+                          background: "transparent",
+                          color: alpha("#0f172a", 0.4),
                         }}
                       >
                         <Box sx={{textAlign: "center"}}>
@@ -2521,7 +2522,23 @@ Negative Prompt: ${promptData.negativePrompt}.
                             character.itens.map((item, index) => (
                               <Chip
                                 key={`${item.name}-${index}`}
-                                label={item.name}
+                                label={
+                                  <span>
+                                    {item.name}
+                                    {item.quantity &&
+                                      parseInt(item.quantity, 10) > 1 && (
+                                        <span
+                                          style={{
+                                            fontSize: "0.8em",
+                                            opacity: 0.75,
+                                            marginLeft: "4px",
+                                          }}
+                                        >
+                                          (x{item.quantity})
+                                        </span>
+                                      )}
+                                  </span>
+                                }
                                 onDoubleClick={(e) =>
                                   handleChipDoubleClick(e, "itens", index, item)
                                 }
@@ -2559,7 +2576,23 @@ Negative Prompt: ${promptData.negativePrompt}.
                             character.espolios.map((item, index) => (
                               <Chip
                                 key={`${item.name}-${index}`}
-                                label={item.name}
+                                label={
+                                  <span>
+                                    {item.name}
+                                    {item.quantity &&
+                                      parseInt(item.quantity, 10) > 1 && (
+                                        <span
+                                          style={{
+                                            fontSize: "0.8em",
+                                            opacity: 0.75,
+                                            marginLeft: "4px",
+                                          }}
+                                        >
+                                          (x{item.quantity})
+                                        </span>
+                                      )}
+                                  </span>
+                                }
                                 onDoubleClick={(e) =>
                                   handleChipDoubleClick(
                                     e,

@@ -63,7 +63,7 @@ export const EDGES = [
     name: "Antecedente Arcano",
     rank: "Novato",
     source: "SWADE",
-    description: "Permite acesso a Magias e recebe +5 de Mana base.",
+    description: "Permite acesso a Magias e recebe +10 de Mana base.",
   },
   {
     name: "Aristocrata",

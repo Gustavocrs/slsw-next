@@ -309,7 +309,7 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                   </HeaderButton>
                 )}
 
-                <HeaderButton
+                {/* <HeaderButton
                   customcolors={headerColors}
                   startIcon={
                     (currentView || viewMode) === "book" ? (
@@ -325,7 +325,7 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                     : (currentView || viewMode) === "book"
                       ? "Ficha"
                       : "Livro"}
-                </HeaderButton>
+                </HeaderButton> */}
 
                 {(currentView || viewMode) === "sheet" && (
                   <>
