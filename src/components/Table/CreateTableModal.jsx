@@ -199,20 +199,6 @@ function CreateTableModal() {
                   ),
                 }}
               />
-              <TextField
-                label="Link (Discord/VTT)"
-                placeholder="https://..."
-                fullWidth
-                value={externalLink}
-                onChange={(e) => setExternalLink(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
             </Stack>
           </Box>
 

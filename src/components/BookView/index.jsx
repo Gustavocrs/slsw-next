@@ -7,15 +7,31 @@
 
 import React from "react";
 import styled from "styled-components";
-import {Paper, IconButton, TextField, InputAdornment, Box} from "@mui/material";
-import {Menu as MenuIcon, Search as SearchIcon} from "@mui/icons-material";
+import {
+  Paper,
+  IconButton,
+  TextField,
+  InputAdornment,
+  Box,
+  Fab,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Typography,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Search as SearchIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+} from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
 import {EDGES, RANKS} from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
-    padding: ${(props) => (props.$twoPage ? "30px 40px" : "40px")};
-    padding-bottom: ${(props) => (props.$twoPage ? "30px" : "100px")};
+    padding: ${(props) => (props.$twoPage ? "20px" : "40px")};
+    padding-bottom: ${(props) => (props.$twoPage ? "20px" : "100px")};
     max-width: ${(props) => (props.$twoPage ? "100%" : "900px")};
     margin: 0 auto;
     background: white;
@@ -185,19 +201,134 @@ const safeHighlightHtml = (html, term) => {
 
 function BookView({onOpenSidebar, twoPageMode = false}) {
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [showBackToTop, setShowBackToTop] = React.useState(false);
+  const scrollContainerRef = React.useRef(null);
+
+  const handleScroll = (e) => {
+    const scrollTop = e.target?.scrollTop ?? window.scrollY;
+    setShowBackToTop(scrollTop > 300);
+  };
+
+  React.useEffect(() => {
+    if (!twoPageMode) {
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
+  }, [twoPageMode]);
+
+  const scrollToTop = () => {
+    if (twoPageMode && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({top: 0, behavior: "smooth"});
+    } else {
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+  };
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({behavior: "smooth", block: "start"});
+    }
+  };
 
   return (
-    <>
+    <Box
+      sx={{
+        display: "flex",
+        height: twoPageMode ? "100%" : "auto",
+        position: "relative",
+        width: "100%",
+      }}
+    >
       {!twoPageMode && (
         <MenuButton onClick={onOpenSidebar}>
           <MenuIcon />
         </MenuButton>
       )}
 
-      <BookContainer $twoPage={twoPageMode}>
+      {/* Sumário / Sidebar lateral (Apenas na View do Painel de Jogo) */}
+      {twoPageMode && (
         <Box
           sx={{
-            mb: 4,
+            width: 260,
+            flexShrink: 0,
+            borderRight: "1px solid #e0e0e0",
+            bgcolor: "#fafafa",
+            overflowY: "auto",
+            display: {xs: "none", md: "block"},
+            height: "100%",
+            "&::-webkit-scrollbar": {width: "6px"},
+            "&::-webkit-scrollbar-track": {background: "transparent"},
+            "&::-webkit-scrollbar-thumb": {
+              background: "#bdbdbd",
+              borderRadius: "3px",
+            },
+          }}
+        >
+          <List component="nav" dense disablePadding>
+            <ListItem
+              sx={{
+                py: 2,
+                bgcolor: "#fff",
+                borderBottom: "1px solid #e0e0e0",
+                position: "sticky",
+                top: 0,
+                zIndex: 2,
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                Sumário
+              </Typography>
+            </ListItem>
+            {manualSections.map((section) => (
+              <React.Fragment key={section.id}>
+                <ListItem
+                  button
+                  onClick={() => scrollToSection(section.id)}
+                  sx={{"&:hover": {bgcolor: "#e3f2fd"}, py: 1}}
+                >
+                  <ListItemText
+                    primary={section.title.replace(/<\/?[^>]+(>|$)/g, "")}
+                    primaryTypographyProps={{
+                      fontSize: "0.85rem",
+                      color: "#333",
+                    }}
+                  />
+                </ListItem>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </List>
+        </Box>
+      )}
+
+      <BookContainer
+        $twoPage={twoPageMode}
+        ref={twoPageMode ? scrollContainerRef : null}
+        onScroll={twoPageMode ? handleScroll : undefined}
+        sx={{flex: 1, position: "relative"}}
+      >
+        <Box
+          sx={{
+            position: "sticky",
+            top: twoPageMode ? "-20px" : 0,
+            zIndex: 10,
+            backgroundColor: "#fff",
+            pt: twoPageMode ? "20px" : 0,
+            pb: "15px",
+            mb: "20px",
+            borderBottom: "1px solid #e0e0e0",
+            mx: twoPageMode ? "-20px" : 0,
+            px: twoPageMode ? "20px" : 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            "@media (max-width: 900px)": {
+              top: twoPageMode ? "-20px" : 0,
+              pt: twoPageMode ? "20px" : 0,
+              mx: twoPageMode ? "-20px" : 0,
+              px: twoPageMode ? "20px" : 0,
+            },
           }}
         >
           <TextField
@@ -324,7 +455,23 @@ function BookView({onOpenSidebar, twoPageMode = false}) {
           );
         })}
       </BookContainer>
-    </>
+
+      {showBackToTop && (
+        <Fab
+          color="primary"
+          size="small"
+          onClick={scrollToTop}
+          sx={{
+            position: twoPageMode ? "absolute" : "fixed",
+            bottom: 30,
+            right: 30,
+            zIndex: 100,
+          }}
+        >
+          <KeyboardArrowUpIcon />
+        </Fab>
+      )}
+    </Box>
   );
 }
 

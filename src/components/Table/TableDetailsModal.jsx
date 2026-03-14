@@ -398,20 +398,6 @@ function TableDetailsModal() {
                   ),
                 }}
               />
-              <TextField
-                label="Link (Discord/VTT)"
-                fullWidth
-                value={externalLink}
-                onChange={(e) => setExternalLink(e.target.value)}
-                disabled={!isGM}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
             </Stack>
           </Box>
 

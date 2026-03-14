@@ -466,6 +466,17 @@ function GameModal() {
   const gameSession = getTableGameSession(selectedTable);
   const lockedFieldsCount = gameSession.lockedFields.length;
 
+  // Efeito para fechar o livro ao pressionar Esc
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isBookOpen) {
+        setIsBookOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isBookOpen]);
+
   // Efeito para sincronização em tempo real e verificação de segurança
   useEffect(() => {
     if (!selectedTable?._id || !user) return;
@@ -1407,11 +1418,11 @@ function GameModal() {
                 sx={{
                   height: "100%",
                   overflow: "hidden",
-                  bgcolor: "#e0e0e0",
-                  p: {xs: 0, md: 4},
+                  bgcolor: "#fff",
+                  p: 0,
                 }}
               >
-                <Paper
+                <Box
                   sx={{
                     height: "100%",
                     width: "100%",
@@ -1419,12 +1430,10 @@ function GameModal() {
                     margin: "0 auto",
                     overflow: "hidden",
                     position: "relative",
-                    borderRadius: {xs: 0, md: 2},
-                    boxShadow: {xs: "none", md: "0 10px 30px rgba(0,0,0,0.2)"},
                   }}
                 >
                   <BookView twoPageMode={true} />
-                </Paper>
+                </Box>
               </Box>
             ) : (
               <>
