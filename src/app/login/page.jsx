@@ -4,8 +4,10 @@
  */
 "use client";
 
-import {useState} from "react";
-import {FaUserShield, FaLock} from "react-icons/fa";
+import {useEffect} from "react";
+import {useRouter} from "next/navigation";
+import {FaFingerprint, FaGoogle} from "react-icons/fa";
+import {useAuth} from "@/hooks";
 
 /**
  * Componente de página de login com uma estética de masmorra/fantasia sombria.
@@ -13,13 +15,23 @@ import {FaUserShield, FaLock} from "react-icons/fa";
  * @returns {JSX.Element} O componente de login renderizado.
  */
 const LoginPage = () => {
-  const [hunterId, setHunterId] = useState("");
-  const [accessToken, setAccessToken] = useState("");
+  const {user, loginWithGoogle} = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Tentativa de login com:", {hunterId, accessToken});
-    // Aqui viria a lógica de autenticação com a API/Firebase
+  // Redireciona para a home automaticamente se o usuário já estiver logado
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
+  const handleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      router.push("/");
+    } catch (error) {
+      console.error("Erro na autenticação arcana:", error);
+    }
   };
 
   return (
@@ -27,10 +39,10 @@ const LoginPage = () => {
       className="flex h-screen w-full items-center justify-center bg-neutral-950"
       style={{
         backgroundImage:
-          "radial-gradient(circle at 25% 25%, rgba(0, 229, 255, 0.05) 0%, transparent 30%), radial-gradient(circle at 75% 75%, rgba(128, 0, 128, 0.05) 0%, transparent 30%)",
+          "radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 40%)",
       }}
     >
-      <div className="w-full max-w-md rounded-lg border border-cyan-400/50 bg-black/60 p-8 shadow-[0_0_15px_rgba(0,229,255,0.3)] backdrop-blur-md">
+      <div className="flex w-full max-w-md flex-col items-center rounded-lg border border-cyan-400/50 bg-black/60 p-8 shadow-[0_0_15px_rgba(0,229,255,0.3)] backdrop-blur-md">
         {/* Header do Painel */}
         <div className="text-center">
           <h1 className="font-bold text-5xl text-white [text-shadow:0_0_8px_rgba(0,229,255,0.8)]">
@@ -41,53 +53,28 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Formulário */}
-        <form onSubmit={handleSubmit} className="mt-10 space-y-8">
-          {/* Input: ID do Caçador */}
-          <div className="relative">
-            <FaUserShield className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" />
-            <input
-              type="text"
-              id="hunterId"
-              value={hunterId}
-              onChange={(e) => setHunterId(e.target.value)}
-              placeholder="ID do Caçador"
-              className="w-full border-b border-cyan-500/50 bg-black/40 p-3 pl-10 text-white placeholder-gray-500 transition-all duration-300 focus:border-cyan-400 focus:outline-none"
-              required
-            />
-          </div>
-
-          {/* Input: Token de Acesso */}
-          <div className="relative">
-            <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" />
-            <input
-              type="password"
-              id="accessToken"
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              placeholder="Token de Acesso"
-              className="w-full border-b border-cyan-500/50 bg-black/40 p-3 pl-10 text-white placeholder-gray-500 transition-all duration-300 focus:border-cyan-400 focus:outline-none"
-              required
-            />
-          </div>
-
-          {/* Botão Principal */}
+        {/* Escaner de Digital (Login Google) */}
+        <div className="mt-12 mb-6 flex flex-col items-center justify-center space-y-6">
           <button
-            type="submit"
-            className="w-full rounded-md border border-cyan-400 py-3 font-semibold text-cyan-400 transition-all duration-300 hover:bg-cyan-900/50 hover:text-white hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+            onClick={handleLogin}
+            className="group relative flex h-32 w-32 cursor-pointer items-center justify-center rounded-full border border-cyan-500/30 bg-black/40 shadow-[0_0_20px_rgba(0,229,255,0.1)] transition-all duration-500 hover:border-cyan-400 hover:bg-cyan-900/30 hover:shadow-[0_0_40px_rgba(0,229,255,0.5)] active:scale-95"
           >
-            Desbloquear Sistema
+            <FaFingerprint className="text-7xl text-cyan-500/50 transition-all duration-500 group-hover:scale-110 group-hover:text-cyan-400 drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]" />
           </button>
-        </form>
 
-        {/* Link Secundário */}
-        <div className="mt-6 text-center">
-          <a
-            href="#"
-            className="text-xs text-gray-500 transition-colors duration-300 hover:text-cyan-400"
-          >
-            Recuperar Token
-          </a>
+          <div className="flex items-center space-x-2 text-gray-400">
+            <FaGoogle className="text-cyan-400" />
+            <span className="text-sm font-medium uppercase tracking-wider">
+              Autenticar via Google
+            </span>
+          </div>
+        </div>
+
+        {/* Status Indicativo */}
+        <div className="mt-4 text-center">
+          <p className="animate-pulse text-xs text-gray-500">
+            Aguardando biometria do Caçador...
+          </p>
         </div>
       </div>
     </main>
