@@ -20,20 +20,98 @@ import {
   Checkroom as ChestIcon,
   Gavel as WeaponIcon,
   Shield as ShieldIcon,
-  Diamond as AccessoryIcon,
   Psychology as HeadIcon,
   Snowshoeing as FeetIcon,
   Person as PersonIcon,
   AddCircleOutline as AddIcon,
+  AllInclusive as NecklaceIcon,
+  Toll as RingIcon,
+  Waves as CapeIcon,
+  LineWeight as BeltIcon,
+  DirectionsWalk as PantsIcon,
 } from "@mui/icons-material";
 
 const SLOTS = [
-  {id: "head", label: "Cabeça", icon: HeadIcon, align: "left"},
-  {id: "mainHand", label: "Mão Principal", icon: WeaponIcon, align: "left"},
-  {id: "accessory1", label: "Acessório 1", icon: AccessoryIcon, align: "left"},
-  {id: "chest", label: "Tronco", icon: ChestIcon, align: "right"},
-  {id: "offHand", label: "Mão Secundária", icon: ShieldIcon, align: "right"},
-  {id: "feet", label: "Pés", icon: FeetIcon, align: "right"},
+  // Lado Esquerdo (Focado no Corpo)
+  {
+    id: "head",
+    label: "Cabeça",
+    icon: HeadIcon,
+    align: "left",
+    allowedTypes: ["armadura", "item"],
+  },
+  {
+    id: "necklace",
+    label: "Colar",
+    icon: NecklaceIcon,
+    align: "left",
+    allowedTypes: ["item", "espolio"],
+  },
+  {
+    id: "chest",
+    label: "Tronco",
+    icon: ChestIcon,
+    align: "left",
+    allowedTypes: ["armadura"],
+  },
+  {
+    id: "belt",
+    label: "Cinto",
+    icon: BeltIcon,
+    align: "left",
+    allowedTypes: ["armadura", "item"],
+  },
+  {
+    id: "pants",
+    label: "Calça",
+    icon: PantsIcon,
+    align: "left",
+    allowedTypes: ["armadura", "item"],
+  },
+  {
+    id: "ring1",
+    label: "Anel 1",
+    icon: RingIcon,
+    align: "left",
+    allowedTypes: ["item", "espolio"],
+  },
+
+  // Lado Direito (Focado em Equipamentos de Mão e Extremidades)
+  {
+    id: "cape",
+    label: "Capa",
+    icon: CapeIcon,
+    align: "right",
+    allowedTypes: ["item"],
+  },
+  {
+    id: "mainHand",
+    label: "Mão Principal",
+    icon: WeaponIcon,
+    align: "right",
+    allowedTypes: ["arma"],
+  },
+  {
+    id: "offHand",
+    label: "Mão Secundária",
+    icon: ShieldIcon,
+    align: "right",
+    allowedTypes: ["armadura", "item", "arma"],
+  },
+  {
+    id: "ring2",
+    label: "Anel 2",
+    icon: RingIcon,
+    align: "right",
+    allowedTypes: ["item", "espolio"],
+  },
+  {
+    id: "feet",
+    label: "Pés",
+    icon: FeetIcon,
+    align: "right",
+    allowedTypes: ["armadura", "item"],
+  },
 ];
 
 function PaperDoll({character, updateAttribute, isFieldLocked}) {
@@ -86,8 +164,12 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
       ...i,
       listType: "item",
     }));
+    const loot = (character.espolios || []).map((i) => ({
+      ...i,
+      listType: "espolio",
+    }));
 
-    const allItems = [...weapons, ...armors, ...items];
+    const allItems = [...weapons, ...armors, ...items, ...loot];
 
     // Opcional: Filtrar os que já estão equipados para não aparecerem duplicados
     const equippedNames = Object.values(equipped)
@@ -200,9 +282,10 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
           sx={{
             display: "flex",
             flexDirection: "column",
-            gap: 4,
+            gap: 2,
             flex: 1,
             alignItems: "flex-end",
+            justifyContent: "center",
           }}
         >
           {leftSlots.map(renderSlot)}
@@ -211,8 +294,8 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
         {/* Centro: O Boneco / Retrato */}
         <Box
           sx={{
-            width: {xs: 160, md: 240},
-            height: {xs: 240, md: 360},
+            width: {xs: 160, md: 260},
+            height: {xs: 320, md: 460},
             borderRadius: 3,
             border: "4px solid #e2e8f0",
             bgcolor: "#f1f5f9",
@@ -246,9 +329,10 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
           sx={{
             display: "flex",
             flexDirection: "column",
-            gap: 4,
+            gap: 2,
             flex: 1,
             alignItems: "flex-start",
+            justifyContent: "center",
           }}
         >
           {rightSlots.map(renderSlot)}
@@ -262,30 +346,44 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
         onClose={handleCloseMenu}
         PaperProps={{sx: {width: 250, maxHeight: 300}}}
       >
-        <MenuItem disabled>Escolha um item da mochila:</MenuItem>
-        {availableItems.length === 0 && (
-          <MenuItem disabled>Nenhum item disponível.</MenuItem>
-        )}
-        {availableItems.map((item, idx) => (
-          <MenuItem
-            key={`${item.name}-${idx}`}
-            onClick={() => handleEquipItem(item)}
-          >
-            <ListItemIcon>
-              <AddIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary={item.name}
-              secondary={
-                item.damage
-                  ? `Dano: ${item.damage}`
-                  : item.defense
-                    ? `Def: +${item.defense}`
-                    : `Mochila (${item.listType})`
-              }
-            />
-          </MenuItem>
-        ))}
+        {(() => {
+          const activeSlotConfig = SLOTS.find((s) => s.id === activeSlot);
+          const filteredItems = activeSlotConfig
+            ? availableItems.filter((item) =>
+                activeSlotConfig.allowedTypes.includes(item.listType),
+              )
+            : [];
+          return (
+            <>
+              <MenuItem disabled>
+                Escolha para {activeSlotConfig?.label}:
+              </MenuItem>
+              {filteredItems.length === 0 && (
+                <MenuItem disabled>Nenhum item compatível na mochila.</MenuItem>
+              )}
+              {filteredItems.map((item, idx) => (
+                <MenuItem
+                  key={`${item.name}-${idx}`}
+                  onClick={() => handleEquipItem(item)}
+                >
+                  <ListItemIcon>
+                    <AddIcon fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={
+                      item.damage
+                        ? `Dano: ${item.damage}`
+                        : item.defense
+                          ? `Def: +${item.defense}`
+                          : `Mochila (${item.listType})`
+                    }
+                  />
+                </MenuItem>
+              ))}
+            </>
+          );
+        })()}
       </Menu>
     </Box>
   );
