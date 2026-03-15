@@ -11,6 +11,16 @@ const nextConfig = {
     styledComponents: true,
   },
 
+  // Redireciona links antigos para a API de arquivos e contorna o cache do standalone
+  async rewrites() {
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: "/api/files/:path*",
+      },
+    ];
+  },
+
   // Configurações de Headers (CORS)
   async headers() {
     return [
