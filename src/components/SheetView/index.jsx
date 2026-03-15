@@ -3422,34 +3422,21 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 6: INVENTÁRIO (Provisório) */}
       {tabValue === 6 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
-          <h3
-            style={{
-              margin: "0 0 16px 0",
-              fontSize: "1.1rem",
-              textAlign: "center",
-            }}
-          >
-            🎒 Inventário e Equipamentos
-          </h3>
+        <Box
+          sx={{
+            background: "#fff",
+            borderRadius: 2,
+            p: 2,
+            pb: 10,
+            width: "100%",
+            height: "100%",
+          }}
+        >
           <PaperDoll
             character={character}
             updateAttribute={updateAttributeIfAllowed}
             isFieldLocked={isFieldLocked}
           />
-
-          {/* <Typography
-            variant="h5"
-            color="primary"
-            gutterBottom
-            fontWeight="bold"
-          >
-            🎒 Inventário (Em Construção)
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Esta aba abrigará em breve o novo sistema visual de Equipamentos
-            (Paper Doll).
-          </Typography> */}
         </Box>
       )}
 

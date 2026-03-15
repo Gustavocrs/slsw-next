@@ -20,106 +20,475 @@ import {
   Gavel as WeaponIcon,
   Shield as ShieldIcon,
   Psychology as HeadIcon,
-  Snowshoeing as FeetIcon,
-  PanTool as PanToolIcon,
-  Person as PersonIcon,
-  AddCircleOutline as AddIcon,
+  Snowshoeing as BootsIcon,
+  PanTool as GlovesIcon,
+  DirectionsWalk as PantsIcon,
+  AccessibilityNew as MannequinIcon,
+  Diamond as GemIcon,
+  MenuBook as BookIcon,
+  Science as PotionIcon,
+  Map as MapIcon,
+  VpnKey as KeyIcon,
+  Highlight as TorchIcon,
+  Healing as HealIcon,
+  Hardware as ToolIcon,
+  Backpack as BackpackIcon,
+  Category as GenericIcon,
   AllInclusive as NecklaceIcon,
   Toll as RingIcon,
-  Waves as CapeIcon,
-  LineWeight as BeltIcon,
-  DirectionsWalk as PantsIcon,
 } from "@mui/icons-material";
 
+// Função Inteligente de Ícones: Mapeia palavras-chave para ícones de RPG
+const getIconForItem = (name, type) => {
+  const lower = name?.toLowerCase() || "";
+
+  // Armaduras e Vestimentas
+  if (lower.includes("escudo") || lower.includes("broquel")) return ShieldIcon;
+  if (
+    lower.includes("elmo") ||
+    lower.includes("capacete") ||
+    lower.includes("chapéu") ||
+    lower.includes("máscara") ||
+    lower.includes("capuz") ||
+    lower.includes("tiara")
+  )
+    return HeadIcon;
+  if (
+    lower.includes("armadura") ||
+    lower.includes("colete") ||
+    lower.includes("cota") ||
+    lower.includes("peitoral") ||
+    lower.includes("manto") ||
+    lower.includes("capa") ||
+    lower.includes("túnica")
+  )
+    return ChestIcon;
+  if (
+    lower.includes("bota") ||
+    lower.includes("sapato") ||
+    lower.includes("sandália") ||
+    lower.includes("coturno")
+  )
+    return BootsIcon;
+  if (
+    lower.includes("luva") ||
+    lower.includes("manopla") ||
+    lower.includes("braçadeira")
+  )
+    return GlovesIcon;
+  if (
+    lower.includes("calça") ||
+    lower.includes("perneira") ||
+    lower.includes("greva") ||
+    lower.includes("bermuda") ||
+    lower.includes("saia")
+  )
+    return PantsIcon;
+
+  // Itens Comuns de RPG
+  if (
+    lower.includes("poção") ||
+    lower.includes("elixir") ||
+    lower.includes("frasco") ||
+    lower.includes("veneno") ||
+    lower.includes("antídoto")
+  )
+    return PotionIcon;
+  if (
+    lower.includes("livro") ||
+    lower.includes("grimório") ||
+    lower.includes("pergaminho") ||
+    lower.includes("tomo") ||
+    lower.includes("diário")
+  )
+    return BookIcon;
+  if (lower.includes("mapa") || lower.includes("carta")) return MapIcon;
+  if (lower.includes("chave")) return KeyIcon;
+  if (
+    lower.includes("tocha") ||
+    lower.includes("lanterna") ||
+    lower.includes("lampião")
+  )
+    return TorchIcon;
+  if (
+    lower.includes("kit") ||
+    lower.includes("curativo") ||
+    lower.includes("médico") ||
+    lower.includes("ervas")
+  )
+    return HealIcon;
+
+  if (
+    lower.includes("anel") ||
+    lower.includes("aliança") ||
+    lower.includes("cristal") ||
+    lower.includes("essência") ||
+    lower.includes("pedra")
+  )
+    return RingIcon;
+
+  if (
+    lower.includes("cordão") ||
+    lower.includes("colar") ||
+    lower.includes("amuleto") ||
+    lower.includes("pingente")
+  )
+    return NecklaceIcon;
+
+  // Armas Comuns
+  if (
+    lower.includes("machado") ||
+    lower.includes("picareta") ||
+    lower.includes("ferramenta") ||
+    lower.includes("martelo") ||
+    lower.includes("maça")
+  )
+    return ToolIcon;
+
+  // Fallbacks baseados na origem do item (aba)
+  if (type === "arma") return WeaponIcon;
+  if (type === "armadura") return ChestIcon;
+  if (type === "espolio") return GemIcon;
+  if (type === "item") return BackpackIcon;
+
+  return GenericIcon;
+};
+
+// Função para descobrir a categoria e o slot baseado no nome do item
+const getItemCategory = (name, type) => {
+  const lower = name?.toLowerCase() || "";
+
+  if (lower.includes("escudo") || lower.includes("broquel")) return "shield";
+  if (
+    lower.includes("elmo") ||
+    lower.includes("capacete") ||
+    lower.includes("chapéu") ||
+    lower.includes("máscara") ||
+    lower.includes("capuz") ||
+    lower.includes("tiara")
+  )
+    return "head";
+  if (
+    lower.includes("armadura") ||
+    lower.includes("colete") ||
+    lower.includes("cota") ||
+    lower.includes("peitoral") ||
+    lower.includes("manto") ||
+    lower.includes("capa") ||
+    lower.includes("túnica")
+  )
+    return "chest";
+  if (
+    lower.includes("bota") ||
+    lower.includes("sapato") ||
+    lower.includes("sandália") ||
+    lower.includes("coturno")
+  )
+    return "feet";
+  if (
+    lower.includes("calça") ||
+    lower.includes("perneira") ||
+    lower.includes("greva") ||
+    lower.includes("bermuda") ||
+    lower.includes("saia")
+  )
+    return "pants";
+
+  if (
+    lower.includes("cordão") ||
+    lower.includes("colar") ||
+    lower.includes("amuleto") ||
+    lower.includes("pingente")
+  )
+    return "necklace";
+
+  if (
+    lower.includes("anel") ||
+    lower.includes("aliança") ||
+    lower.includes("joia") ||
+    lower.includes("cristal") ||
+    lower.includes("essência") ||
+    lower.includes("pedra")
+  )
+    return "ring";
+
+  if (
+    lower.includes("tocha") ||
+    lower.includes("lanterna") ||
+    lower.includes("lampião") ||
+    lower.includes("poção") ||
+    lower.includes("elixir") ||
+    lower.includes("frasco") ||
+    lower.includes("veneno") ||
+    lower.includes("antídoto") ||
+    lower.includes("runa") ||
+    lower.includes("kit")
+  )
+    return "offHandItem";
+
+  if (type === "arma") {
+    if (/\boh\b/i.test(name)) return "weapon";
+    if (/\bth\b/i.test(name)) return "two-handed";
+
+    if (
+      lower.includes("arco") ||
+      lower.includes("besta") ||
+      lower.includes("cajado") ||
+      lower.includes("montante") ||
+      lower.includes("machado de batalha") ||
+      lower.includes("lança longa") ||
+      lower.includes("alabarda") ||
+      lower.includes("duas mãos") ||
+      lower.includes("fuzil") ||
+      lower.includes("espingarda") ||
+      lower.includes("escopeta")
+    ) {
+      return "two-handed";
+    }
+    return "weapon";
+  }
+
+  if (type === "armadura") return "chest";
+  if (type === "espolio") return "ring";
+  if (type === "item") return "offHandItem";
+
+  return "offHandItem";
+};
+
+const getValidSlotsForCategory = (category) => {
+  switch (category) {
+    case "head":
+      return ["head"];
+    case "chest":
+      return ["chest"];
+    case "pants":
+      return ["pants"];
+    case "feet":
+      return ["feet"];
+    case "shield":
+      return ["offHand"];
+    case "two-handed":
+      return ["mainHand"];
+    case "weapon":
+      return ["mainHand", "offHand"];
+    case "necklace":
+      return ["necklace"];
+    case "ring":
+      return ["ring1", "ring2"];
+    case "offHandItem":
+      return ["offHand"];
+    default:
+      return [
+        "mainHand",
+        "offHand",
+        "head",
+        "chest",
+        "pants",
+        "feet",
+        "necklace",
+        "ring1",
+        "ring2",
+      ];
+  }
+};
+
 const SLOTS = [
-  // Corpo (Lado Esquerdo)
+  // Corpo & Vestimentas (Lado Esquerdo)
   {
     id: "head",
     label: "Cabeça",
-    icon: HeadIcon,
+    defaultIcon: HeadIcon,
     align: "left",
-    allowedTypes: ["armadura", "item"],
   },
   {
     id: "chest",
     label: "Tronco",
-    icon: ChestIcon,
+    defaultIcon: ChestIcon,
     align: "left",
-    allowedTypes: ["armadura"],
-  },
-  {
-    id: "hands",
-    label: "Luvas",
-    icon: PanToolIcon,
-    align: "left",
-    allowedTypes: ["armadura", "item"],
-  },
-  {
-    id: "belt",
-    label: "Cinto",
-    icon: BeltIcon,
-    align: "left",
-    allowedTypes: ["armadura", "item"],
   },
   {
     id: "pants",
     label: "Calça",
-    icon: PantsIcon,
+    defaultIcon: PantsIcon,
     align: "left",
-    allowedTypes: ["armadura", "item"],
   },
   {
     id: "feet",
     label: "Botas",
-    icon: FeetIcon,
+    defaultIcon: BootsIcon,
     align: "left",
-    allowedTypes: ["armadura", "item"],
   },
 
-  // Acessórios e Armas (Lado Direito)
-  {
-    id: "cape",
-    label: "Capa",
-    icon: CapeIcon,
-    align: "right",
-    allowedTypes: ["item"],
-  },
-  {
-    id: "necklace",
-    label: "Amuleto",
-    icon: NecklaceIcon,
-    align: "right",
-    allowedTypes: ["item", "espolio"],
-  },
-  {
-    id: "ring1",
-    label: "Anel 1",
-    icon: RingIcon,
-    align: "right",
-    allowedTypes: ["item", "espolio"],
-  },
-  {
-    id: "ring2",
-    label: "Anel 2",
-    icon: RingIcon,
-    align: "right",
-    allowedTypes: ["item", "espolio"],
-  },
+  // Combate & Equipamentos (Lado Direito)
   {
     id: "mainHand",
     label: "Arma Principal",
-    icon: WeaponIcon,
+    defaultIcon: WeaponIcon,
     align: "right",
-    allowedTypes: ["arma"],
   },
   {
     id: "offHand",
     label: "Mão Secund.",
-    icon: ShieldIcon,
+    defaultIcon: ShieldIcon,
     align: "right",
-    allowedTypes: ["armadura", "item", "arma"],
+  },
+  {
+    id: "necklace",
+    label: "Cordão",
+    defaultIcon: NecklaceIcon,
+    align: "right",
+  },
+  {
+    id: "ring1",
+    label: "Anel 1",
+    defaultIcon: RingIcon,
+    align: "right",
+  },
+  {
+    id: "ring2",
+    label: "Anel 2",
+    defaultIcon: RingIcon,
+    align: "right",
   },
 ];
+
+// Componente do Manequim Segmentado Interativo
+const SegmentedMannequin = ({equipped, isTwoHandedActive}) => {
+  const getColor = (isEquipped, isAccessory = false) => {
+    if (!isEquipped) return "#cbd5e1"; // Cor apagada
+    return isAccessory ? "#fbbf24" : "#3b82f6"; // Dourado p/ Acessórios, Azul p/ Armaduras
+  };
+
+  const getOpacity = (isEquipped) => (isEquipped ? 1 : 0.2);
+  const getFilter = (isEquipped) =>
+    isEquipped ? "drop-shadow(0px 0px 8px rgba(59, 130, 246, 0.6))" : "none";
+  const getAccessoryFilter = (isEquipped) =>
+    isEquipped ? "drop-shadow(0px 0px 8px rgba(251, 191, 36, 0.6))" : "none";
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        padding: 2,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <svg
+        viewBox="0 0 200 400"
+        width="100%"
+        height="100%"
+        style={{overflow: "visible"}}
+      >
+        {/* CABEÇA */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.head)}
+          opacity={getOpacity(equipped.head)}
+          filter={getFilter(equipped.head)}
+        >
+          <circle cx="100" cy="50" r="30" />
+        </g>
+
+        {/* TRONCO */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.chest)}
+          opacity={getOpacity(equipped.chest)}
+          filter={getFilter(equipped.chest)}
+        >
+          <path d="M70,90 Q100,80 130,90 L120,200 Q100,210 80,200 Z" />
+          {/* Braços incorporados ao Tronco */}
+          <path d="M65,95 L30,170 L45,180 L75,110 Z" />
+          <path d="M135,95 L170,170 L155,180 L125,110 Z" />
+        </g>
+
+        {/* MÃO SECUNDÁRIA (Apenas a mão esquerda) */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.offHand || isTwoHandedActive)}
+          opacity={getOpacity(equipped.offHand || isTwoHandedActive)}
+          filter={getFilter(equipped.offHand || isTwoHandedActive)}
+        >
+          <circle cx="37" cy="185" r="12" />
+        </g>
+
+        {/* MÃO PRINCIPAL (Apenas a mão direita) */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.mainHand)}
+          opacity={getOpacity(equipped.mainHand)}
+          filter={getFilter(equipped.mainHand)}
+        >
+          <circle cx="163" cy="185" r="12" />
+        </g>
+
+        {/* CALÇA */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.pants)}
+          opacity={getOpacity(equipped.pants)}
+          filter={getFilter(equipped.pants)}
+        >
+          <path d="M80,205 Q100,215 120,205 L115,310 L102,310 L100,240 L98,310 L85,310 Z" />
+        </g>
+
+        {/* PÉS */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.feet)}
+          opacity={getOpacity(equipped.feet)}
+          filter={getFilter(equipped.feet)}
+        >
+          <path d="M85,315 L100,315 L95,340 L80,340 Z" />
+          <path d="M100,315 L115,315 L120,340 L105,340 Z" />
+        </g>
+
+        {/* CORDÃO */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill={getColor(equipped.necklace, true)}
+          opacity={getOpacity(equipped.necklace)}
+          filter={getAccessoryFilter(equipped.necklace)}
+        >
+          <path
+            d="M 85 85 Q 100 110 115 85"
+            fill="none"
+            stroke={getColor(equipped.necklace, true)}
+            strokeWidth="4"
+          />
+          <polygon points="100,105 105,115 100,120 95,115" />
+        </g>
+
+        {/* ANEL 1 (Mão Secundária - Esquerda da tela) */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill="none"
+          stroke={getColor(equipped.ring1, true)}
+          strokeWidth="3"
+          opacity={getOpacity(equipped.ring1)}
+          filter={getAccessoryFilter(equipped.ring1)}
+        >
+          <circle cx="37" cy="185" r="5" />
+        </g>
+
+        {/* ANEL 2 (Mão Principal - Direita da tela) */}
+        <g
+          style={{transition: "all 0.3s ease"}}
+          fill="none"
+          stroke={getColor(equipped.ring2, true)}
+          strokeWidth="3"
+          opacity={getOpacity(equipped.ring2)}
+          filter={getAccessoryFilter(equipped.ring2)}
+        >
+          <circle cx="163" cy="185" r="5" />
+        </g>
+      </svg>
+    </Box>
+  );
+};
 
 function PaperDoll({character, updateAttribute, isFieldLocked}) {
   const [activeSlot, setActiveSlot] = useState(null);
@@ -135,22 +504,42 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
   const handleBagItemClick = (item) => {
     if (isFieldLocked("equipados")) return;
 
+    const category = getItemCategory(item.name, item.listType);
+    const validSlots = getValidSlotsForCategory(category);
+
     if (activeSlot) {
       // Equipa no slot selecionado (se permitido)
-      const slotConfig = SLOTS.find((s) => s.id === activeSlot);
-      if (slotConfig?.allowedTypes.includes(item.listType)) {
-        updateAttribute("equipados", {...equipped, [activeSlot]: item});
+      if (validSlots.includes(activeSlot)) {
+        let newEquipped = {...equipped, [activeSlot]: item};
+        if (activeSlot === "mainHand" && category === "two-handed")
+          delete newEquipped.offHand;
+        if (activeSlot === "offHand") {
+          const mainCat = getItemCategory(
+            newEquipped.mainHand?.name,
+            newEquipped.mainHand?.listType,
+          );
+          if (mainCat === "two-handed") delete newEquipped.mainHand;
+        }
+        updateAttribute("equipados", newEquipped);
         setActiveSlot(null);
       }
     } else {
       // Auto-equipar: Procura o primeiro slot válido vazio (ou substitui o primeiro válido)
-      const validSlots = SLOTS.filter((s) =>
-        s.allowedTypes.includes(item.listType),
-      );
-      if (validSlots.length > 0) {
-        const emptySlot = validSlots.find((s) => !equipped[s.id]);
-        const target = emptySlot ? emptySlot.id : validSlots[0].id;
-        updateAttribute("equipados", {...equipped, [target]: item});
+      let target = validSlots.find((s) => !equipped[s]);
+      if (!target) target = validSlots[0];
+
+      if (target) {
+        let newEquipped = {...equipped, [target]: item};
+        if (target === "mainHand" && category === "two-handed")
+          delete newEquipped.offHand;
+        if (target === "offHand") {
+          const mainCat = getItemCategory(
+            newEquipped.mainHand?.name,
+            newEquipped.mainHand?.listType,
+          );
+          if (mainCat === "two-handed") delete newEquipped.mainHand;
+        }
+        updateAttribute("equipados", newEquipped);
       }
     }
   };
@@ -209,9 +598,28 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
   const offDamage =
     equipped.offHand?.listType === "arma" ? equipped.offHand.damage : "—";
 
+  const mainHandCategory = getItemCategory(
+    equipped.mainHand?.name,
+    equipped.mainHand?.listType,
+  );
+  const isTwoHandedActive = mainHandCategory === "two-handed";
+
   const renderSlot = (slot) => {
-    const item = equipped[slot.id];
-    const Icon = slot.icon;
+    const isOccupiedByTwoHanded = slot.id === "offHand" && isTwoHandedActive;
+    let item = equipped[slot.id];
+
+    let displayName = item ? item.name : "Vazio";
+    let Icon = item
+      ? getIconForItem(item.name, item.listType)
+      : slot.defaultIcon;
+    let isItemActual = !!item;
+
+    if (isOccupiedByTwoHanded) {
+      displayName = "Ocupado (2 Mãos)";
+      Icon = WeaponIcon;
+      isItemActual = false;
+    }
+
     const isLeft = slot.align === "left";
     const isActive = activeSlot === slot.id;
 
@@ -227,13 +635,20 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
         }}
       >
         {/* Textos do Slot */}
-        <Box sx={{textAlign: isLeft ? "right" : "left", flex: 1}}>
+        <Box
+          sx={{
+            textAlign: isLeft ? "right" : "left",
+            flex: 1,
+            overflow: "hidden",
+          }}
+        >
           <Typography
             variant="caption"
             sx={{
-              color: isActive ? "#fbbf24" : "#94a3b8",
+              color: isActive ? "primary.main" : "text.secondary",
               fontWeight: 700,
               textTransform: "uppercase",
+              fontSize: "0.65rem",
             }}
           >
             {slot.label}
@@ -242,21 +657,25 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
             variant="body2"
             sx={{
               fontWeight: 800,
-              color: item ? "#f8fafc" : "#475569",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: {xs: 80, sm: 120},
+              color:
+                isItemActual || isOccupiedByTwoHanded
+                  ? "text.primary"
+                  : "text.disabled",
+              fontSize: "0.75rem",
+              lineHeight: 1.1,
+              whiteSpace: "normal",
+              wordWrap: "break-word",
             }}
           >
-            {item ? item.name : "Vazio"}
+            {displayName}
           </Typography>
-          {item && (
+          {isItemActual && (
             <Typography
               variant="caption"
               sx={{
-                color: "#ef4444",
+                color: "error.main",
                 cursor: "pointer",
+                fontSize: "0.65rem",
                 "&:hover": {textDecoration: "underline"},
               }}
               onClick={(e) => handleUnequip(e, slot.id)}
@@ -269,40 +688,45 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
         {/* Caixa do Ícone (Clicável) */}
         <Paper
           onClick={() => handleSlotClick(slot.id)}
-          elevation={isActive ? 6 : item ? 3 : 0}
+          elevation={isItemActual || isOccupiedByTwoHanded ? 3 : 0}
           sx={{
-            width: 56,
-            height: 56,
+            width: 48,
+            height: 48,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             cursor: isFieldLocked("equipados") ? "not-allowed" : "pointer",
             borderRadius: 2,
             bgcolor: isActive
-              ? "rgba(251, 191, 36, 0.15)"
-              : item
-                ? "rgba(30, 41, 59, 0.9)"
-                : "rgba(15, 23, 42, 0.6)",
+              ? "#e0f2fe"
+              : isItemActual || isOccupiedByTwoHanded
+                ? "#f8fafc"
+                : "#f1f5f9",
             border: isActive
-              ? "2px solid #fbbf24"
-              : item
-                ? "2px solid #475569"
-                : "2px dashed #334155",
+              ? "2px solid #3b82f6"
+              : isItemActual || isOccupiedByTwoHanded
+                ? "2px solid #cbd5e1"
+                : "2px dashed #cbd5e1",
             transition: "all 0.2s ease",
             "&:hover": {
-              borderColor: isActive ? "#f59e0b" : "#64748b",
+              borderColor: "#667eea",
               bgcolor: isActive
-                ? "rgba(251, 191, 36, 0.25)"
-                : item
-                  ? "rgba(51, 65, 85, 0.9)"
-                  : "rgba(30, 41, 59, 0.8)",
+                ? "#bae6fd"
+                : isItemActual || isOccupiedByTwoHanded
+                  ? "#f1f5f9"
+                  : "#e2e8f0",
             },
           }}
         >
           <Icon
             sx={{
-              color: isActive ? "#fbbf24" : item ? "#cbd5e1" : "#334155",
-              fontSize: 28,
+              color: isActive
+                ? "#2563eb"
+                : isItemActual || isOccupiedByTwoHanded
+                  ? "#64748b"
+                  : "#cbd5e1",
+              fontSize: 24,
+              opacity: isOccupiedByTwoHanded ? 0.3 : 1,
             }}
           />
         </Paper>
@@ -313,17 +737,11 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
   return (
     <Box
       sx={{
-        p: {xs: 2, md: 4},
-        borderRadius: 3,
-        bgcolor: "#0f172a",
-        color: "#f8fafc",
-        boxShadow:
-          "inset 0 0 100px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3)",
-        position: "relative",
-        minHeight: 600,
+        width: "100%",
+        height: "100%",
       }}
     >
-      <Grid container spacing={4}>
+      <Grid container spacing={2}>
         {/* COLUNA ESQUERDA: O BONECO (PAPER DOLL) */}
         <Grid item xs={12} lg={7}>
           <Box
@@ -349,23 +767,25 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
             </Box>
             <Box
               sx={{
-                width: {xs: 160, md: 240},
-                height: {xs: 320, md: 440},
+                width: {xs: 120, md: 200},
+                height: {xs: 260, md: 400},
                 borderRadius: 3,
-                border: "2px solid #334155",
-                bgcolor: "#1e293b",
+                border: "2px solid #e2e8f0",
+                bgcolor: "#f1f5f9",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 overflow: "hidden",
-                boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
                 position: "relative",
                 flexShrink: 0,
               }}
             >
-              <PersonIcon
-                sx={{fontSize: 140, color: "#334155", opacity: 0.5}}
+              <SegmentedMannequin
+                equipped={equipped}
+                isTwoHandedActive={isTwoHandedActive}
               />
+
               <Box
                 sx={{
                   position: "absolute",
@@ -374,7 +794,7 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                   right: 0,
                   height: "40%",
                   background:
-                    "linear-gradient(to top, rgba(15,23,42,1) 0%, transparent 100%)",
+                    "linear-gradient(to top, rgba(241,245,249,1) 0%, transparent 100%)",
                 }}
               />
             </Box>
@@ -406,17 +826,17 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
             {/* Painel de Status */}
             <Paper
               sx={{
-                p: 2.5,
-                bgcolor: "rgba(30, 41, 59, 0.7)",
-                border: "1px solid #334155",
+                p: 2,
+                bgcolor: "#f8fafc",
+                border: "1px solid #e2e8f0",
                 borderRadius: 2,
-                color: "#f8fafc",
+                color: "#0f172a",
               }}
             >
               <Typography
                 variant="subtitle2"
                 sx={{
-                  color: "#94a3b8",
+                  color: "text.secondary",
                   textTransform: "uppercase",
                   letterSpacing: 1,
                   mb: 1.5,
@@ -428,7 +848,7 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                 <Grid item xs={6}>
                   <Typography
                     variant="caption"
-                    sx={{color: "#ef4444", fontWeight: "bold"}}
+                    sx={{color: "error.main", fontWeight: "bold"}}
                   >
                     ⚔️ DANO PRINCIPAL
                   </Typography>
@@ -439,7 +859,7 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                 <Grid item xs={6}>
                   <Typography
                     variant="caption"
-                    sx={{color: "#f87171", fontWeight: "bold"}}
+                    sx={{color: "error.main", fontWeight: "bold"}}
                   >
                     🗡️ MÃO SECUNDÁRIA
                   </Typography>
@@ -448,12 +868,12 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                  <Divider sx={{borderColor: "#334155", my: 0.5}} />
+                  <Divider sx={{borderColor: "#e2e8f0", my: 0.5}} />
                 </Grid>
                 <Grid item xs={6}>
                   <Typography
                     variant="caption"
-                    sx={{color: "#60a5fa", fontWeight: "bold"}}
+                    sx={{color: "primary.main", fontWeight: "bold"}}
                   >
                     🛡️ ARMADURA TOTAL
                   </Typography>
@@ -464,7 +884,7 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                 <Grid item xs={6}>
                   <Typography
                     variant="caption"
-                    sx={{color: "#93c5fd", fontWeight: "bold"}}
+                    sx={{color: "info.main", fontWeight: "bold"}}
                   >
                     🛑 APARAR TOTAL
                   </Typography>
@@ -478,11 +898,11 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
             {/* Painel da Mochila */}
             <Paper
               sx={{
-                p: 2.5,
-                bgcolor: "rgba(30, 41, 59, 0.7)",
-                border: "1px solid #334155",
+                p: 2,
+                bgcolor: "#f8fafc",
+                border: "1px solid #e2e8f0",
                 borderRadius: 2,
-                color: "#f8fafc",
+                color: "#0f172a",
                 flexGrow: 1,
               }}
             >
@@ -497,7 +917,7 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                 <Typography
                   variant="subtitle2"
                   sx={{
-                    color: "#94a3b8",
+                    color: "text.secondary",
                     textTransform: "uppercase",
                     letterSpacing: 1,
                   }}
@@ -508,9 +928,9 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "#fbbf24",
+                      color: "primary.main",
                       fontWeight: "bold",
-                      bgcolor: "rgba(251, 191, 36, 0.1)",
+                      bgcolor: "#e0f2fe",
                       px: 1,
                       py: 0.5,
                       borderRadius: 1,
@@ -525,15 +945,15 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
-                  gap: 1.5,
+                  gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))",
+                  gap: 1,
                 }}
               >
                 {availableItems.length === 0 && (
                   <Typography
                     variant="body2"
                     sx={{
-                      color: "#475569",
+                      color: "text.secondary",
                       gridColumn: "1 / -1",
                       textAlign: "center",
                       py: 4,
@@ -543,24 +963,24 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                   </Typography>
                 )}
                 {availableItems.map((item, idx) => {
+                  const category = getItemCategory(item.name, item.listType);
+                  const validSlots = getValidSlotsForCategory(category);
                   const isAllowed =
-                    !activeSlot ||
-                    SLOTS.find(
-                      (s) => s.id === activeSlot,
-                    )?.allowedTypes.includes(item.listType);
+                    !activeSlot || validSlots.includes(activeSlot);
 
                   return (
                     <Tooltip
                       key={`${item.name}-${idx}`}
                       title={
                         <Box>
-                          <Typography
-                            variant="subtitle2"
-                            fontWeight="bold"
-                            sx={{color: "#fbbf24"}}
-                          >
+                          <Typography variant="subtitle2" fontWeight="bold">
                             {item.name}
                           </Typography>
+                          {item.quantity && parseInt(item.quantity) > 1 && (
+                            <Typography variant="caption" display="block">
+                              Quantidade: {item.quantity}
+                            </Typography>
+                          )}
                           {item.damage && (
                             <Typography variant="caption" display="block">
                               Dano: {item.damage}
@@ -590,44 +1010,49 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                     >
                       <Paper
                         onClick={() => isAllowed && handleBagItemClick(item)}
-                        elevation={isAllowed ? 4 : 0}
+                        elevation={isAllowed ? 2 : 0}
                         sx={{
                           aspectRatio: "1/1",
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          p: 1,
-                          bgcolor: isAllowed
-                            ? "#1e293b"
-                            : "rgba(15, 23, 42, 0.4)",
+                          p: 0.5,
+                          bgcolor: isAllowed ? "#fff" : "#f1f5f9",
                           border: "1px solid",
-                          borderColor: isAllowed ? "#475569" : "#1e293b",
+                          borderColor: isAllowed ? "#cbd5e1" : "#e2e8f0",
                           cursor:
                             isAllowed && !isFieldLocked("equipados")
                               ? "pointer"
                               : "not-allowed",
-                          opacity: isAllowed ? 1 : 0.3,
+                          opacity: isAllowed ? 1 : 0.4,
                           transition: "all 0.2s",
                           "&:hover":
                             isAllowed && !isFieldLocked("equipados")
                               ? {
-                                  borderColor: "#fbbf24",
-                                  bgcolor: "#334155",
+                                  borderColor: "primary.main",
+                                  bgcolor: "#f8fafc",
                                   transform: "scale(1.05)",
                                 }
                               : {},
                         }}
                       >
-                        {item.listType === "arma" ? (
-                          <WeaponIcon sx={{color: "#fca5a5"}} />
-                        ) : item.listType === "armadura" ? (
-                          <ShieldIcon sx={{color: "#93c5fd"}} />
-                        ) : item.listType === "espolio" ? (
-                          <NecklaceIcon sx={{color: "#fde047"}} />
-                        ) : (
-                          <CapeIcon sx={{color: "#d8b4fe"}} />
-                        )}
+                        {(() => {
+                          const ItemIcon = getIconForItem(
+                            item.name,
+                            item.listType,
+                          );
+                          return (
+                            <ItemIcon
+                              sx={{
+                                color: isAllowed
+                                  ? "primary.main"
+                                  : "text.disabled",
+                                fontSize: 22,
+                              }}
+                            />
+                          );
+                        })()}
                         <Typography
                           variant="caption"
                           noWrap
@@ -635,7 +1060,8 @@ function PaperDoll({character, updateAttribute, isFieldLocked}) {
                             width: "100%",
                             textAlign: "center",
                             fontSize: "0.65rem",
-                            color: "#e2e8f0",
+                            color: isAllowed ? "text.primary" : "text.disabled",
+                            fontWeight: 600,
                             mt: 0.5,
                           }}
                         >
