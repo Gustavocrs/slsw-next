@@ -668,6 +668,67 @@ class APIService {
       console.warn("Falha ao limpar notificações:", error);
     }
   }
+
+  // =================================================================
+  // MÉTODOS DE MESTRE / AVENTURAS
+  // =================================================================
+
+  // 17. GERAR AVENTURA ALEATÓRIA
+  static async generateRandomAdventure() {
+    try {
+      const response = await fetch("/api/adventures/generate");
+      if (!response.ok) throw new Error("Erro ao gerar a aventura aleatória");
+      return await response.json();
+    } catch (error) {
+      console.error("Erro no gerador de aventura:", error);
+      throw error;
+    }
+  }
+
+  // =================================================================
+  // MÉTODOS DE QUESTS (MISSÕES DA MESA)
+  // =================================================================
+
+  // 18. ADICIONAR QUEST À MESA
+  static async addQuestToTable(tableId, questData) {
+    try {
+      const questsRef = collection(db, "tables", tableId, "quests");
+      const payload = this._cleanData({
+        ...questData,
+        isActive: false, // Inicia inativa (invisível aos jogadores)
+        createdAt: serverTimestamp(),
+      });
+      const docRef = await addDoc(questsRef, payload);
+      return {_id: docRef.id, ...payload};
+    } catch (error) {
+      console.error("Erro ao salvar quest:", error);
+      throw error;
+    }
+  }
+
+  // 19. ATIVAR / DESATIVAR QUEST
+  static async updateQuestStatus(tableId, questId, isActive) {
+    try {
+      const questRef = doc(db, "tables", tableId, "quests", questId);
+      await updateDoc(questRef, {isActive, updatedAt: serverTimestamp()});
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao atualizar status da quest:", error);
+      throw error;
+    }
+  }
+
+  // 20. LISTAR QUESTS DA MESA
+  static async getTableQuests(tableId) {
+    try {
+      const q = query(collection(db, "tables", tableId, "quests"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+    } catch (error) {
+      console.error("Erro ao buscar quests:", error);
+      return [];
+    }
+  }
 }
 
 export default APIService;
