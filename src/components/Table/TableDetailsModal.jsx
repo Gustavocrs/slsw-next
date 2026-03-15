@@ -32,6 +32,10 @@ import {
   InputLabel,
   useMediaQuery,
   useTheme,
+  Avatar,
+  Paper,
+  Divider,
+  CircularProgress,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -75,6 +79,10 @@ function TableDetailsModal() {
   const [invites, setInvites] = useState([]);
   const [myCharacters, setMyCharacters] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const [friendModalOpen, setFriendModalOpen] = useState(false);
+  const [friendData, setFriendData] = useState(null);
+  const [loadingFriend, setLoadingFriend] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -274,7 +282,40 @@ function TableDetailsModal() {
     }
   };
 
+  const handleOpenFriendSheet = async (player) => {
+    setLoadingFriend(true);
+    setFriendModalOpen(true);
+    try {
+      let charData = null;
+      if (player.characterId) {
+        charData = await APIService.getCharacterById(player.characterId);
+      } else if (player.uid) {
+        charData = await APIService.getCharacter(player.uid);
+      }
+
+      if (charData) {
+        setFriendData(charData);
+      } else {
+        showNotification("Jogador sem ficha vinculada.", "warning");
+        setFriendModalOpen(false);
+      }
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao carregar dados do jogador.", "error");
+      setFriendModalOpen(false);
+    } finally {
+      setLoadingFriend(false);
+    }
+  };
+
   const handleOpenPlayerSheet = async (player) => {
+    if (!isGM && player.uid !== user?.uid) {
+      showNotification(
+        "Apenas o Mestre pode ver a ficha de outros jogadores.",
+        "warning",
+      );
+      return;
+    }
     setLoading(true);
     try {
       let charData = null;
@@ -463,8 +504,16 @@ function TableDetailsModal() {
                       label={player.name}
                       color="primary"
                       size="small"
-                      onDoubleClick={() => handleOpenPlayerSheet(player)}
-                      title="Clique duplo para ver a ficha"
+                      onDoubleClick={() =>
+                        isGM || player.uid === user?.uid
+                          ? handleOpenPlayerSheet(player)
+                          : handleOpenFriendSheet(player)
+                      }
+                      title={
+                        isGM || player.uid === user?.uid
+                          ? "Clique duplo para ver a ficha"
+                          : player.name
+                      }
                     />
                   ))}
                 </Box>
@@ -597,6 +646,282 @@ function TableDetailsModal() {
           desfeita.
         </p>
       </ConfirmDialog>
+
+      {/* Modal de Perfil Resumido (Ver Amigo) */}
+      <Dialog
+        open={friendModalOpen}
+        onClose={() => setFriendModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Licença de Caçador
+          </Typography>
+          <IconButton onClick={() => setFriendModalOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{bgcolor: "#f8fafc", p: {xs: 2, md: 4}}}>
+          {loadingFriend ? (
+            <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
+              <CircularProgress />
+            </Box>
+          ) : friendData ? (
+            <Grid container spacing={4}>
+              {/* FOTO - Coluna Esquerda */}
+              <Grid
+                item
+                xs={12}
+                md={5}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 1.5,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    bgcolor: "#fff",
+                    borderRadius: 2,
+                  }}
+                >
+                  {friendData.imagem_url ? (
+                    <Box
+                      component="img"
+                      src={friendData.imagem_url}
+                      alt={friendData.nome}
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        aspectRatio: "3/4",
+                        objectFit: "cover",
+                        borderRadius: 1,
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      src=""
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        aspectRatio: "3/4",
+                        borderRadius: 1,
+                      }}
+                      variant="rounded"
+                    >
+                      <PersonIcon sx={{fontSize: 80}} />
+                    </Avatar>
+                  )}
+                  <Box
+                    sx={{
+                      width: "100%",
+                      mt: 2,
+                      textAlign: "center",
+                      p: 1,
+                      bgcolor: "#1e293b",
+                      color: "#fff",
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      sx={{letterSpacing: 2, textTransform: "uppercase"}}
+                    >
+                      RANK {friendData.rank || "Novato"}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
+
+              {/* DADOS - Coluna Direita */}
+              <Grid item xs={12} md={7}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    gap: 3,
+                  }}
+                >
+                  <Box sx={{borderBottom: "2px solid #cbd5e1", pb: 2}}>
+                    <Typography
+                      variant="h4"
+                      fontWeight="900"
+                      color="#0f172a"
+                      sx={{textTransform: "uppercase", lineHeight: 1.1}}
+                    >
+                      {friendData.nome || "Caçador Sem Nome"}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      color="primary"
+                      fontWeight="bold"
+                      sx={{mt: 0.5}}
+                    >
+                      {friendData.arquetipo || "Arquétipo Desconhecido"}{" "}
+                      {friendData.conceito ? `• ${friendData.conceito}` : ""}
+                    </Typography>
+                  </Box>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        GUILDA
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.guilda || "Independente"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        IDADE
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.idade || "Desconhecida"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        ALTURA
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.altura || "Não informada"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        PESO
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.peso || "Não informado"}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+
+                  <Box
+                    sx={{mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1"}}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      EQUIPAMENTO REGISTRADO
+                    </Typography>
+                    <Box
+                      sx={{display: "flex", flexDirection: "column", gap: 1}}
+                    >
+                      {friendData.armas?.length > 0
+                        ? friendData.armas.slice(0, 3).map((w, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                bgcolor: "#f1f5f9",
+                                p: 1,
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                ⚔️ {w.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Dano: {w.damage || "—"}
+                              </Typography>
+                            </Box>
+                          ))
+                        : null}
+                      {friendData.armaduras?.length > 0
+                        ? friendData.armaduras.slice(0, 2).map((a, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                bgcolor: "#f1f5f9",
+                                p: 1,
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                🛡️ {a.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Def: +{a.defense || a.def || 0}
+                              </Typography>
+                            </Box>
+                          ))
+                        : null}
+                      {!friendData.armas?.length &&
+                        !friendData.armaduras?.length && (
+                          <Typography variant="body2" color="text.secondary">
+                            Nenhum equipamento registrado.
+                          </Typography>
+                        )}
+                    </Box>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          ) : (
+            <Typography>Dados não encontrados.</Typography>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

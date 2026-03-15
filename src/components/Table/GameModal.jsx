@@ -38,6 +38,7 @@ import {
   Checkbox,
   FormControlLabel,
   TextField,
+  CircularProgress,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -187,9 +188,11 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
     return () => unsub?.();
   }, [player.characterId, player.uid, player.isNpc]);
 
-  const safePhotoURL = player.photoURL?.includes("googleusercontent.com")
-    ? player.photoURL.replace("=s96-c", "=s100-c")
-    : player.photoURL;
+  const avatarSrc =
+    charData?.imagem_url ||
+    (player.photoURL?.includes("googleusercontent.com")
+      ? player.photoURL.replace("=s96-c", "=s100-c")
+      : player.photoURL);
 
   // Formatar nome: Apenas os dois primeiros nomes
   const displayName = player.name
@@ -254,7 +257,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
           }
         >
           <Avatar
-            src={safePhotoURL}
+            src={avatarSrc}
             alt={player.name}
             sx={{width: 40, height: 40}}
             imgProps={{referrerPolicy: "no-referrer"}}
@@ -447,6 +450,10 @@ function GameModal() {
   const [customEffectModalOpen, setCustomEffectModalOpen] = useState(false);
   const [customEffectText, setCustomEffectText] = useState("");
 
+  const [friendModalOpen, setFriendModalOpen] = useState(false);
+  const [friendData, setFriendData] = useState(null);
+  const [loadingFriend, setLoadingFriend] = useState(false);
+
   // Estados para NPC e Troca de Mesa
   const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [myCharacters, setMyCharacters] = useState([]);
@@ -618,6 +625,39 @@ function GameModal() {
   const handleCloseTertiary = () => {
     setTertiaryAnchorEl(null);
     setTertiaryType(null);
+  };
+
+  const handleViewFriend = async () => {
+    handleCloseMenu();
+    if (!selectedPlayer) return;
+
+    setLoadingFriend(true);
+    setFriendModalOpen(true);
+    try {
+      showNotification("Buscando dados...", "info");
+      let charData = null;
+
+      if (selectedPlayer.characterId) {
+        charData = await APIService.getCharacterById(
+          selectedPlayer.characterId,
+        );
+      } else if (selectedPlayer.uid) {
+        charData = await APIService.getCharacter(selectedPlayer.uid);
+      }
+
+      if (charData) {
+        setFriendData(charData);
+      } else {
+        showNotification("Jogador sem ficha vinculada.", "warning");
+        setFriendModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Erro ao visualizar amigo:", error);
+      showNotification("Erro ao carregar dados.", "error");
+      setFriendModalOpen(false);
+    } finally {
+      setLoadingFriend(false);
+    }
   };
 
   const handleViewSheet = async () => {
@@ -1234,12 +1274,38 @@ function GameModal() {
             height: "100%",
             gap: 3,
             bgcolor: "#f5f7fa",
+            p: 3,
+            textAlign: "center",
           }}
         >
           <Typography variant="h5" color="text.secondary">
-            Nenhuma mesa selecionada
+            Bem-vindo ao Hub do Caçador!
           </Typography>
-          <Box sx={{display: "flex", gap: 2}}>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{maxWidth: 500}}
+          >
+            Você está na área de Mesas de Jogo, mas ainda não selecionou
+            nenhuma. Escolha uma mesa, crie uma nova campanha ou retorne à tela
+            principal para gerenciar seus personagens.
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => useUIStore.getState().setViewMode("sheet")}
+              startIcon={<SheetIcon />}
+            >
+              Ir para Minhas Fichas
+            </Button>
             <Button
               variant="contained"
               onClick={handleOpenTablesMenu}
@@ -1842,18 +1908,6 @@ function GameModal() {
                 </div>
               )}
 
-              {/* Opção para Ver Personagem de OUTRO jogador (que não seja o GM Avatar) */}
-              {selectedPlayer?.uid !== user?.uid &&
-                !selectedPlayer?.isGM &&
-                !isGM && (
-                  <MenuItem onClick={handleViewSheet}>
-                    <ListItemIcon>
-                      <SheetIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Ver Personagem</ListItemText>
-                  </MenuItem>
-                )}
-
               {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
               {isGM &&
                 (!selectedPlayer?.isGM ||
@@ -1984,12 +2038,20 @@ function GameModal() {
               {/* A opção de enviar mensagem só aparece se não for o próprio usuário */}
               {selectedPlayer?.uid !== user?.uid &&
                 !(isGM && !selectedPlayer?.isGM) && (
-                  <MenuItem onClick={handleSendMessage}>
-                    <ListItemIcon>
-                      <MessageIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Enviar Msg</ListItemText>
-                  </MenuItem>
+                  <>
+                    <MenuItem onClick={handleViewFriend}>
+                      <ListItemIcon>
+                        <InfoIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Ver Perfil</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={handleSendMessage}>
+                      <ListItemIcon>
+                        <MessageIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Enviar Msg</ListItemText>
+                    </MenuItem>
+                  </>
                 )}
             </Menu>
 
@@ -2585,6 +2647,280 @@ function GameModal() {
             Confirmar
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Modal de Perfil Resumido (Ver Amigo) */}
+      <Dialog
+        open={friendModalOpen}
+        onClose={() => setFriendModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Licença de Caçador
+          </Typography>
+          <IconButton onClick={() => setFriendModalOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{bgcolor: "#f8fafc", p: {xs: 2, md: 4}}}>
+          {loadingFriend ? (
+            <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
+              <CircularProgress />
+            </Box>
+          ) : friendData ? (
+            <Grid container spacing={4}>
+              {/* FOTO - Coluna Esquerda */}
+              <Grid
+                item
+                xs={12}
+                md={5}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 1.5,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    bgcolor: "#fff",
+                    borderRadius: 2,
+                  }}
+                >
+                  {friendData.imagem_url ? (
+                    <Box
+                      component="img"
+                      src={friendData.imagem_url}
+                      alt={friendData.nome}
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        aspectRatio: "3/4",
+                        objectFit: "cover",
+                        borderRadius: 1,
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      src={selectedPlayer?.photoURL}
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        aspectRatio: "3/4",
+                        borderRadius: 1,
+                      }}
+                      variant="rounded"
+                    />
+                  )}
+                  <Box
+                    sx={{
+                      width: "100%",
+                      mt: 2,
+                      textAlign: "center",
+                      p: 1,
+                      bgcolor: "#1e293b",
+                      color: "#fff",
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
+                      sx={{letterSpacing: 2, textTransform: "uppercase"}}
+                    >
+                      RANK {friendData.rank || "Novato"}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
+
+              {/* DADOS - Coluna Direita */}
+              <Grid item xs={12} md={7}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    gap: 3,
+                  }}
+                >
+                  <Box sx={{borderBottom: "2px solid #cbd5e1", pb: 2}}>
+                    <Typography
+                      variant="h4"
+                      fontWeight="900"
+                      color="#0f172a"
+                      sx={{textTransform: "uppercase", lineHeight: 1.1}}
+                    >
+                      {friendData.nome || "Caçador Sem Nome"}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      color="primary"
+                      fontWeight="bold"
+                      sx={{mt: 0.5}}
+                    >
+                      {friendData.arquetipo || "Arquétipo Desconhecido"}{" "}
+                      {friendData.conceito ? `• ${friendData.conceito}` : ""}
+                    </Typography>
+                  </Box>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        GUILDA
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.guilda || "Independente"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        IDADE
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.idade || "Desconhecida"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        ALTURA
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.altura || "Não informada"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight="bold"
+                      >
+                        PESO
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="600"
+                        color="#334155"
+                      >
+                        {friendData.peso || "Não informado"}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+
+                  <Box
+                    sx={{mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1"}}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      EQUIPAMENTO REGISTRADO
+                    </Typography>
+                    <Box
+                      sx={{display: "flex", flexDirection: "column", gap: 1}}
+                    >
+                      {friendData.armas?.length > 0
+                        ? friendData.armas.slice(0, 3).map((w, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                bgcolor: "#f1f5f9",
+                                p: 1,
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                ⚔️ {w.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Dano: {w.damage || "—"}
+                              </Typography>
+                            </Box>
+                          ))
+                        : null}
+                      {friendData.armaduras?.length > 0
+                        ? friendData.armaduras.slice(0, 2).map((a, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                bgcolor: "#f1f5f9",
+                                p: 1,
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                🛡️ {a.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Def: +{a.defense || a.def || 0}
+                              </Typography>
+                            </Box>
+                          ))
+                        : null}
+                      {!friendData.armas?.length &&
+                        !friendData.armaduras?.length && (
+                          <Typography variant="body2" color="text.secondary">
+                            Nenhum equipamento registrado.
+                          </Typography>
+                        )}
+                    </Box>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          ) : (
+            <Typography>Dados não encontrados.</Typography>
+          )}
+        </DialogContent>
       </Dialog>
     </>
   );
