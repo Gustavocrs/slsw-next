@@ -44,7 +44,9 @@ export async function POST(request) {
     // Utiliza NEXT_PUBLIC_APP_URL para garantir o HTTPS através do Nginx
     const requestUrl = new URL(request.url);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin;
-    const url = new URL(`/api/files/${fileName}`, baseUrl).toString();
+    // Com Nginx servindo /uploads/, podemos apontar diretamente para o arquivo estático.
+    // Esta é a abordagem mais performática para produção.
+    const url = new URL(`/uploads/${fileName}`, baseUrl).toString();
 
     return NextResponse.json({
       fileName,
