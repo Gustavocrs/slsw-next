@@ -40,7 +40,11 @@ export async function POST(request) {
 
     await writeFile(filePath, buffer);
 
-    const url = `/uploads/${fileName}`;
+    // Usa a rota de API de arquivos para evitar erros de cache 404 em produção
+    // Utiliza NEXT_PUBLIC_APP_URL para garantir o HTTPS através do Nginx
+    const requestUrl = new URL(request.url);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin;
+    const url = new URL(`/api/files/${fileName}`, baseUrl).toString();
 
     return NextResponse.json({
       fileName,
