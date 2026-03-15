@@ -40,11 +40,8 @@ export async function POST(request) {
 
     await writeFile(filePath, buffer);
 
-    // Utiliza NEXT_PUBLIC_APP_URL para garantir o HTTPS através do Nginx
-    const requestUrl = new URL(request.url);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin;
-    // Usa a rota de API de arquivos para evitar o erro 404 do Next.js Standalone
-    const url = new URL(`/api/files/${fileName}`, baseUrl).toString();
+    // Retorna URL relativa para evitar problemas de domínio e bloqueio do next/image
+    const url = `/api/files/${fileName}`;
 
     return NextResponse.json({
       fileName,
