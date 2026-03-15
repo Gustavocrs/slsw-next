@@ -39,6 +39,8 @@ import {
   FormControlLabel,
   TextField,
   CircularProgress,
+  Card,
+  CardContent,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -449,6 +451,7 @@ function GameModal() {
   const [tertiaryType, setTertiaryType] = useState(null);
   const [customEffectModalOpen, setCustomEffectModalOpen] = useState(false);
   const [customEffectText, setCustomEffectText] = useState("");
+  const [activeQuests, setActiveQuests] = useState([]);
 
   const [friendModalOpen, setFriendModalOpen] = useState(false);
   const [friendData, setFriendData] = useState(null);
@@ -553,6 +556,30 @@ function GameModal() {
 
     return () => unsubscribe();
   }, [selectedTable?._id, user, setSelectedTable, showNotification]);
+
+  // Efeito para sincronizar Quests Ativas em tempo real
+  useEffect(() => {
+    if (!selectedTable?._id) return;
+
+    const q = query(
+      collection(db, "tables", selectedTable._id, "quests"),
+      where("isActive", "==", true),
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const quests = snapshot.docs.map((doc) => ({
+          _id: doc.id,
+          ...doc.data(),
+        }));
+        setActiveQuests(quests);
+      },
+      (error) => console.error("Erro ao buscar quests ativas:", error),
+    );
+
+    return () => unsubscribe();
+  }, [selectedTable?._id]);
 
   // --- Lógica de Presença na Próxima Sessão ---
   const handleTogglePresence = async () => {
@@ -1685,6 +1712,140 @@ function GameModal() {
                               {selectedTable?.description ||
                                 "Sem descrição disponível."}
                             </Typography>
+
+                            {activeQuests.length > 0 && (
+                              <Box
+                                sx={{
+                                  mt: 2,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 2,
+                                }}
+                              >
+                                <Divider />
+                                <Typography
+                                  variant="subtitle2"
+                                  color="primary"
+                                  sx={{
+                                    textTransform: "uppercase",
+                                    letterSpacing: 1,
+                                  }}
+                                >
+                                  Operações em Andamento
+                                </Typography>
+                                {activeQuests.map((quest) => (
+                                  <Card
+                                    key={quest._id}
+                                    sx={{
+                                      border: "1px solid #00e5ff",
+                                      bgcolor: "rgba(0, 229, 255, 0.05)",
+                                      boxShadow:
+                                        "0 0 10px rgba(0, 229, 255, 0.1)",
+                                    }}
+                                  >
+                                    <CardContent
+                                      sx={{p: 2, "&:last-child": {pb: 2}}}
+                                    >
+                                      <Typography
+                                        variant="overline"
+                                        color="#00b8d4"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          lineHeight: 1,
+                                          display: "block",
+                                          mb: 0.5,
+                                        }}
+                                      >
+                                        [ AVISO DO SISTEMA ]
+                                      </Typography>
+                                      <Typography
+                                        variant="subtitle1"
+                                        fontWeight="bold"
+                                        sx={{mb: 1, textTransform: "uppercase"}}
+                                      >
+                                        {quest.title}
+                                      </Typography>
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          <strong>Situação:</strong>{" "}
+                                          {quest.hook}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                          <strong>Objetivo:</strong>{" "}
+                                          {quest.objective}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                          <strong>Local:</strong>{" "}
+                                          {quest.location}
+                                        </Typography>
+
+                                        {isGM && (
+                                          <Box
+                                            sx={{
+                                              mt: 1,
+                                              p: 1.5,
+                                              bgcolor: "rgba(0,0,0,0.03)",
+                                              borderRadius: 1,
+                                              borderLeft: "3px solid #9c27b0",
+                                            }}
+                                          >
+                                            <Typography
+                                              variant="caption"
+                                              color="text.secondary"
+                                              sx={{
+                                                display: "block",
+                                                mb: 1,
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              INFORMAÇÕES SIGILOSAS (Apenas GM)
+                                            </Typography>
+                                            <Typography
+                                              variant="caption"
+                                              color="error.main"
+                                              display="block"
+                                            >
+                                              <strong>Boss:</strong>{" "}
+                                              {quest.antagonist}
+                                            </Typography>
+                                            <Typography
+                                              variant="caption"
+                                              color="warning.main"
+                                              display="block"
+                                            >
+                                              <strong>Complicação:</strong>{" "}
+                                              {quest.complication}
+                                            </Typography>
+                                            <Typography
+                                              variant="caption"
+                                              color="secondary.main"
+                                              display="block"
+                                            >
+                                              <strong>Twist:</strong>{" "}
+                                              {quest.twist}
+                                            </Typography>
+                                            <Typography
+                                              variant="caption"
+                                              color="success.main"
+                                              display="block"
+                                            >
+                                              <strong>Recompensa:</strong>{" "}
+                                              {quest.reward}
+                                            </Typography>
+                                          </Box>
+                                        )}
+                                      </Box>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </Box>
+                            )}
                           </AccordionDetails>
                         </Accordion>
                       </Box>

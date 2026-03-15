@@ -36,6 +36,8 @@ import {
   Paper,
   Divider,
   CircularProgress,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -52,6 +54,7 @@ import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {ConfirmDialog} from "@/components/ConfirmDialog";
+import QuestBoard from "@/components/Table/QuestBoard";
 
 function TableDetailsModal() {
   const {
@@ -83,6 +86,7 @@ function TableDetailsModal() {
   const [friendModalOpen, setFriendModalOpen] = useState(false);
   const [friendData, setFriendData] = useState(null);
   const [loadingFriend, setLoadingFriend] = useState(false);
+  const [currentTab, setCurrentTab] = useState(0);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -395,198 +399,221 @@ function TableDetailsModal() {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers>
-        <Stack spacing={3} sx={{mt: 1}}>
-          {/* Modo Leitura vs Edição */}
-          <Box>
-            <TextField
-              label="Jogo"
-              fullWidth
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
-              disabled={!isGM}
-              variant={isGM ? "outlined" : "filled"}
-              sx={{mb: 2}}
-            />
-            <TextField
-              label="Descrição"
-              fullWidth
-              multiline
-              rows={1}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={!isGM}
-              variant={isGM ? "outlined" : "filled"}
-            />
-          </Box>
+      <DialogContent dividers sx={{p: 0}}>
+        <Box sx={{borderBottom: 1, borderColor: "divider", px: 2}}>
+          <Tabs
+            value={currentTab}
+            onChange={(e, newValue) => setCurrentTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label="Detalhes" />
+            <Tab label="Jogadores" />
+            <Tab label="Operações" />
+          </Tabs>
+        </Box>
 
-          <Box>
-            <Typography variant="subtitle2" color="primary" gutterBottom>
-              Sessão & Links
-            </Typography>
-            <Stack direction={{xs: "column", sm: "row"}} spacing={2}>
-              <TextField
-                label="Próxima Sessão"
-                type="datetime-local"
-                fullWidth
-                InputLabelProps={{shrink: true}}
-                value={nextSession}
-                onChange={(e) => setNextSession(e.target.value)}
-                disabled={!isGM}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CalendarIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+        <Box sx={{p: {xs: 2, sm: 3}}}>
+          {currentTab === 0 && (
+            <Stack spacing={3}>
+              {/* Modo Leitura vs Edição */}
+              <Box>
+                <TextField
+                  label="Jogo"
+                  fullWidth
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  disabled={!isGM}
+                  variant={isGM ? "outlined" : "filled"}
+                  sx={{mb: 2}}
+                />
+                <TextField
+                  label="Descrição"
+                  fullWidth
+                  multiline
+                  rows={1}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={!isGM}
+                  variant={isGM ? "outlined" : "filled"}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Sessão & Links
+                </Typography>
+                <Stack direction={{xs: "column", sm: "row"}} spacing={2}>
+                  <TextField
+                    label="Próxima Sessão"
+                    type="datetime-local"
+                    fullWidth
+                    InputLabelProps={{shrink: true}}
+                    value={nextSession}
+                    onChange={(e) => setNextSession(e.target.value)}
+                    disabled={!isGM}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CalendarIcon color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Stack>
+              </Box>
             </Stack>
-          </Box>
-
-          {/* Configuração do Jogador (Vincular Ficha) */}
-          {showCharacterSelection && (
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: "#e3f2fd",
-                borderRadius: 2,
-                border: "1px solid #90caf9",
-              }}
-            >
-              <Typography variant="subtitle2" color="primary" gutterBottom>
-                👤 Meu Personagem
-              </Typography>
-              <Typography variant="caption" color="text.secondary" paragraph>
-                Escolha qual ficha você usará nesta mesa. Isso permite que o GM
-                veja seu status.
-              </Typography>
-              <FormControl fullWidth size="small" sx={{bgcolor: "white"}}>
-                <InputLabel>Selecione seu Personagem</InputLabel>
-                <Select
-                  value={currentCharacterId}
-                  label="Selecione seu Personagem"
-                  onChange={(e) => handleCharacterChange(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>Nenhum (Apenas espectador)</em>
-                  </MenuItem>
-                  {myCharacters.map((char) => (
-                    <MenuItem key={char._id} value={char._id}>
-                      {char.nome} ({char.rank} - {char.arquetipo})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
           )}
 
-          <Box>
-            <Typography variant="subtitle2" color="primary" gutterBottom>
-              Jogadores & Convites
-            </Typography>
-
-            {/* Jogadores Confirmados */}
-            {selectedTable?.players?.length > 0 && (
-              <Box sx={{mb: 2}}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{mb: 1, display: "block"}}
+          {currentTab === 1 && (
+            <Stack spacing={3}>
+              {/* Configuração do Jogador (Vincular Ficha) */}
+              {showCharacterSelection && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: "#e3f2fd",
+                    borderRadius: 2,
+                    border: "1px solid #90caf9",
+                  }}
                 >
-                  Jogadores na Mesa:
-                </Typography>
-                <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
-                  {selectedTable.players.map((player) => (
-                    <Chip
-                      key={player.uid}
-                      icon={<PersonIcon fontSize="small" />}
-                      label={player.name}
-                      color="primary"
-                      size="small"
-                      onDoubleClick={() =>
-                        isGM || player.uid === user?.uid
-                          ? handleOpenPlayerSheet(player)
-                          : handleOpenFriendSheet(player)
-                      }
-                      title={
-                        isGM || player.uid === user?.uid
-                          ? "Clique duplo para ver a ficha"
-                          : player.name
-                      }
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-
-            {isGM && (
-              <Box sx={{display: "flex", gap: 1, mb: 2}}>
-                <TextField
-                  label="Convidar E-mail"
-                  size="small"
-                  fullWidth
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-                <Button variant="contained" onClick={handleAddInvite}>
-                  <AddIcon />
-                </Button>
-              </Box>
-            )}
-
-            {/* Lista de Convites com Ações */}
-            <List dense sx={{bgcolor: "#f9f9f9", borderRadius: 2, mb: 2}}>
-              {invites.map((email) => (
-                <ListItem key={email} divider>
-                  <Box
-                    sx={{
-                      mr: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      color: "text.secondary",
-                    }}
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    👤 Meu Personagem
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    paragraph
                   >
-                    <EmailIcon fontSize="small" />
-                  </Box>
-                  <ListItemText
-                    primary={email}
-                    secondary="Pendente"
-                    primaryTypographyProps={{fontWeight: 500}}
-                  />
-                  {isGM && (
-                    <ListItemSecondaryAction>
-                      <IconButton
-                        edge="end"
-                        aria-label="resend"
-                        onClick={() => handleResendInvite(email)}
-                        sx={{mr: 1, color: "#667eea"}}
-                        title="Reenviar E-mail"
-                      >
-                        <SendIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        onClick={() => handleRemoveInvite(email)}
-                        color="error"
-                        title="Remover"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  )}
-                </ListItem>
-              ))}
-              {invites.length === 0 && (
-                <ListItem>
-                  <ListItemText secondary="Nenhum convite ativo." />
-                </ListItem>
+                    Escolha qual ficha você usará nesta mesa. Isso permite que o
+                    GM veja seu status.
+                  </Typography>
+                  <FormControl fullWidth size="small" sx={{bgcolor: "white"}}>
+                    <InputLabel>Selecione seu Personagem</InputLabel>
+                    <Select
+                      value={currentCharacterId}
+                      label="Selecione seu Personagem"
+                      onChange={(e) => handleCharacterChange(e.target.value)}
+                    >
+                      <MenuItem value="">
+                        <em>Nenhum (Apenas espectador)</em>
+                      </MenuItem>
+                      {myCharacters.map((char) => (
+                        <MenuItem key={char._id} value={char._id}>
+                          {char.nome} ({char.rank} - {char.arquetipo})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
               )}
-            </List>
-          </Box>
 
-          {/* {isGM && (
+              <Box>
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Jogadores & Convites
+                </Typography>
+
+                {/* Jogadores Confirmados */}
+                {selectedTable?.players?.length > 0 && (
+                  <Box sx={{mb: 2}}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{mb: 1, display: "block"}}
+                    >
+                      Jogadores na Mesa:
+                    </Typography>
+                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+                      {selectedTable.players.map((player) => (
+                        <Chip
+                          key={player.uid}
+                          icon={<PersonIcon fontSize="small" />}
+                          label={player.name}
+                          color="primary"
+                          size="small"
+                          onDoubleClick={() =>
+                            isGM || player.uid === user?.uid
+                              ? handleOpenPlayerSheet(player)
+                              : handleOpenFriendSheet(player)
+                          }
+                          title={
+                            isGM || player.uid === user?.uid
+                              ? "Clique duplo para ver a ficha"
+                              : player.name
+                          }
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {isGM && (
+                  <Box sx={{display: "flex", gap: 1, mb: 2}}>
+                    <TextField
+                      label="Convidar E-mail"
+                      size="small"
+                      fullWidth
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                    <Button variant="contained" onClick={handleAddInvite}>
+                      <AddIcon />
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Lista de Convites com Ações */}
+                <List dense sx={{bgcolor: "#f9f9f9", borderRadius: 2, mb: 2}}>
+                  {invites.map((email) => (
+                    <ListItem key={email} divider>
+                      <Box
+                        sx={{
+                          mr: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          color: "text.secondary",
+                        }}
+                      >
+                        <EmailIcon fontSize="small" />
+                      </Box>
+                      <ListItemText
+                        primary={email}
+                        secondary="Pendente"
+                        primaryTypographyProps={{fontWeight: 500}}
+                      />
+                      {isGM && (
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            aria-label="resend"
+                            onClick={() => handleResendInvite(email)}
+                            sx={{mr: 1, color: "#667eea"}}
+                            title="Reenviar E-mail"
+                          >
+                            <SendIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => handleRemoveInvite(email)}
+                            color="error"
+                            title="Remover"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      )}
+                    </ListItem>
+                  ))}
+                  {invites.length === 0 && (
+                    <ListItem>
+                      <ListItemText secondary="Nenhum convite ativo." />
+                    </ListItem>
+                  )}
+                </List>
+              </Box>
+
+              {/* {isGM && (
             <FormControlLabel
               control={
                 <Switch
@@ -597,7 +624,13 @@ function TableDetailsModal() {
               label="Mesa Privada"
             />
           )} */}
-        </Stack>
+            </Stack>
+          )}
+
+          {currentTab === 2 && (
+            <QuestBoard tableId={selectedTable._id} isGM={isGM} />
+          )}
+        </Box>
       </DialogContent>
 
       {isGM && (

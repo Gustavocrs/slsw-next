@@ -729,6 +729,17 @@ class APIService {
       return [];
     }
   }
+
+  // 21. DELETAR QUEST DA MESA
+  static async deleteQuestFromTable(tableId, questId) {
+    try {
+      await deleteDoc(doc(db, "tables", tableId, "quests", questId));
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao deletar quest:", error);
+      throw error;
+    }
+  }
 }
 
 export default APIService;
