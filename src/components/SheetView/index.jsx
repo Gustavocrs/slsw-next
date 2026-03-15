@@ -47,6 +47,7 @@ import {
   LocalHospital as WoundIcon,
   RestartAlt as ResetIcon,
   DashboardCustomize as DashboardCustomizeIcon,
+  Backpack as BackpackIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -116,6 +117,7 @@ import MagiasList from "./MagiasList";
 import SkillsList from "./SkillsList";
 import VantagesList from "./VantagesList";
 import WeaponsList from "./WeaponsList";
+import PaperDoll from "./PaperDoll";
 
 const TabsPaper = styled(Paper)(({theme}) => ({
   marginBottom: "12px",
@@ -179,9 +181,10 @@ const SHEET_TABS = {
   COMBATE: 3,
   HABILIDADES: 4,
   EQUIPAMENTOS: 5,
-  MAGIAS: 6,
-  NOTAS: 7,
-  CONFIG: 8,
+  INVENTARIO: 6,
+  MAGIAS: 7,
+  NOTAS: 8,
+  CONFIG: 9,
 };
 
 const DEFAULT_COLORS = {
@@ -1402,6 +1405,9 @@ Negative Prompt: ${promptData.negativePrompt}.
           />
           <TabStyled
             label={<TabLabel icon={<InventoryIcon />} label="Equipamentos" />}
+          />
+          <TabStyled
+            label={<TabLabel icon={<BackpackIcon />} label="Inventário" />}
           />
           <TabStyled
             label={<TabLabel icon={<SpellbookIcon />} label="Magias" />}
@@ -3414,8 +3420,41 @@ Negative Prompt: ${promptData.negativePrompt}.
         </Box>
       )}
 
-      {/* TAB 7: PODERES (Magias) */}
+      {/* TAB 6: INVENTÁRIO (Provisório) */}
       {tabValue === 6 && (
+        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+          <h3
+            style={{
+              margin: "0 0 16px 0",
+              fontSize: "1.1rem",
+              textAlign: "center",
+            }}
+          >
+            🎒 Inventário e Equipamentos
+          </h3>
+          <PaperDoll
+            character={character}
+            updateAttribute={updateAttributeIfAllowed}
+            isFieldLocked={isFieldLocked}
+          />
+
+          {/* <Typography
+            variant="h5"
+            color="primary"
+            gutterBottom
+            fontWeight="bold"
+          >
+            🎒 Inventário (Em Construção)
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Esta aba abrigará em breve o novo sistema visual de Equipamentos
+            (Paper Doll).
+          </Typography> */}
+        </Box>
+      )}
+
+      {/* TAB 7: PODERES (Magias) */}
+      {tabValue === 7 && (
         <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
@@ -3440,7 +3479,7 @@ Negative Prompt: ${promptData.negativePrompt}.
       )}
 
       {/* TAB 8: NOTAS */}
-      {tabValue === 7 && (
+      {tabValue === 8 && (
         <Box
           sx={{
             padding: "16px",
@@ -3469,8 +3508,8 @@ Negative Prompt: ${promptData.negativePrompt}.
         </Box>
       )}
 
-      {/* TAB 8: CONFIG (CORES) */}
-      {tabValue === 8 && (
+      {/* TAB 9: CONFIG (CORES) */}
+      {tabValue === 9 && (
         <Box
           sx={{
             background: "#fff",

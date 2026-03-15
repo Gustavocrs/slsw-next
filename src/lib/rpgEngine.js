@@ -35,7 +35,7 @@ export const SKILLS = {
   Sobrevivência: "intelecto",
   Consertar: "intelecto",
   "Ciência Estranha": "intelecto",
-  Conjuraração: "intelecto",
+  Conjuração: "intelecto",
 
   // ESPÍRITO
   Intimidar: "espirito",
