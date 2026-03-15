@@ -583,28 +583,9 @@ function GameModal() {
   };
 
   const handlePlayerClick = (event, player, status = {}) => {
-    // 1. Permitir clicar em si mesmo (para ver ficha ou configurar)
-    if (player.uid === user?.uid) {
-      setAnchorEl(event.currentTarget);
-      setSelectedPlayer(player);
-      setSelectedPlayerStatus(status);
-      return;
-    }
-
-    // 2. Lógica de Permissão para outros
-    if (isGM) {
-      // GM pode clicar em qualquer um
-      setAnchorEl(event.currentTarget);
-      setSelectedPlayer(player);
-      setSelectedPlayerStatus(status);
-    } else {
-      // Jogador só pode clicar no GM
-      if (player.isGM) {
-        setAnchorEl(event.currentTarget);
-        setSelectedPlayer(player);
-        setSelectedPlayerStatus(status);
-      }
-    }
+    setAnchorEl(event.currentTarget);
+    setSelectedPlayer(player);
+    setSelectedPlayerStatus(status);
   };
 
   const handleCloseMenu = () => {
@@ -1849,7 +1830,7 @@ function GameModal() {
                       </MenuItem>
                     </>
                   )}
-                  {isGM && (
+                  {isGM && !selectedPlayer?.isNpc && (
                     <MenuItem onClick={handleOpenNpcModal}>
                       <ListItemIcon>
                         <AddNpcIcon fontSize="small" />
@@ -1861,6 +1842,18 @@ function GameModal() {
                 </div>
               )}
 
+              {/* Opção para Ver Personagem de OUTRO jogador (que não seja o GM Avatar) */}
+              {selectedPlayer?.uid !== user?.uid &&
+                !selectedPlayer?.isGM &&
+                !isGM && (
+                  <MenuItem onClick={handleViewSheet}>
+                    <ListItemIcon>
+                      <SheetIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Ver Personagem</ListItemText>
+                  </MenuItem>
+                )}
+
               {/* Opções exclusivas para o GM (ao clicar em jogadores) */}
               {isGM &&
                 (!selectedPlayer?.isGM ||
@@ -1870,7 +1863,7 @@ function GameModal() {
                     <ListItemIcon>
                       <SheetIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Ver Ficha</ListItemText>
+                    <ListItemText>Ver Personagem</ListItemText>
                   </MenuItem>,
 
                   // AÇÕES
