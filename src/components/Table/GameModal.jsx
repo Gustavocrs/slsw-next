@@ -1672,7 +1672,15 @@ function GameModal() {
 
                     {/* Conteúdo das Abas */}
                     {panelTab === 0 && (
-                      <Box id="section-dados-campanha" sx={{mb: 4}}>
+                      <Box
+                        id="section-dados-campanha"
+                        sx={{
+                          mb: 4,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}
+                      >
                         <Accordion
                           defaultExpanded
                           sx={{
@@ -1690,9 +1698,9 @@ function GameModal() {
                                 gap: 1,
                               }}
                             >
-                              <QuestIcon color="primary" />
+                              <InfoIcon color="primary" />
                               <Typography variant="subtitle1" fontWeight="bold">
-                                Quests & Informações
+                                Informações da Mesa
                               </Typography>
                             </Box>
                           </AccordionSummary>
@@ -1713,213 +1721,325 @@ function GameModal() {
                             </Box>
                             <Typography
                               variant="body2"
-                              paragraph
                               sx={{whiteSpace: "pre-wrap"}}
                             >
                               {selectedTable?.description ||
                                 "Sem descrição disponível."}
                             </Typography>
+                          </AccordionDetails>
+                        </Accordion>
 
-                            {activeQuests.length > 0 && (
+                        {activeQuests.map((quest, index) => (
+                          <Accordion
+                            key={quest._id}
+                            defaultExpanded={index === 0}
+                            sx={{
+                              borderRadius: "8px",
+                              border: "1px solid #00e5ff",
+                              bgcolor: "rgba(0, 229, 255, 0.05)",
+                              boxShadow: "none",
+                              "&:before": {display: "none"},
+                            }}
+                          >
+                            <AccordionSummary
+                              expandIcon={<ExpandMoreIcon color="primary" />}
+                            >
                               <Box
                                 sx={{
-                                  mt: 2,
                                   display: "flex",
                                   flexDirection: "column",
-                                  gap: 2,
                                 }}
                               >
-                                <Divider />
                                 <Typography
-                                  variant="subtitle2"
-                                  color="primary"
+                                  variant="overline"
+                                  color="#00b8d4"
                                   sx={{
-                                    textTransform: "uppercase",
-                                    letterSpacing: 1,
+                                    fontWeight: "bold",
+                                    lineHeight: 1,
+                                    display: "block",
+                                    mb: 0.5,
                                   }}
                                 >
-                                  Operações em Andamento
+                                  [ CONTRATO DE ASSOCIAÇÃO / CONVOCAÇÃO ]
                                 </Typography>
-                                {activeQuests.map((quest, index) => (
-                                  <Accordion
-                                    key={quest._id}
-                                    defaultExpanded={index === 0}
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <QuestIcon color="primary" />
+                                  <Typography
+                                    variant="subtitle1"
+                                    fontWeight="bold"
+                                    sx={{textTransform: "uppercase"}}
+                                  >
+                                    {quest.title}
+                                  </Typography>
+                                </Box>
+                                {quest.hunterRank && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{mt: 0.5}}
+                                  >
+                                    Rank da Fenda: {quest.hunterRank} | Rank
+                                    SWADE: {quest.swadeRank} | Caçadores:{" "}
+                                    {quest.players}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{pt: 0}}>
+                              <Divider
+                                sx={{
+                                  mb: 1.5,
+                                  borderColor: "rgba(0, 184, 212, 0.2)",
+                                }}
+                              />
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 1.5,
+                                }}
+                              >
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="#00b8d4"
+                                    fontWeight="bold"
+                                    display="block"
+                                  >
+                                    ESTRUTURA ESTIMADA
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.primary"
+                                  >
+                                    Tamanho: {quest.rooms} salas mapeadas.
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="#00b8d4"
+                                    fontWeight="bold"
+                                    display="block"
+                                  >
+                                    SITUAÇÃO / RELATÓRIO
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.primary"
+                                  >
+                                    {quest.hook}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="#00b8d4"
+                                    fontWeight="bold"
+                                    display="block"
+                                  >
+                                    DIRETRIZ DE MISSÃO
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.primary"
+                                  >
+                                    {quest.objective}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="#00b8d4"
+                                    fontWeight="bold"
+                                    display="block"
+                                  >
+                                    PONTO DE INCURSÃO
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.primary"
+                                  >
+                                    {quest.location}
+                                  </Typography>
+                                </Box>
+
+                                {isGM && (
+                                  <Box
                                     sx={{
-                                      border: "1px solid #00e5ff",
-                                      bgcolor: "rgba(0, 229, 255, 0.05)",
-                                      "&:before": {display: "none"},
+                                      mt: 1,
+                                      p: 1.5,
+                                      bgcolor: "rgba(0,0,0,0.03)",
+                                      borderRadius: 1,
+                                      borderLeft: "3px solid #9c27b0",
                                     }}
                                   >
-                                    <AccordionSummary
-                                      expandIcon={
-                                        <ExpandMoreIcon color="primary" />
-                                      }
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      sx={{
+                                        display: "block",
+                                        mb: 1,
+                                        fontWeight: "bold",
+                                      }}
                                     >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                        }}
-                                      >
+                                      INFORMAÇÕES SIGILOSAS (Apenas GM)
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="warning.main"
+                                      display="block"
+                                    >
+                                      <strong>Complicação:</strong>{" "}
+                                      {quest.complication}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="secondary.main"
+                                      display="block"
+                                    >
+                                      <strong>Twist:</strong> {quest.twist}
+                                    </Typography>
+                                    {quest.traps?.length > 0 && (
+                                      <>
                                         <Typography
-                                          variant="overline"
-                                          color="#00b8d4"
-                                          sx={{
-                                            fontWeight: "bold",
-                                            lineHeight: 1,
-                                            display: "block",
-                                            mb: 0.5,
-                                          }}
+                                          variant="caption"
+                                          color="info.main"
+                                          display="block"
+                                          sx={{mt: 1}}
                                         >
-                                          [ CONTRATO DE ASSOCIAÇÃO / CONVOCAÇÃO
-                                          ]
+                                          <strong>Armadilhas:</strong>
                                         </Typography>
-                                        <Typography
-                                          variant="subtitle1"
-                                          fontWeight="bold"
-                                          sx={{textTransform: "uppercase"}}
-                                        >
-                                          {quest.title}
-                                        </Typography>
-                                        {quest.hunterRank && (
+                                        {quest.traps.map((t, i) => (
                                           <Typography
+                                            key={i}
                                             variant="caption"
                                             color="text.secondary"
-                                            sx={{mt: 0.5}}
+                                            display="block"
                                           >
-                                            Rank da Fenda: {quest.hunterRank} |
-                                            Rank SWADE: {quest.swadeRank} |
-                                            Caçadores: {quest.players}
+                                            • {t}
                                           </Typography>
-                                        )}
-                                      </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails sx={{pt: 0}}>
-                                      <Divider
-                                        sx={{
-                                          mb: 1.5,
-                                          borderColor: "rgba(0, 184, 212, 0.2)",
-                                        }}
-                                      />
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          gap: 1.5,
-                                        }}
+                                        ))}
+                                      </>
+                                    )}
+                                    <Box sx={{mt: 1}}>
+                                      <Typography
+                                        variant="caption"
+                                        color="primary.main"
+                                        display="block"
                                       >
-                                        <Box>
-                                          <Typography
-                                            variant="caption"
-                                            color="#00b8d4"
-                                            fontWeight="bold"
-                                            display="block"
-                                          >
-                                            SITUAÇÃO / RELATÓRIO
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            color="text.primary"
-                                          >
-                                            {quest.hook}
-                                          </Typography>
-                                        </Box>
-                                        <Box>
-                                          <Typography
-                                            variant="caption"
-                                            color="#00b8d4"
-                                            fontWeight="bold"
-                                            display="block"
-                                          >
-                                            DIRETRIZ DE MISSÃO
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            color="text.primary"
-                                          >
-                                            {quest.objective}
-                                          </Typography>
-                                        </Box>
-                                        <Box>
-                                          <Typography
-                                            variant="caption"
-                                            color="#00b8d4"
-                                            fontWeight="bold"
-                                            display="block"
-                                          >
-                                            PONTO DE INCURSÃO
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            color="text.primary"
-                                          >
-                                            {quest.location}
-                                          </Typography>
-                                        </Box>
-
-                                        {isGM && (
-                                          <Box
-                                            sx={{
-                                              mt: 1,
-                                              p: 1.5,
-                                              bgcolor: "rgba(0,0,0,0.03)",
-                                              borderRadius: 1,
-                                              borderLeft: "3px solid #9c27b0",
-                                            }}
-                                          >
+                                        <strong>Encontros Esperados:</strong>
+                                      </Typography>
+                                      <Box sx={{ml: 1, mt: 0.5}}>
+                                        <Typography
+                                          variant="caption"
+                                          color="error.main"
+                                          display="block"
+                                        >
+                                          <strong>◆ Boss:</strong>
+                                        </Typography>
+                                        <Box sx={{ml: 1, mb: 1}}>
+                                          {typeof quest.antagonist ===
+                                          "string" ? (
                                             <Typography
                                               variant="caption"
-                                              color="text.secondary"
-                                              sx={{
-                                                display: "block",
-                                                mb: 1,
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              INFORMAÇÕES SIGILOSAS (Apenas GM)
-                                            </Typography>
-                                            <Typography
-                                              variant="caption"
-                                              color="error.main"
                                               display="block"
                                             >
-                                              <strong>Boss:</strong>{" "}
                                               {quest.antagonist}
                                             </Typography>
+                                          ) : (
+                                            <>
+                                              <Typography
+                                                variant="caption"
+                                                display="block"
+                                              >
+                                                <strong>
+                                                  {quest.antagonist?.name}
+                                                </strong>{" "}
+                                                —{" "}
+                                                {quest.antagonist?.description}
+                                              </Typography>
+                                              <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                display="block"
+                                              >
+                                                Status:{" "}
+                                                {quest.antagonist?.stats}
+                                              </Typography>
+                                            </>
+                                          )}
+                                        </Box>
+                                        {quest.encounters?.length > 0 && (
+                                          <>
                                             <Typography
                                               variant="caption"
                                               color="warning.main"
                                               display="block"
                                             >
-                                              <strong>Complicação:</strong>{" "}
-                                              {quest.complication}
+                                              <strong>◆ Monstros:</strong>
                                             </Typography>
-                                            <Typography
-                                              variant="caption"
-                                              color="secondary.main"
-                                              display="block"
-                                            >
-                                              <strong>Twist:</strong>{" "}
-                                              {quest.twist}
-                                            </Typography>
-                                            <Typography
-                                              variant="caption"
-                                              color="success.main"
-                                              display="block"
-                                            >
-                                              <strong>Recompensa:</strong>{" "}
-                                              {quest.reward}
-                                            </Typography>
-                                          </Box>
+                                            {quest.encounters.map((enc, i) => (
+                                              <Box
+                                                key={i}
+                                                sx={{ml: 1, mb: 0.5}}
+                                              >
+                                                <Typography
+                                                  variant="caption"
+                                                  display="block"
+                                                >
+                                                  <strong>{enc.name}</strong> (
+                                                  {enc.type})
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                  display="block"
+                                                >
+                                                  {enc.stats}
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="success.main"
+                                                  display="block"
+                                                >
+                                                  Loot: {enc.loot}
+                                                </Typography>
+                                              </Box>
+                                            ))}
+                                          </>
                                         )}
                                       </Box>
-                                    </AccordionDetails>
-                                  </Accordion>
-                                ))}
+                                    </Box>
+                                    <Typography
+                                      variant="caption"
+                                      color="success.main"
+                                      display="block"
+                                      sx={{mt: 1}}
+                                    >
+                                      <strong>Loot do Boss:</strong>{" "}
+                                      {quest.bossLoot?.join(", ")}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="success.main"
+                                      display="block"
+                                    >
+                                      <strong>Recompensa:</strong>{" "}
+                                      {quest.reward}
+                                    </Typography>
+                                  </Box>
+                                )}
                               </Box>
-                            )}
-                          </AccordionDetails>
-                        </Accordion>
+                            </AccordionDetails>
+                          </Accordion>
+                        ))}
                       </Box>
                     )}
 
