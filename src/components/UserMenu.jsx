@@ -34,7 +34,6 @@ import {
   Description as SheetIcon,
   Close as CloseIcon,
   Message as MessageIcon,
-  AutoAwesome as AutoAwesomeIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
@@ -57,10 +56,6 @@ export default function UserMenu() {
   const [pendingInvites, setPendingInvites] = useState(0);
   const [sheetManagerOpen, setSheetManagerOpen] = useState(false);
 
-  // Modal de Gerador de Aventura
-  const [generatorOpen, setGeneratorOpen] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generatedQuest, setGeneratedQuest] = useState(null);
   const isGM = selectedTable && selectedTable.gmId === user?.uid;
 
   const prevInvitesRef = useRef(0);
@@ -98,44 +93,6 @@ export default function UserMenu() {
   const handleOpenChat = () => {
     handleClose();
     toggleMessagesDashboard();
-  };
-
-  // Funções do Gerador de Aventura
-  const handleOpenGenerator = async () => {
-    setGeneratorOpen(true);
-    if (!generatedQuest) {
-      await handleGenerateQuest();
-    }
-  };
-
-  const handleGenerateQuest = async () => {
-    try {
-      setGenerating(true);
-      const quest = await APIService.generateRandomAdventure();
-      setGeneratedQuest(quest);
-    } catch (e) {
-      showNotification("Erro ao gerar aventura.", "error");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleApproveQuest = async () => {
-    if (!selectedTable) return;
-    try {
-      setGenerating(true);
-      await APIService.addQuestToTable(selectedTable._id, generatedQuest);
-      showNotification(
-        "Aventura salva! Vá para a aba Quests da mesa para ativá-la.",
-        "success",
-      );
-      setGeneratorOpen(false);
-      setGeneratedQuest(null);
-    } catch (e) {
-      showNotification("Erro ao salvar aventura.", "error");
-    } finally {
-      setGenerating(false);
-    }
   };
 
   // Monitora novas notificações e mensagens
@@ -201,15 +158,6 @@ export default function UserMenu() {
 
   return (
     <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-      {isGM && (
-        <IconButton
-          color="inherit"
-          onClick={handleOpenGenerator}
-          title="Gerar Aventura Aleatória"
-        >
-          <AutoAwesomeIcon />
-        </IconButton>
-      )}
       <IconButton
         size="small"
         aria-label="account of current user"
@@ -310,70 +258,6 @@ export default function UserMenu() {
         <DialogContent>
           <SheetManager onClose={() => setSheetManagerOpen(false)} />
         </DialogContent>
-      </Dialog>
-
-      {/* Modal de Gerador de Aventura e Aprovação */}
-      <Dialog
-        open={generatorOpen}
-        onClose={() => setGeneratorOpen(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Nova Operação Aleatória</DialogTitle>
-        <DialogContent dividers>
-          {generating ? (
-            <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
-              <CircularProgress />
-            </Box>
-          ) : generatedQuest ? (
-            <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-              <Typography variant="h5" color="primary">
-                {generatedQuest.title}
-              </Typography>
-              <Typography>
-                <strong>Gancho:</strong> {generatedQuest.hook}
-              </Typography>
-              <Typography>
-                <strong>Objetivo:</strong> {generatedQuest.objective}
-              </Typography>
-              <Typography>
-                <strong>Local:</strong> {generatedQuest.location}
-              </Typography>
-              <Typography>
-                <strong>Antagonista:</strong> {generatedQuest.antagonist}
-              </Typography>
-              <Typography>
-                <strong>Complicação:</strong> {generatedQuest.complication}
-              </Typography>
-              <Typography>
-                <strong>Reviravolta:</strong> {generatedQuest.twist}
-              </Typography>
-              <Typography>
-                <strong>Recompensa:</strong> {generatedQuest.reward}
-              </Typography>
-            </Box>
-          ) : null}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setGeneratorOpen(false)} color="inherit">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleGenerateQuest}
-            color="secondary"
-            disabled={generating}
-          >
-            Gerar Novamente
-          </Button>
-          <Button
-            onClick={handleApproveQuest}
-            variant="contained"
-            color="primary"
-            disabled={generating || !generatedQuest || !selectedTable}
-          >
-            Aprovar & Salvar
-          </Button>
-        </DialogActions>
       </Dialog>
     </Box>
   );

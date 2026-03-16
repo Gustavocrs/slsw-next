@@ -127,6 +127,7 @@ export const useUIStore = create(
       tableDetailsModalOpen: false, // Modal de Detalhes/Config
       inspectModalOpen: false, // Modal de Inspeção de Ficha
       gameModalOpen: false, // Modal de Jogo (Novo)
+      questGeneratorOpen: false, // Painel do Gerador de Quests
       selectedTable: null, // Mesa selecionada para ver detalhes
       tablesUpdated: 0, // Timestamp para forçar refresh da lista
       messagesDashboardOpen: false, // O novo dashboard de mensagens
@@ -151,6 +152,8 @@ export const useUIStore = create(
         set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
       toggleMessagesDashboard: () =>
         set((state) => ({messagesDashboardOpen: !state.messagesDashboardOpen})),
+      toggleQuestGenerator: () =>
+        set((state) => ({questGeneratorOpen: !state.questGeneratorOpen})),
 
       // Sistema de Chat
       chatOpen: false,

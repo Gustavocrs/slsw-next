@@ -9,6 +9,11 @@ function getRandomItem(array) {
 
 export async function GET(request) {
   try {
+    const {searchParams} = new URL(request.url);
+    const players = searchParams.get("players") || "Desconhecido";
+    const swadeRank = searchParams.get("swadeRank") || "Desconhecido";
+    const hunterRank = searchParams.get("hunterRank") || "Desconhecido";
+
     // Rola uma opção de cada array da base de dados e compõe um JSON de Quest
     const adventure = {
       id: `quest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, // ID único para a quest
@@ -20,6 +25,9 @@ export async function GET(request) {
       complication: getRandomItem(adventureData.complications),
       twist: getRandomItem(adventureData.twists),
       reward: getRandomItem(adventureData.rewards),
+      players,
+      swadeRank,
+      hunterRank,
       createdAt: new Date().toISOString(),
     };
 

@@ -54,7 +54,6 @@ import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {ConfirmDialog} from "@/components/ConfirmDialog";
-import QuestBoard from "@/components/Table/QuestBoard";
 
 function TableDetailsModal() {
   const {
@@ -409,7 +408,6 @@ function TableDetailsModal() {
           >
             <Tab label="Detalhes" />
             <Tab label="Jogadores" />
-            <Tab label="Operações" />
           </Tabs>
         </Box>
 
@@ -625,10 +623,6 @@ function TableDetailsModal() {
             />
           )} */}
             </Stack>
-          )}
-
-          {currentTab === 2 && (
-            <QuestBoard tableId={selectedTable._id} isGM={isGM} />
           )}
         </Box>
       </DialogContent>
