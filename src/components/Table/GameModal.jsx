@@ -81,6 +81,7 @@ import {
   Cancel as CancelIcon,
   HelpOutline as HelpOutlineIcon,
   MenuBook as MenuBookIcon,
+  Star as StarIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -817,43 +818,44 @@ function GameModal() {
     handleCloseMenu();
   };
 
-  // --- Recalcular Mana (GM) ---
-  const handleRecalculateMana = async () => {
+  // --- Ações em Massa (GM Powers) ---
+  const handleMassAction = async (type) => {
     if (!selectedTable || !isGM) return;
-    if (
-      !confirm(
-        "Recalcular e restaurar a Mana Máxima de todos os jogadores da mesa?",
-      )
-    )
-      return;
+    const confirmMsg =
+      type === "mana"
+        ? "Restaurar a Mana de todos os jogadores da mesa?"
+        : type === "wounds"
+          ? "Curar todos os ferimentos de todos os jogadores?"
+          : "Remover o estado Abalado de todos os jogadores?";
 
-    setSavingGameSettings(true); // Reutilizando estado de loading
+    if (!confirm(confirmMsg)) return;
+
+    setSavingGameSettings(true);
     try {
       const promises = selectedTable.players.map(async (player) => {
-        if (player.isNpc) return; // Ignora NPCs por enquanto ou trata diferente se tiver ficha
+        if (player.isNpc) return;
 
-        // Buscar ficha completa
         const charData = player.characterId
           ? await APIService.getCharacterById(player.characterId)
           : await APIService.getCharacter(player.uid);
 
         if (charData) {
-          const newMaxMana = calculateMaxMana(charData);
-          // Atualiza a ficha com a nova mana atual cheia (reset)
+          const updates = {};
+          if (type === "mana") updates.mana_atual = calculateMaxMana(charData);
+          if (type === "wounds") updates.ferimentos = 0;
+          if (type === "shaken") updates.abalado = false;
+
           await APIService.saveCharacter(charData.userId, {
             ...charData,
-            mana_atual: newMaxMana,
+            ...updates,
           });
         }
       });
 
       await Promise.all(promises);
-      showNotification(
-        "Mana de todos os jogadores recalculada e restaurada!",
-        "success",
-      );
+      showNotification("Ação em massa aplicada com sucesso!", "success");
     } catch (error) {
-      console.error("Erro ao recalcular mana:", error);
+      console.error("Erro na ação em massa:", error);
       showNotification("Erro ao processar atualização em massa.", "error");
     } finally {
       setSavingGameSettings(false);
@@ -1120,6 +1122,14 @@ function GameModal() {
           );
           break;
         }
+        case "give_xp":
+          const currentXp = parseInt(charData.xp || 0, 10);
+          updates.xp = currentXp + (payload.amount || 0);
+          showNotification(
+            `${targetPlayer.name} recebeu +${payload.amount} XP.`,
+            "success",
+          );
+          break;
       }
 
       await APIService.saveCharacter(charData.userId, {
@@ -1505,15 +1515,7 @@ function GameModal() {
                   )}
                 </IconButton>
               )}
-              {isGM && (
-                <IconButton
-                  onClick={handleRecalculateMana}
-                  title="Restaurar Mana de Todos"
-                  sx={{color: "action.active"}}
-                >
-                  <RecalculateIcon />
-                </IconButton>
-              )}
+
               <IconButton
                 onClick={() => setIsBookOpen(!isBookOpen)}
                 title="Manual do Jogo"
@@ -2130,13 +2132,78 @@ function GameModal() {
                       />
                     </Divider>
 
-                    <Box sx={{mb: 2}}>
-                      <PlayerListItem
-                        player={gmData}
-                        isGMView={isGM}
-                        presenceStatus={selectedTable?.gmPresence || "pending"}
-                        onClick={handlePlayerClick}
-                      />
+                    <Box
+                      sx={{
+                        mb: 2,
+                        display: "flex",
+                        gap: 1,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box sx={{flex: 1, minWidth: 0}}>
+                        <PlayerListItem
+                          player={gmData}
+                          isGMView={isGM}
+                          presenceStatus={
+                            selectedTable?.gmPresence || "pending"
+                          }
+                          onClick={handlePlayerClick}
+                        />
+                      </Box>
+                      {isGM && (
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 1,
+                            border: "1px solid #e0e0e0",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                            bgcolor: "#fafafa",
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            align="center"
+                            fontWeight="bold"
+                          >
+                            PODERES GM
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 0.5,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              title="Restaurar Mana da Mesa"
+                              onClick={() => handleMassAction("mana")}
+                            >
+                              <ManaPotionIcon />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              title="Curar Ferimentos da Mesa"
+                              onClick={() => handleMassAction("wounds")}
+                            >
+                              <HealIcon />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="warning"
+                              title="Remover Abalado da Mesa"
+                              onClick={() => handleMassAction("shaken")}
+                            >
+                              <StunIcon />
+                            </IconButton>
+                          </Box>
+                        </Paper>
+                      )}
                     </Box>
 
                     {gmCharacterData && (
@@ -2292,6 +2359,18 @@ function GameModal() {
                     <ChevronRightIcon fontSize="small" />
                   </MenuItem>,
 
+                  // XP
+                  <MenuItem
+                    key="menu-xp"
+                    onClick={(e) => handleOpenSubmenu("xp", e)}
+                  >
+                    <ListItemIcon>
+                      <StarIcon fontSize="small" sx={{color: "#fbc02d"}} />
+                    </ListItemIcon>
+                    <ListItemText sx={{color: "#fbc02d"}}>Dar XP</ListItemText>
+                    <ChevronRightIcon fontSize="small" />
+                  </MenuItem>,
+
                   <Divider key="div-actions" />,
 
                   // ABALAR / REMOVER ABALADO
@@ -2435,6 +2514,32 @@ function GameModal() {
                   <FileIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Solicitar Arquivo</ListItemText>
+              </MenuItem>
+            </Menu>
+
+            {/* SUBMENU: XP */}
+            <Menu
+              anchorEl={submenuAnchorEl}
+              open={submenuType === "xp"}
+              onClose={handleCloseSubmenu}
+              anchorOrigin={{vertical: "top", horizontal: "right"}}
+              transformOrigin={{vertical: "top", horizontal: "left"}}
+              PaperProps={{elevation: 3}}
+            >
+              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 1})}>
+                <ListItemText>+1 XP</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 2})}>
+                <ListItemText>+2 XP</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 3})}>
+                <ListItemText>+3 XP</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 4})}>
+                <ListItemText>+4 XP</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 5})}>
+                <ListItemText>+5 XP</ListItemText>
               </MenuItem>
             </Menu>
 

@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {adventureData} from "@/data/adventureGenerator";
+import {adventureData} from "@/lib/adventureGenerator";
 
 // Função auxiliar para pegar item aleatório sem repetição no mesmo array
 function getRandomItem(array) {

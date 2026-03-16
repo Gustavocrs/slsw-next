@@ -677,7 +677,7 @@ class APIService {
   static async generateRandomAdventure(params = {}) {
     try {
       const query = new URLSearchParams(params).toString();
-      const response = await fetch(`/api/adventures/generate?${query}`);
+      const response = await fetch(`/api/generate/adventures?${query}`);
       if (!response.ok) throw new Error("Erro ao gerar a aventura aleatória");
       return await response.json();
     } catch (error) {
