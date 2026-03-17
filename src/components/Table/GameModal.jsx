@@ -1515,7 +1515,15 @@ function GameModal() {
                   )}
                 </IconButton>
               )}
-
+              {isGM && (
+                <IconButton
+                  onClick={() => handleMassAction("mana")}
+                  title="Restaurar Mana de Todos"
+                  sx={{color: "action.active"}}
+                >
+                  <RecalculateIcon />
+                </IconButton>
+              )}
               <IconButton
                 onClick={() => setIsBookOpen(!isBookOpen)}
                 title="Manual do Jogo"
@@ -2365,9 +2373,9 @@ function GameModal() {
                     onClick={(e) => handleOpenSubmenu("xp", e)}
                   >
                     <ListItemIcon>
-                      <StarIcon fontSize="small" sx={{color: "#fbc02d"}} />
+                      <StarIcon fontSize="small" sx={{color: "#d97706"}} />
                     </ListItemIcon>
-                    <ListItemText sx={{color: "#fbc02d"}}>Dar XP</ListItemText>
+                    <ListItemText sx={{color: "#d97706"}}>Dar XP</ListItemText>
                     <ChevronRightIcon fontSize="small" />
                   </MenuItem>,
 
@@ -2527,16 +2535,13 @@ function GameModal() {
               PaperProps={{elevation: 3}}
             >
               <MenuItem onClick={() => handleGMAction("give_xp", {amount: 1})}>
-                <ListItemText>+1 XP</ListItemText>
+                <ListItemText>+1 XP (Avanço Menor)</ListItemText>
               </MenuItem>
               <MenuItem onClick={() => handleGMAction("give_xp", {amount: 2})}>
                 <ListItemText>+2 XP</ListItemText>
               </MenuItem>
               <MenuItem onClick={() => handleGMAction("give_xp", {amount: 3})}>
-                <ListItemText>+3 XP</ListItemText>
-              </MenuItem>
-              <MenuItem onClick={() => handleGMAction("give_xp", {amount: 4})}>
-                <ListItemText>+4 XP</ListItemText>
+                <ListItemText>+3 XP (Avanço Padrão)</ListItemText>
               </MenuItem>
               <MenuItem onClick={() => handleGMAction("give_xp", {amount: 5})}>
                 <ListItemText>+5 XP</ListItemText>

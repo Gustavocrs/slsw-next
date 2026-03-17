@@ -161,7 +161,7 @@ export default function QuestBoard({tableId, isGM}) {
 
     const prompts = {
       narrative: `Crie uma descrição narrativa envolvente para uma aventura de RPG de fantasia urbana (estilo Solo Leveling). Tema: ${quest.theme}. O portal se abriu em: ${quest.hook}. O objetivo dos caçadores é: ${quest.objective}. O interior da fenda é: ${quest.location}. A aventura terá uma complicação: ${quest.complication} e uma reviravolta: ${quest.twist}. O chefe final será: ${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name}. Recompensa: ${quest.reward}. Descreva o clima, o ambiente e o perigo inicial que os caçadores sentem ao entrar na fenda.`,
-      encounters: `Gere uma descrição detalhada para os seguintes encontros e armadilhas em uma dungeon de RPG. Armadilhas: ${quest.traps?.join("; ") || "Nenhuma"}. Monstros: ${quest.encounters?.map((e) => e.name).join(", ") || "Nenhum"}. Descreva como esses monstros agem, como as armadilhas estão escondidas no cenário (${quest.location}) e o que os jogadores sentem ao se deparar com eles.`,
+      encounters: `Gere uma descrição detalhada para os seguintes encontros e armadilhas em uma dungeon de RPG. Armadilhas: ${quest.traps?.join("; ") || "Nenhuma"}. Pistas disponíveis: ${quest.clues?.join("; ") || "Nenhuma"}. Monstros: ${quest.encounters?.map((e) => e.name).join(", ") || "Nenhum"}. Descreva como esses monstros agem, como as armadilhas estão escondidas no cenário (${quest.location}) e o que os jogadores sentem ao se deparar com eles.`,
       boss: `Crie uma descrição épica e aterrorizante para a entrada do Chefe da Dungeon: ${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name + " - " + quest.antagonist?.description}. Descreva sua aparência, a aura mágica ao seu redor, o cenário da sala do chefe e a primeira ação que ele faz quando os jogadores entram.`,
       map: `Crie um guia de mapeamento para uma Dungeon de ${quest.rooms} salas com o tema visual: ${quest.location}. Descreva como as salas estão conectadas e o design geral do lugar (ex: corredores estreitos, cavernas amplas, arquitetura ancestral).`,
       rooms: `Divida a Dungeon de ${quest.rooms} salas em uma progressão lógica. Distribua o gancho (investigação inicial), as armadilhas (${quest.traps?.join(", ") || "Nenhuma"}), os monstros (${quest.encounters?.map((e) => e.name).join(", ") || "Nenhum"}) e a sala do chefe final (${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name}) entre essas ${quest.rooms} salas de forma orgânica e desafiadora.`,
@@ -169,74 +169,177 @@ export default function QuestBoard({tableId, isGM}) {
 
     const copyToClipboard = (text) => {
       navigator.clipboard.writeText(text);
-      showNotification("Prompt copiado para a área de transferência!", "success");
+      showNotification(
+        "Prompt copiado para a área de transferência!",
+        "success",
+      );
     };
 
     return (
       <Box sx={{display: "flex", flexDirection: "column", gap: 1, mt: 2}}>
         {/* Resumo */}
-        <Accordion defaultExpanded disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          defaultExpanded
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Resumo</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Resumo
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="caption" color="primary" fontWeight="bold">SITUAÇÃO (HOOK)</Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>{quest.hook}</Typography>
+            <Typography variant="caption" color="primary" fontWeight="bold">
+              SITUAÇÃO (HOOK)
+            </Typography>
+            <Typography variant="body2" sx={{mb: 1.5}}>
+              {quest.hook}
+            </Typography>
 
-            <Typography variant="caption" color="primary" fontWeight="bold">OBJETIVO</Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>{quest.objective}</Typography>
+            <Typography variant="caption" color="primary" fontWeight="bold">
+              OBJETIVO
+            </Typography>
+            <Typography variant="body2" sx={{mb: 1.5}}>
+              {quest.objective}
+            </Typography>
 
-            <Typography variant="caption" color="primary" fontWeight="bold">LOCAL DA FENDA</Typography>
+            <Typography variant="caption" color="primary" fontWeight="bold">
+              LOCAL DA FENDA
+            </Typography>
             <Typography variant="body2">{quest.location}</Typography>
           </AccordionDetails>
         </Accordion>
 
         {/* Detalhada */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Detalhada</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Detalhada
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="caption" color="warning.main" fontWeight="bold">COMPLICAÇÃO</Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>{quest.complication}</Typography>
+            <Typography
+              variant="caption"
+              color="warning.main"
+              fontWeight="bold"
+            >
+              COMPLICAÇÃO
+            </Typography>
+            <Typography variant="body2" sx={{mb: 1.5}}>
+              {quest.complication}
+            </Typography>
 
-            <Typography variant="caption" color="secondary.main" fontWeight="bold">REVIRAVOLTA</Typography>
+            <Typography
+              variant="caption"
+              color="secondary.main"
+              fontWeight="bold"
+            >
+              REVIRAVOLTA
+            </Typography>
             <Typography variant="body2">{quest.twist}</Typography>
           </AccordionDetails>
         </Accordion>
 
         {/* Estrutura */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Estrutura</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Estrutura
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="body2"><strong>Tamanho Estimado:</strong> {quest.rooms} salas mapeadas.</Typography>
+            <Typography variant="body2">
+              <strong>Tamanho Estimado:</strong> {quest.rooms} salas mapeadas.
+            </Typography>
           </AccordionDetails>
         </Accordion>
 
         {/* Encontros */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Encontros</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Encontros
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
+            {quest.clues?.length > 0 && (
+              <Box sx={{mb: 2}}>
+                <Typography
+                  variant="caption"
+                  color="secondary.main"
+                  fontWeight="bold"
+                >
+                  PISTAS E INVESTIGAÇÃO
+                </Typography>
+                {quest.clues.map((c, i) => (
+                  <Typography key={i} variant="body2">
+                    • {c}
+                  </Typography>
+                ))}
+              </Box>
+            )}
             {quest.traps?.length > 0 && (
               <Box sx={{mb: 2}}>
-                <Typography variant="caption" color="info.main" fontWeight="bold">ARMADILHAS E ENIGMAS</Typography>
+                <Typography
+                  variant="caption"
+                  color="info.main"
+                  fontWeight="bold"
+                >
+                  ARMADILHAS E ENIGMAS
+                </Typography>
                 {quest.traps.map((t, i) => (
-                  <Typography key={i} variant="body2">• {t}</Typography>
+                  <Typography key={i} variant="body2">
+                    • {t}
+                  </Typography>
                 ))}
               </Box>
             )}
             {quest.encounters?.length > 0 && (
               <Box>
-                <Typography variant="caption" color="warning.main" fontWeight="bold" display="block" sx={{mb: 0.5}}>◆ MONSTROS EXTRAS</Typography>
+                <Typography
+                  variant="caption"
+                  color="warning.main"
+                  fontWeight="bold"
+                  display="block"
+                  sx={{mb: 0.5}}
+                >
+                  ◆ MONSTROS EXTRAS
+                </Typography>
                 {quest.encounters.map((enc, i) => (
-                  <Box key={i} sx={{mb: i === quest.encounters.length - 1 ? 0 : 1}}>
-                    <Typography variant="body2"><strong>{enc.name}</strong> ({enc.type})</Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">{enc.stats}</Typography>
-                    <Typography variant="caption" color="success.main" display="block">Loot: {enc.loot}</Typography>
+                  <Box
+                    key={i}
+                    sx={{mb: i === quest.encounters.length - 1 ? 0 : 1}}
+                  >
+                    <Typography variant="body2">
+                      <strong>{enc.name}</strong> ({enc.type})
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                    >
+                      {enc.stats}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="success.main"
+                      display="block"
+                    >
+                      Loot: {enc.loot}
+                    </Typography>
                   </Box>
                 ))}
               </Box>
@@ -245,87 +348,242 @@ export default function QuestBoard({tableId, isGM}) {
         </Accordion>
 
         {/* Chefe Final */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Chefe Final</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Chefe Final
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="caption" color="error.main" fontWeight="bold" display="block">◆ BOSS</Typography>
+            <Typography
+              variant="caption"
+              color="error.main"
+              fontWeight="bold"
+              display="block"
+            >
+              ◆ BOSS
+            </Typography>
             {typeof quest.antagonist === "string" ? (
               <Typography variant="body2">{quest.antagonist}</Typography>
             ) : (
               <Box sx={{mt: 0.5}}>
-                <Typography variant="body2"><strong>{quest.antagonist?.name}:</strong> {quest.antagonist?.description}</Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{mt: 0.5}}>{quest.antagonist?.stats}</Typography>
+                <Typography variant="body2">
+                  <strong>{quest.antagonist?.name}:</strong>{" "}
+                  {quest.antagonist?.description}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{mt: 0.5}}
+                >
+                  {quest.antagonist?.stats}
+                </Typography>
               </Box>
             )}
           </AccordionDetails>
         </Accordion>
 
         {/* Espólios */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">Espólios</Typography>
+            <Typography fontWeight="bold" color="primary">
+              Espólios
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="caption" color="success.main" fontWeight="bold" display="block">LOOT DO CHEFE E RECOMPENSAS</Typography>
+            <Typography
+              variant="caption"
+              color="success.main"
+              fontWeight="bold"
+              display="block"
+            >
+              LOOT DO CHEFE E RECOMPENSAS
+            </Typography>
             {quest.bossLoot && (
-              <Typography variant="body2" sx={{mb: 0.5}}><strong>Loot do Chefe:</strong> {quest.bossLoot.join(", ")}</Typography>
+              <Typography variant="body2" sx={{mb: 0.5}}>
+                <strong>Loot do Chefe:</strong> {quest.bossLoot.join(", ")}
+              </Typography>
             )}
-            <Typography variant="body2"><strong>Recompensa do Sistema/Guilda:</strong> {quest.reward}</Typography>
+            <Typography variant="body2">
+              <strong>Recompensa do Sistema/Guilda:</strong> {quest.reward}
+            </Typography>
           </AccordionDetails>
         </Accordion>
 
         {/* XP */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">XP</Typography>
+            <Typography fontWeight="bold" color="primary">
+              XP
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="body2"><strong>Experiência Sugerida:</strong> 3 XP (Padrão SWADE) ou 1 Avanço se concluída com sucesso.</Typography>
+            <Typography variant="body2">
+              <strong>Experiência Sugerida:</strong> 3 XP (Padrão SWADE) ou 1
+              Avanço se concluída com sucesso.
+            </Typography>
           </AccordionDetails>
         </Accordion>
 
         {/* Prompt */}
-        <Accordion disableGutters elevation={0} sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="secondary">Prompt (IA Assistente)</Typography>
+            <Typography fontWeight="bold" color="secondary">
+              Prompt (IA Assistente)
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
               <Box>
-                <Typography variant="caption" fontWeight="bold">1. Descrição Narrativa</Typography>
-                <Box sx={{display: "flex", gap: 1, alignItems: "flex-start", mt: 0.5}}>
-                  <TextField multiline fullWidth size="small" value={prompts.narrative} InputProps={{readOnly: true}} />
-                  <IconButton onClick={() => copyToClipboard(prompts.narrative)} color="primary"><ContentCopyIcon /></IconButton>
+                <Typography variant="caption" fontWeight="bold">
+                  1. Descrição Narrativa
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                >
+                  <TextField
+                    multiline
+                    fullWidth
+                    size="small"
+                    value={prompts.narrative}
+                    InputProps={{readOnly: true}}
+                  />
+                  <IconButton
+                    onClick={() => copyToClipboard(prompts.narrative)}
+                    color="primary"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
                 </Box>
               </Box>
               <Box>
-                <Typography variant="caption" fontWeight="bold">2. Encontros (Armadilhas, Enigmas e Monstros)</Typography>
-                <Box sx={{display: "flex", gap: 1, alignItems: "flex-start", mt: 0.5}}>
-                  <TextField multiline fullWidth size="small" value={prompts.encounters} InputProps={{readOnly: true}} />
-                  <IconButton onClick={() => copyToClipboard(prompts.encounters)} color="primary"><ContentCopyIcon /></IconButton>
+                <Typography variant="caption" fontWeight="bold">
+                  2. Encontros (Armadilhas, Enigmas e Monstros)
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                >
+                  <TextField
+                    multiline
+                    fullWidth
+                    size="small"
+                    value={prompts.encounters}
+                    InputProps={{readOnly: true}}
+                  />
+                  <IconButton
+                    onClick={() => copyToClipboard(prompts.encounters)}
+                    color="primary"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
                 </Box>
               </Box>
               <Box>
-                <Typography variant="caption" fontWeight="bold">3. Boss</Typography>
-                <Box sx={{display: "flex", gap: 1, alignItems: "flex-start", mt: 0.5}}>
-                  <TextField multiline fullWidth size="small" value={prompts.boss} InputProps={{readOnly: true}} />
-                  <IconButton onClick={() => copyToClipboard(prompts.boss)} color="primary"><ContentCopyIcon /></IconButton>
+                <Typography variant="caption" fontWeight="bold">
+                  3. Boss
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                >
+                  <TextField
+                    multiline
+                    fullWidth
+                    size="small"
+                    value={prompts.boss}
+                    InputProps={{readOnly: true}}
+                  />
+                  <IconButton
+                    onClick={() => copyToClipboard(prompts.boss)}
+                    color="primary"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
                 </Box>
               </Box>
               <Box>
-                <Typography variant="caption" fontWeight="bold">4. Mapa da Masmorra</Typography>
-                <Box sx={{display: "flex", gap: 1, alignItems: "flex-start", mt: 0.5}}>
-                  <TextField multiline fullWidth size="small" value={prompts.map} InputProps={{readOnly: true}} />
-                  <IconButton onClick={() => copyToClipboard(prompts.map)} color="primary"><ContentCopyIcon /></IconButton>
+                <Typography variant="caption" fontWeight="bold">
+                  4. Mapa da Masmorra
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                >
+                  <TextField
+                    multiline
+                    fullWidth
+                    size="small"
+                    value={prompts.map}
+                    InputProps={{readOnly: true}}
+                  />
+                  <IconButton
+                    onClick={() => copyToClipboard(prompts.map)}
+                    color="primary"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
                 </Box>
               </Box>
               <Box>
-                <Typography variant="caption" fontWeight="bold">5. Salas da Masmorra</Typography>
-                <Box sx={{display: "flex", gap: 1, alignItems: "flex-start", mt: 0.5}}>
-                  <TextField multiline fullWidth size="small" value={prompts.rooms} InputProps={{readOnly: true}} />
-                  <IconButton onClick={() => copyToClipboard(prompts.rooms)} color="primary"><ContentCopyIcon /></IconButton>
+                <Typography variant="caption" fontWeight="bold">
+                  5. Salas da Masmorra
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                >
+                  <TextField
+                    multiline
+                    fullWidth
+                    size="small"
+                    value={prompts.rooms}
+                    InputProps={{readOnly: true}}
+                  />
+                  <IconButton
+                    onClick={() => copyToClipboard(prompts.rooms)}
+                    color="primary"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
                 </Box>
               </Box>
             </Box>

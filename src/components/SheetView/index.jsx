@@ -927,6 +927,19 @@ function SheetView({
   const [imgLoading, setImgLoading] = useState(false);
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [promptData, setPromptData] = useState(null);
+  const [selectedArtStyle, setSelectedArtStyle] = useState("default");
+
+  const ART_STYLES = {
+    default:
+      "Solo Leveling Manhwa Style, High Fantasy, Character Concept Art, 8k, Detailed, Portrait Orientation",
+    dark: "Solo Leveling Manhwa Style, Dark Fantasy, Grimdark, Heavy Shadows, 8k, Detailed, Portrait Orientation",
+    cyberpunk:
+      "Solo Leveling Manhwa Style, Cyberpunk, Neon Lights, Sci-Fi Fantasy, 8k, Detailed, Portrait Orientation",
+    cel_shaded:
+      "Solo Leveling Manhwa Style, Cel Shaded Anime, Vibrant Colors, 8k, Detailed, Portrait Orientation",
+    watercolor:
+      "Solo Leveling Manhwa Style, Watercolor Painting, Ethereal, Soft Lighting, 8k, Detailed, Portrait Orientation",
+  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -967,8 +980,7 @@ function SheetView({
     const spells = (character.magias || []).map((m) => m.name).join(", ");
 
     const data = {
-      artStyle:
-        "Solo Leveling Manhwa Style, Anime, High Fantasy, Character Concept Art, 8k, Detailed, Portrait Orientation",
+      artStyle: ART_STYLES[selectedArtStyle],
       characterDetails: `Name: ${character.nome || "Unknown Hunter"}, Gender: ${character.genero || "Unknown"}, Rank: ${character.rank || "Novice"}, Archetype: ${character.arquetipo || "Hunter"}, Concept: ${character.conceito || "Adventurer"}, Guild: ${character.guilda || "None"}. Appearance -> Age: ${character.idade || "Unknown"}, Height: ${character.altura || "Unknown"}, Weight: ${character.peso || "Unknown"}, Hair: ${character.cabelos || "Unknown"}, Eyes: ${character.olhos || "Unknown"}, Skin: ${character.pele || "Unknown"}. Personality/History: ${character.descricao || "None"}`,
       awakeningDetails: `Awakening Origin: ${character.despertar_origem || "Unknown"}, Sensation: ${character.despertar_sensacao || "Unknown"}, Mana Affinity: ${character.despertar_afinidade || "Blue"}, Mark: ${character.despertar_marca || "None"}. Unique Power Structure -> Source: ${character.poder_unico_fonte || "Unknown"}, Expression: ${character.poder_unico_expressao || "Unknown"}, Trigger: ${character.poder_unico_gatilho || "Unknown"}. Resources: ${awakeningResources || "None"}`,
       equipmentDetails: `Weapons: ${weapons || "None"}, Armor: ${armor || "Standard Hunter Gear"}, Items: ${items || "None"}, Loot/Artifacts: ${loot || "None"}`,
@@ -3071,6 +3083,25 @@ Negative Prompt: ${promptData.negativePrompt}.
                       />
                     </Box>
                   )}
+
+                  <FormControl fullWidth size="small" sx={{mb: 2}}>
+                    <InputLabel>Estilo de Arte</InputLabel>
+                    <Select
+                      value={selectedArtStyle}
+                      label="Estilo de Arte"
+                      onChange={(e) => setSelectedArtStyle(e.target.value)}
+                    >
+                      <MenuItem value="default">Padrão (High Fantasy)</MenuItem>
+                      <MenuItem value="dark">Dark Fantasy (Grimdark)</MenuItem>
+                      <MenuItem value="cyberpunk">Cyberpunk (Neon)</MenuItem>
+                      <MenuItem value="cel_shaded">
+                        Cel Shaded Anime (Vibrante)
+                      </MenuItem>
+                      <MenuItem value="watercolor">
+                        Aquarela (Ethereal)
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
 
                   <Box
                     className="flex flex-col"

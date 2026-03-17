@@ -1,14 +1,16 @@
 import {NextResponse} from "next/server";
-import {adventureData} from "@/lib/adventureGenerator";
+import {adventureData} from "@/data/adventureGenerator";
 
 // Função auxiliar para pegar item aleatório sem repetição no mesmo array
 function getRandomItem(array) {
+  if (!array || array.length === 0) return null;
   const randomIndex = Math.floor(Math.random() * array.length);
   return array[randomIndex];
 }
 
 // Função auxiliar para pegar múltiplos itens sem repetição
 function getRandomUniqueItems(array, count) {
+  if (!array || array.length === 0) return [];
   const shuffled = [...array].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 }
@@ -73,6 +75,10 @@ export async function GET(request) {
       (t) => t.text,
     );
 
+    // Pistas (Clues)
+    const cluesCount = Math.floor(Math.random() * 2) + 1; // 1 a 2 pistas
+    const clues = getRandomUniqueItems(adventureData.clues, cluesCount);
+
     // Loot do Boss Principal
     const bLootCount = Math.floor(Math.random() * 2) + 2; // 2 a 3 itens épicos
     const bossLootList = getRandomUniqueItems(
@@ -110,12 +116,13 @@ export async function GET(request) {
       rooms: roomsCount,
       encounters: encounters,
       traps: traps,
+      clues: clues,
       bossLoot: bossLootList,
       createdAt: new Date().toISOString(),
     };
 
     // Você pode brincar gerando um Título Baseado no Antagonista ou Local se quiser no futuro
-    const antagonistaCurto = adventure.antagonist.name; // "O Cavaleiro Corrompido"
+    const antagonistaCurto = adventure.antagonist?.name || "Desconhecida";
     adventure.title = `Operação: ${antagonistaCurto}`;
 
     return NextResponse.json(adventure);
