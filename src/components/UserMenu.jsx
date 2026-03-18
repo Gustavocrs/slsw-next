@@ -95,6 +95,15 @@ export default function UserMenu() {
     toggleMessagesDashboard();
   };
 
+  // Permite que outros componentes abram o gerenciador de fichas
+  useEffect(() => {
+    const handleOpen = () => setSheetManagerOpen(true);
+    window.addEventListener("open-sheet-manager", handleOpen);
+    return () => {
+      window.removeEventListener("open-sheet-manager", handleOpen);
+    };
+  }, []);
+
   // Monitora novas notificações e mensagens
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current && prevUnreadRef.current !== 0) {
@@ -242,6 +251,7 @@ export default function UserMenu() {
         fullWidth
         maxWidth="sm"
         fullScreen
+        sx={{zIndex: 99999}} // Garante que a ficha sobreponha a mesa de jogo
       >
         <DialogTitle
           sx={{
