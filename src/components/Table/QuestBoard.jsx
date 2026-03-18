@@ -137,6 +137,12 @@ export default function QuestBoard({tableId, isGM}) {
       );
       setGeneratorOpen(false);
       setGeneratedQuest(null);
+      // Limpa os rascunhos da IA em cache para não vazar para a próxima criação
+      setAiResults((prev) => {
+        const next = {...prev};
+        delete next["unsaved_draft"];
+        return next;
+      });
       loadQuests(); // Refresh the list
     } catch (e) {
       showNotification("Erro ao salvar aventura.", "error");
@@ -159,7 +165,8 @@ export default function QuestBoard({tableId, isGM}) {
       {id: "scenery", label: "Cenários e Pistas"},
     ];
 
-    let currentResults = {...(aiResults[quest._id] || quest.aiContent || {})};
+    const questId = quest._id || "unsaved_draft";
+    let currentResults = {...(aiResults[questId] || quest.aiContent || {})};
 
     for (const step of steps) {
       setLoadingStep(step.id);
@@ -173,13 +180,16 @@ export default function QuestBoard({tableId, isGM}) {
 
         if (data.content) {
           currentResults[step.id] = data.content;
-          setAiResults((prev) => ({...prev, [quest._id]: {...currentResults}}));
+          setAiResults((prev) => ({...prev, [questId]: {...currentResults}}));
 
           // Salva no banco de dados (se a quest já estiver salva no painel)
           if (quest._id) {
             await APIService.updateQuest(tableId, quest._id, {
               aiContent: currentResults,
             });
+          } else {
+            // Se a quest ainda não foi salva (está no gerador), atualiza o estado local para quando for salva
+            setGeneratedQuest((prev) => ({...prev, aiContent: currentResults}));
           }
         }
       } catch (err) {
@@ -192,7 +202,9 @@ export default function QuestBoard({tableId, isGM}) {
       }
     }
     setLoadingStep(null);
-    loadQuests(); // Atualiza a lista por baixo dos panos
+    if (quest._id) {
+      loadQuests(); // Atualiza a lista apenas se a quest já existia
+    }
   };
 
   if (!isGM) return null; // O painel de Quests agora é exclusivo do Mestre na Tab 4
@@ -536,8 +548,9 @@ export default function QuestBoard({tableId, isGM}) {
                 {id: "encounters", label: "2. Encontros e Armadilhas"},
                 {id: "boss", label: "3. Cena do Boss Final"},
               ].map((step) => {
+                const questId = quest._id || "unsaved_draft";
                 const content =
-                  aiResults[quest._id]?.[step.id] || quest.aiContent?.[step.id];
+                  aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
                 const {text} = extractTextAndPrompt(content, step.id);
 
                 return (
@@ -599,8 +612,9 @@ export default function QuestBoard({tableId, isGM}) {
                 {id: "loot", label: "4. Arte dos Espólios"},
                 {id: "scenery", label: "5. Arte do Cenário"},
               ].map((step) => {
+                const questId = quest._id || "unsaved_draft";
                 const content =
-                  aiResults[quest._id]?.[step.id] || quest.aiContent?.[step.id];
+                  aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
                 const {prompt} = extractTextAndPrompt(content, step.id);
 
                 return (
