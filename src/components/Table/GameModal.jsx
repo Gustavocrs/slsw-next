@@ -1473,15 +1473,7 @@ function GameModal() {
                 )}
               </IconButton>
             )}
-            {selectedTable && isGM && (
-              <IconButton
-                onClick={() => handleMassAction("mana")}
-                title="Restaurar Mana de Todos"
-                sx={{color: "action.active"}}
-              >
-                <RecalculateIcon />
-              </IconButton>
-            )}
+
             <IconButton
               onClick={() => setIsBookOpen(!isBookOpen)}
               title="Manual do Jogo"

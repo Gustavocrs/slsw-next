@@ -719,6 +719,18 @@ class APIService {
     }
   }
 
+  // 19.5 ATUALIZAR QUEST (DADOS GENÉRICOS / IA)
+  static async updateQuest(tableId, questId, data) {
+    try {
+      const questRef = doc(db, "tables", tableId, "quests", questId);
+      await updateDoc(questRef, {...data, updatedAt: serverTimestamp()});
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao atualizar quest:", error);
+      throw error;
+    }
+  }
+
   // 20. LISTAR QUESTS DA MESA
   static async getTableQuests(tableId) {
     try {

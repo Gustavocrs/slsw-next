@@ -1,135 +1,98 @@
 import {NextResponse} from "next/server";
-import {adventureData} from "@/data/adventureGenerator";
+import {adventureData} from "@/lib/adventureGenerator";
 
-// Função auxiliar para pegar item aleatório sem repetição no mesmo array
-function getRandomItem(array) {
-  if (!array || array.length === 0) return null;
-  const randomIndex = Math.floor(Math.random() * array.length);
-  return array[randomIndex];
-}
-
-// Função auxiliar para pegar múltiplos itens sem repetição
-function getRandomUniqueItems(array, count) {
-  if (!array || array.length === 0) return [];
-  const shuffled = [...array].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+// Função auxiliar para pegar um item aleatório de um array
+function pickRandom(array) {
+  if (!array || array.length === 0) return "Desconhecido";
+  return array[Math.floor(Math.random() * array.length)];
 }
 
 export async function GET(request) {
+  const {searchParams} = new URL(request.url);
+  const players = parseInt(searchParams.get("players") || "4", 10);
+  const swadeRank = searchParams.get("swadeRank") || "Novato";
+  const hunterRank = searchParams.get("hunterRank") || "E";
+
   try {
-    const {searchParams} = new URL(request.url);
-    const players = searchParams.get("players") || "4"; // Fallback numérico seguro
-    const swadeRank = searchParams.get("swadeRank") || "Desconhecido";
-    const hunterRank = searchParams.get("hunterRank") || "Desconhecido";
+    // 1. Sorteia o Tema e seus respectivos Ganchos/Objetivos
+    const themes = Object.keys(adventureData.themes);
+    const selectedTheme = pickRandom(themes);
+    const themeObj = adventureData.themes[selectedTheme];
 
-    // Escolher um tema de missão aleatório para manter coesão
-    const themesList = Object.keys(adventureData.themes);
-    const selectedTheme = getRandomItem(themesList);
-    const themeData = adventureData.themes[selectedTheme];
+    // 2. Filtra Bosses pelo Rank (se não achar do rank, pega qualquer um)
+    let possibleBosses = adventureData.antagonists.filter(
+      (b) => b.rank === swadeRank,
+    );
+    if (possibleBosses.length === 0) possibleBosses = adventureData.antagonists;
+    const antagonist = pickRandom(possibleBosses);
 
-    // Cálculos de Estrutura da Dungeon
-    const parsedPlayers = parseInt(players, 10);
-    const roomsCount = isNaN(parsedPlayers) ? 5 : parsedPlayers + 1;
+    // 3. Filtra Monstros (Rank do grupo ou Novato) para encontros aleatórios
+    let possibleMonsters = adventureData.monsters.filter(
+      (m) => m.rank === swadeRank || m.rank === "Novato",
+    );
+    if (possibleMonsters.length === 0)
+      possibleMonsters = adventureData.monsters;
 
-    // Constantes para nivelamento
-    const SWADE_RANKS = [
-      "Novato",
-      "Experiente",
-      "Veterano",
-      "Heroico",
-      "Lendário",
+    // Monta o array de encontros com base no número de jogadores (ex: 4 jogadores = 2 encontros)
+    const encountersCount = Math.max(1, Math.floor(players / 2));
+    const encounters = Array.from({length: encountersCount}).map(() => {
+      const m = pickRandom(possibleMonsters);
+      return {
+        name: m.name,
+        type: m.type,
+        stats: m.stats,
+        loot: pickRandom(adventureData.monsterLoot),
+      };
+    });
+
+    // 4. Sorteia Armadilhas e Pistas
+    let possibleTraps = adventureData.trapsAndPuzzles.filter(
+      (t) => t.rank === swadeRank || t.rank === "Novato",
+    );
+    if (possibleTraps.length === 0)
+      possibleTraps = adventureData.trapsAndPuzzles;
+
+    const traps = [
+      pickRandom(possibleTraps).text,
+      pickRandom(possibleTraps).text,
     ];
-    const rankIndex =
-      SWADE_RANKS.indexOf(swadeRank) !== -1
-        ? SWADE_RANKS.indexOf(swadeRank)
-        : 0;
 
-    // Filtrar Monstros por Rank (Mesmo rank ou 1 rank abaixo para formar hordas. Se novato, só novato)
-    let availableMonsters = adventureData.monsters.filter((m) => {
-      const mIdx = SWADE_RANKS.indexOf(m.rank || "Novato");
-      return mIdx === rankIndex || (rankIndex > 0 && mIdx === rankIndex - 1);
-    });
-    if (availableMonsters.length < 2)
-      availableMonsters = adventureData.monsters; // Fallback
+    const genericClues = [
+      "Manchas suspeitas de sangue nas paredes e arranhões profundos.",
+      "Ecos de batalha antigos e restos de equipamento quebrado de outros caçadores.",
+      "Um cristal de mana exaurido pisca de forma intermitente no chão.",
+    ];
+    const clues = [pickRandom(genericClues), pickRandom(genericClues)];
 
-    const encountersCount = Math.floor(Math.random() * 2) + 2; // 2 a 3 encontros
-    const chosenMonsters = getRandomUniqueItems(
-      availableMonsters,
-      encountersCount,
-    );
-    const encounters = chosenMonsters.map((monster) => ({
-      ...monster,
-      loot: getRandomItem(adventureData.monsterLoot),
-    }));
-
-    // Filtrar Armadilhas por Rank
-    let availableTraps = adventureData.trapsAndPuzzles.filter((t) => {
-      const tIdx = SWADE_RANKS.indexOf(t.rank || "Novato");
-      return tIdx === rankIndex || (rankIndex > 0 && tIdx === rankIndex - 1);
-    });
-    if (availableTraps.length === 0)
-      availableTraps = adventureData.trapsAndPuzzles; // Fallback
-
-    const trapsCount = Math.floor(Math.random() * 2) + 1; // 1 a 2 armadilhas
-    const traps = getRandomUniqueItems(availableTraps, trapsCount).map(
-      (t) => t.text,
-    );
-
-    // Pistas (Clues)
-    const cluesCount = Math.floor(Math.random() * 2) + 1; // 1 a 2 pistas
-    const clues = getRandomUniqueItems(adventureData.clues, cluesCount);
-
-    // Loot do Boss Principal
-    const bLootCount = Math.floor(Math.random() * 2) + 2; // 2 a 3 itens épicos
-    const bossLootList = getRandomUniqueItems(
-      adventureData.bossLoot,
-      bLootCount,
-    );
-
-    // Filtrar Bosses por Rank (Igual, 1 acima ou 1 abaixo)
-    let availableBosses = adventureData.antagonists.filter((b) => {
-      const bIdx = SWADE_RANKS.indexOf(b.rank || "Novato");
-      return (
-        bIdx === rankIndex ||
-        (rankIndex > 0 && bIdx === rankIndex - 1) ||
-        (rankIndex < 4 && bIdx === rankIndex + 1)
-      );
-    });
-    if (availableBosses.length === 0)
-      availableBosses = adventureData.antagonists;
-
-    // Rola uma opção de cada array da base de dados e compõe um JSON de Quest
+    // 5. Monta o objeto final da aventura
     const adventure = {
-      id: `quest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, // ID único para a quest
-      title: "Missão Gerada",
+      title: `Operação Fenda ${hunterRank} - ${selectedTheme.split("/")[0].trim()}`,
       theme: selectedTheme,
-      hook: getRandomItem(themeData.hooks),
-      objective: getRandomItem(themeData.objectives),
-      location: getRandomItem(adventureData.locations),
-      antagonist: getRandomItem(availableBosses),
-      complication: getRandomItem(adventureData.complications),
-      twist: getRandomItem(themeData.twists),
-      reward: getRandomItem(adventureData.rewards),
+      hook: pickRandom(themeObj.hooks),
+      objective: pickRandom(themeObj.objectives),
+      location: pickRandom(adventureData.locations),
+      twist: pickRandom(themeObj.twists),
+      complication: pickRandom(adventureData.complications),
+      reward: pickRandom(adventureData.rewards),
+      antagonist,
+      encounters,
+      traps,
+      clues,
+      bossLoot: [
+        pickRandom(adventureData.bossLoot),
+        pickRandom(adventureData.monsterLoot),
+      ],
+      rooms: Math.floor(Math.random() * 5) + 3, // Entre 3 e 7 salas
       players,
       swadeRank,
       hunterRank,
-      rooms: roomsCount,
-      encounters: encounters,
-      traps: traps,
-      clues: clues,
-      bossLoot: bossLootList,
-      createdAt: new Date().toISOString(),
     };
-
-    // Você pode brincar gerando um Título Baseado no Antagonista ou Local se quiser no futuro
-    const antagonistaCurto = adventure.antagonist?.name || "Desconhecida";
-    adventure.title = `Operação: ${antagonistaCurto}`;
 
     return NextResponse.json(adventure);
   } catch (error) {
-    console.error("Erro ao gerar aventura:", error);
+    console.error("Erro ao gerar aventura base:", error);
     return NextResponse.json(
-      {error: "Falha ao processar o gerador de aventuras do sistema."},
+      {error: "Falha ao gerar os dados da aventura base."},
       {status: 500},
     );
   }

@@ -23,6 +23,8 @@ services:
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_AI_MODEL=${GOOGLE_AI_MODEL}
     volumes:
       - ./public/uploads:/app/public/uploads
       - ./uploads:/app/uploads

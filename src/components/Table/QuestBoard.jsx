@@ -65,6 +65,10 @@ export default function QuestBoard({tableId, isGM}) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [questToDelete, setQuestToDelete] = useState(null);
 
+  // Estados da Geração com IA
+  const [aiResults, setAiResults] = useState({});
+  const [loadingStep, setLoadingStep] = useState(null);
+
   const loadQuests = async () => {
     if (!tableId) return;
     setLoading(true);
@@ -146,6 +150,51 @@ export default function QuestBoard({tableId, isGM}) {
     setDetailsOpen(true);
   };
 
+  const handleGenerateAI = async (quest) => {
+    const steps = [
+      {id: "narrative", label: "Descrição Narrativa"},
+      {id: "encounters", label: "Encontros e Desafios"},
+      {id: "boss", label: "O Boss Final"},
+      {id: "loot", label: "Espólios e Recompensas"},
+      {id: "scenery", label: "Cenários e Pistas"},
+    ];
+
+    let currentResults = {...(aiResults[quest._id] || quest.aiContent || {})};
+
+    for (const step of steps) {
+      setLoadingStep(step.id);
+      try {
+        const res = await fetch("/api/generate/adventures/steps", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({step: step.id, adventure: quest}),
+        });
+        const data = await res.json();
+
+        if (data.content) {
+          currentResults[step.id] = data.content;
+          setAiResults((prev) => ({...prev, [quest._id]: {...currentResults}}));
+
+          // Salva no banco de dados (se a quest já estiver salva no painel)
+          if (quest._id) {
+            await APIService.updateQuest(tableId, quest._id, {
+              aiContent: currentResults,
+            });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification(
+          "Erro ao comunicar com a IA no passo: " + step.id,
+          "error",
+        );
+        break;
+      }
+    }
+    setLoadingStep(null);
+    loadQuests(); // Atualiza a lista por baixo dos panos
+  };
+
   if (!isGM) return null; // O painel de Quests agora é exclusivo do Mestre na Tab 4
 
   if (loading) {
@@ -159,20 +208,25 @@ export default function QuestBoard({tableId, isGM}) {
   const renderQuestDetails = (quest) => {
     if (!quest) return null;
 
-    const prompts = {
-      narrative: `Crie uma descrição narrativa envolvente para uma aventura de RPG de fantasia urbana (estilo Solo Leveling). Tema: ${quest.theme}. O portal se abriu em: ${quest.hook}. O objetivo dos caçadores é: ${quest.objective}. O interior da fenda é: ${quest.location}. A aventura terá uma complicação: ${quest.complication} e uma reviravolta: ${quest.twist}. O chefe final será: ${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name}. Recompensa: ${quest.reward}. Descreva o clima, o ambiente e o perigo inicial que os caçadores sentem ao entrar na fenda.`,
-      encounters: `Gere uma descrição detalhada para os seguintes encontros e armadilhas em uma dungeon de RPG. Armadilhas: ${quest.traps?.join("; ") || "Nenhuma"}. Pistas disponíveis: ${quest.clues?.join("; ") || "Nenhuma"}. Monstros: ${quest.encounters?.map((e) => e.name).join(", ") || "Nenhum"}. Descreva como esses monstros agem, como as armadilhas estão escondidas no cenário (${quest.location}) e o que os jogadores sentem ao se deparar com eles.`,
-      boss: `Crie uma descrição épica e aterrorizante para a entrada do Chefe da Dungeon: ${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name + " - " + quest.antagonist?.description}. Descreva sua aparência, a aura mágica ao seu redor, o cenário da sala do chefe e a primeira ação que ele faz quando os jogadores entram.`,
-      map: `Crie um guia de mapeamento para uma Dungeon de ${quest.rooms} salas com o tema visual: ${quest.location}. Descreva como as salas estão conectadas e o design geral do lugar (ex: corredores estreitos, cavernas amplas, arquitetura ancestral).`,
-      rooms: `Divida a Dungeon de ${quest.rooms} salas em uma progressão lógica. Distribua o gancho (investigação inicial), as armadilhas (${quest.traps?.join(", ") || "Nenhuma"}), os monstros (${quest.encounters?.map((e) => e.name).join(", ") || "Nenhum"}) e a sala do chefe final (${typeof quest.antagonist === "string" ? quest.antagonist : quest.antagonist?.name}) entre essas ${quest.rooms} salas de forma orgânica e desafiadora.`,
-    };
-
     const copyToClipboard = (text) => {
+      if (!text) return;
       navigator.clipboard.writeText(text);
       showNotification(
         "Prompt copiado para a área de transferência!",
         "success",
       );
+    };
+
+    const extractTextAndPrompt = (content, stepId) => {
+      if (!content) return {text: "", prompt: ""};
+      if (stepId === "loot" || stepId === "scenery") {
+        return {
+          text: "",
+          prompt: content.replace(/\[PROMPT DE IMAGEM\]/gi, "").trim(),
+        };
+      }
+      const parts = content.split(/\[PROMPT DE IMAGEM\]/i);
+      return {text: parts[0]?.trim() || "", prompt: parts[1]?.trim() || ""};
     };
 
     return (
@@ -438,7 +492,7 @@ export default function QuestBoard({tableId, isGM}) {
           </AccordionDetails>
         </Accordion>
 
-        {/* Prompt */}
+        {/* ✨ Assistente Inteligente (Gemini) */}
         <Accordion
           disableGutters
           elevation={0}
@@ -446,146 +500,152 @@ export default function QuestBoard({tableId, isGM}) {
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography fontWeight="bold" color="secondary">
-              Prompt (IA Assistente)
+              ✨ Assistente IA (Gerar História e Imagens)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+              Use o Gemini para transformar o esqueleto dessa missão em uma
+              narrativa detalhada e prompts de imagem prontos.
+            </Typography>
+
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<AutoAwesomeIcon />}
+              onClick={() => handleGenerateAI(quest)}
+              disabled={loadingStep !== null}
+              sx={{mb: 3}}
+            >
+              {loadingStep
+                ? "Conectando ao Gemini..."
+                : "Escrever Missão Passo a Passo"}
+            </Button>
+
+            <Typography
+              variant="subtitle1"
+              color="secondary"
+              fontWeight="bold"
+              sx={{mb: 2}}
+            >
+              📖 Narrativa da Missão
+            </Typography>
+            <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+              {[
+                {id: "narrative", label: "1. Introdução e Narrativa"},
+                {id: "encounters", label: "2. Encontros e Armadilhas"},
+                {id: "boss", label: "3. Cena do Boss Final"},
+              ].map((step) => {
+                const content =
+                  aiResults[quest._id]?.[step.id] || quest.aiContent?.[step.id];
+                const {text} = extractTextAndPrompt(content, step.id);
+
+                return (
+                  <Box key={step.id}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.primary"
+                      fontWeight="bold"
+                    >
+                      {step.label}
+                      {loadingStep === step.id && (
+                        <span style={{marginLeft: 8, opacity: 0.7}}>
+                          ⏳ Gerando...
+                        </span>
+                      )}
+                      {text && (
+                        <span style={{marginLeft: 8, color: "green"}}>✅</span>
+                      )}
+                    </Typography>
+                    {text && (
+                      <Paper
+                        sx={{
+                          p: 2,
+                          mt: 1,
+                          bgcolor: "#f8fafc",
+                          color: "#1e293b",
+                          whiteSpace: "pre-wrap",
+                          fontSize: "0.9rem",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        {text}
+                      </Paper>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Prompts para as Imagens */}
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography fontWeight="bold" color="secondary">
+              🎨 Prompts para as Imagens
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-              <Box>
-                <Typography variant="caption" fontWeight="bold">
-                  1. Descrição Narrativa
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                    mt: 0.5,
-                  }}
-                >
-                  <TextField
-                    multiline
-                    fullWidth
-                    size="small"
-                    value={prompts.narrative}
-                    InputProps={{readOnly: true}}
-                  />
-                  <IconButton
-                    onClick={() => copyToClipboard(prompts.narrative)}
-                    color="primary"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Box>
-                <Typography variant="caption" fontWeight="bold">
-                  2. Encontros (Armadilhas, Enigmas e Monstros)
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                    mt: 0.5,
-                  }}
-                >
-                  <TextField
-                    multiline
-                    fullWidth
-                    size="small"
-                    value={prompts.encounters}
-                    InputProps={{readOnly: true}}
-                  />
-                  <IconButton
-                    onClick={() => copyToClipboard(prompts.encounters)}
-                    color="primary"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Box>
-                <Typography variant="caption" fontWeight="bold">
-                  3. Boss
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                    mt: 0.5,
-                  }}
-                >
-                  <TextField
-                    multiline
-                    fullWidth
-                    size="small"
-                    value={prompts.boss}
-                    InputProps={{readOnly: true}}
-                  />
-                  <IconButton
-                    onClick={() => copyToClipboard(prompts.boss)}
-                    color="primary"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Box>
-                <Typography variant="caption" fontWeight="bold">
-                  4. Mapa da Masmorra
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                    mt: 0.5,
-                  }}
-                >
-                  <TextField
-                    multiline
-                    fullWidth
-                    size="small"
-                    value={prompts.map}
-                    InputProps={{readOnly: true}}
-                  />
-                  <IconButton
-                    onClick={() => copyToClipboard(prompts.map)}
-                    color="primary"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Box>
-                <Typography variant="caption" fontWeight="bold">
-                  5. Salas da Masmorra
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "flex-start",
-                    mt: 0.5,
-                  }}
-                >
-                  <TextField
-                    multiline
-                    fullWidth
-                    size="small"
-                    value={prompts.rooms}
-                    InputProps={{readOnly: true}}
-                  />
-                  <IconButton
-                    onClick={() => copyToClipboard(prompts.rooms)}
-                    color="primary"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Box>
-              </Box>
+              {[
+                {id: "narrative", label: "1. Introdução e Narrativa"},
+                {id: "encounters", label: "2. Encontros e Armadilhas"},
+                {id: "boss", label: "3. Cena do Boss Final"},
+                {id: "loot", label: "4. Arte dos Espólios"},
+                {id: "scenery", label: "5. Arte do Cenário"},
+              ].map((step) => {
+                const content =
+                  aiResults[quest._id]?.[step.id] || quest.aiContent?.[step.id];
+                const {prompt} = extractTextAndPrompt(content, step.id);
+
+                return (
+                  <Box key={`prompt-${step.id}`}>
+                    <Typography
+                      variant="caption"
+                      fontWeight="bold"
+                      display="block"
+                    >
+                      {step.label}
+                      {loadingStep === step.id && (
+                        <span style={{marginLeft: 8, opacity: 0.7}}>⏳</span>
+                      )}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        alignItems: "flex-start",
+                        mt: 0.5,
+                      }}
+                    >
+                      <TextField
+                        multiline
+                        fullWidth
+                        size="small"
+                        value={prompt}
+                        InputProps={{readOnly: true}}
+                        placeholder={
+                          loadingStep === step.id
+                            ? "Aguardando IA..."
+                            : "Nenhum prompt gerado."
+                        }
+                      />
+                      <IconButton
+                        onClick={() => copyToClipboard(prompt)}
+                        color="primary"
+                        disabled={!prompt}
+                      >
+                        <ContentCopyIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                );
+              })}
             </Box>
           </AccordionDetails>
         </Accordion>
