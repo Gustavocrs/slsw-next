@@ -1,11 +1,4 @@
-# ESTÁGIO 1: Dependências
-FROM node:22-slim AS dependencies
-WORKDIR /app
-COPY package*.json ./
-# Instalamos TUDO (incluindo devDeps) para que o builder consiga compilar o CSS
-RUN npm install
-
-# ESTÁGIO 2: Builder
+# ESTÁGIO 1: Builder (Unificamos dependências e build para não duplicar arquivos)
 FROM node:22-slim AS builder
 WORKDIR /app
 
@@ -23,17 +16,21 @@ ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
 ENV NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
+ENV NEXT_TELEMETRY_DISABLED=1
 
-ENV NEXT_TELEMETRY_DISABLED 1
+COPY package*.json ./
 
-# Copiamos as node_modules completas
-COPY --from=dependencies /app/node_modules ./node_modules
+# Instala as dependências usando cache em memória/volume temporário para poupar o disco
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
+
+# Copia o restante do código
 COPY . .
 
-# O build do Next.js agora terá o Tailwind/PostCSS disponível
+# Executa o build (o Tailwind/PostCSS estará disponível)
 RUN npm run build
 
-# ESTÁGIO 3: Runner
+# ESTÁGIO 2: Runner
 FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
