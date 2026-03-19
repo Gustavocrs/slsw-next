@@ -96,7 +96,7 @@ import {
 } from "firebase/firestore";
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
-import ChatModal from "./ChatModal";
+import ChatModal from "../Messages/ChatModal";
 import BookView from "@/components/BookView";
 import UserMenu from "@/components/UserMenu";
 import InspectSheetModal from "./InspectSheetModal";

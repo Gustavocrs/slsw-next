@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import {Google as GoogleIcon} from "@mui/icons-material";
-import Sidebar from "@/components/Sidebar/Sidebar";
+import Sidebar from "@/components/Sidebar";
 import {useAuth} from "@/hooks";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useCharacterAPI} from "@/hooks";
@@ -22,7 +22,7 @@ import CreateTableModal from "@/components/Table/CreateTableModal";
 import TableListModal from "@/components/Table/TableListModal";
 import TableDetailsModal from "@/components/Table/TableDetailsModal";
 import InspectSheetModal from "@/components/Table/InspectSheetModal";
-import MessagesDashboard from "@/components/Messages/MessagesDashboard";
+import MessagesDashboard from "@/components/Messages";
 
 export default function PageLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

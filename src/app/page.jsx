@@ -2,8 +2,7 @@
 
 import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
-import {onAuthStateChanged} from "firebase/auth";
-import {auth} from "@/lib/firebase";
+import {useAuth} from "@/hooks";
 import PageLayout from "@/components/PageLayout";
 import {manualSections} from "@/data/manualSections";
 import {Box, CircularProgress} from "@mui/material";
@@ -11,20 +10,14 @@ import {Box, CircularProgress} from "@mui/material";
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const {user, loading} = useAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        router.push("/login");
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [router]);
+    // Se já terminou de carregar e não há usuário, redireciona para login
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
 
   const filteredSections = useMemo(() => {
     if (!searchTerm) return manualSections;
@@ -39,7 +32,7 @@ export default function Home() {
     });
   }, [searchTerm]);
 
-  if (loading || !isAuthenticated) {
+  if (loading || !user) {
     return (
       <Box
         sx={{

@@ -25,13 +25,14 @@ import {
   Google as GoogleIcon,
   Menu as MenuIcon,
   SportsEsports as GameIcon,
+  Pets as BestiaryIcon,
 } from "@mui/icons-material";
-import CreateTableModal from "../Table/CreateTableModal";
-import TableListModal from "../Table/TableListModal";
-import TableDetailsModal from "../Table/TableDetailsModal";
-import InspectSheetModal from "../Table/InspectSheetModal";
+import CreateTableModal from "./Table/CreateTableModal";
+import TableListModal from "./Table/TableListModal";
+import TableDetailsModal from "./Table/TableDetailsModal";
+import InspectSheetModal from "./Table/InspectSheetModal";
 import {db} from "@/lib/firebase";
-import MessagesDashboard from "../Messages/MessagesDashboard";
+import MessagesDashboard from "./Messages";
 
 // Função auxiliar para escurecer cor para o gradiente (simples)
 const adjustColor = (color, amount) => {
@@ -128,7 +129,7 @@ const HeaderButton = styled(Button)(({theme, customcolors}) => ({
   },
 }));
 
-function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
+function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   const {user, loading, loginWithGoogle} = useAuth();
   const {
     viewMode,
@@ -294,6 +295,17 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
               </HeaderButton>
             ) : (
               <>
+                <HeaderButton
+                  customcolors={headerColors}
+                  startIcon={<BestiaryIcon />}
+                  onClick={() => {
+                    // TODO: Implementar a chamada para o modal ou view do Bestiário
+                    console.log("Abrir Bestiário");
+                  }}
+                >
+                  {isMobile ? "" : "Bestiário"}
+                </HeaderButton>
+
                 {/* <HeaderButton
                   customcolors={headerColors}
                   startIcon={
@@ -366,4 +378,4 @@ function Footer({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   );
 }
 
-export default Footer;
+export default Navbar;
