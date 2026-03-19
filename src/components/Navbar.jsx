@@ -67,8 +67,8 @@ const StyledAppBar = styled(AppBar)(({theme, customcolors, footerstyle}) => {
 
   return {
     position: "fixed",
-    bottom: 0,
-    top: "auto",
+    top: 0,
+    bottom: "auto",
     background: bg,
     borderTop: borderTop,
     color: customcolors?.text || "#fff",
@@ -280,7 +280,11 @@ function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
         footerstyle={footerStyle}
       >
         <HeaderContent>
-          <UserSection></UserSection>
+          <UserSection>
+            <IconButton color="inherit" edge="start" onClick={onToggleSidebar}>
+              <MenuIcon />
+            </IconButton>
+          </UserSection>
 
           <ControlsSection>
             {loading ? (
@@ -306,7 +310,7 @@ function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                   {isMobile ? "" : "Bestiário"}
                 </HeaderButton>
 
-                {/* <HeaderButton
+                <HeaderButton
                   customcolors={headerColors}
                   startIcon={
                     (currentView || viewMode) === "book" ? (
@@ -322,7 +326,7 @@ function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                     : (currentView || viewMode) === "book"
                       ? "Ficha"
                       : "Livro"}
-                </HeaderButton> */}
+                </HeaderButton>
 
                 {(currentView || viewMode) === "sheet" && (
                   <>

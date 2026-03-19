@@ -82,6 +82,7 @@ import {
   HelpOutline as HelpOutlineIcon,
   MenuBook as MenuBookIcon,
   Star as StarIcon,
+  Pets as BestiaryIcon,
 } from "@mui/icons-material";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
@@ -1473,6 +1474,14 @@ function GameModal() {
                 )}
               </IconButton>
             )}
+
+            <IconButton
+              onClick={() => console.log("Abrir Bestiário")}
+              title="Bestiário"
+              sx={{color: "action.active"}}
+            >
+              <BestiaryIcon />
+            </IconButton>
 
             <IconButton
               onClick={() => setIsBookOpen(!isBookOpen)}

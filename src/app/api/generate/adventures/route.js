@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {adventureData} from "@/lib/adventureGenerator";
+import {adventureData} from "@/data/adventureGenerator";
 
 // Função auxiliar para pegar um item aleatório de um array
 function pickRandom(array) {
