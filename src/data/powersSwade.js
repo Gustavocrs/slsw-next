@@ -1,3 +1,14 @@
+/**
+ * Poderes/Magias Base - Savage Worlds (SWADE)
+ *
+ * ÍNDICE DE REGRAS E CONTEÚDO NESTE ARQUIVO:
+ * - Magias Ofensivas: Causam dano e controle (Ex: Explosão, Raio, Ferir)
+ * - Magias Defensivas/Cura: Proteção individual ou de grupo (Ex: Armadura, Deflexão, Cura)
+ * - Magias de Utilitários e Movimento: Facilitam exploração (Ex: Cavar, Teleporte, Falar Idiomas)
+ * - Magias de Controle/Alteração Mística: Condições nos inimigos (Ex: Emaranhar, Medo, Fantoche, Confusão)
+ * - Todas catalogadas por custo padrão em Pontos de Poder (PP), Duração, Alcance e Rank Mínimo.
+ */
+
 export const POWERS_SWADE = {
   Adivinhação: {
     pp: "1",

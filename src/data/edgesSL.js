@@ -1,3 +1,14 @@
+/**
+ * Vantagens Solo Leveling (SL)
+ *
+ * ÍNDICE DE REGRAS E CONTEÚDO NESTE ARQUIVO:
+ * - Vantagens de Sobrevivência/Dano (Ex: Ataque Fantasma, Sangue Frio, Alma de Aço)
+ * - Vantagens de Interação com Mana (Ex: Portador da Centelha, Sangue Arcano, Fluxo Rúnico)
+ * - Vantagens de Manipulação Rúnica (Ex: Mestre das Runas, Campo Rúnico)
+ * - Vantagens de Invocações e Sombras (Ex: Invocador, Comando Duplo, Entidade Maior)
+ * - Modificações de Arquétipos (Ex: Curandeiro da Luz, Metamorfo Bestial, Atirador Arcano)
+ */
+
 export const EDGES_SL = [
   // --- SL Medieval Específicas ---
   {

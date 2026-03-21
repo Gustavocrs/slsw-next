@@ -1,6 +1,19 @@
 /**
  * Base de dados para o Gerador de Aventuras
  * Foco: Fantasia Urbana (Mundo Moderno) vs Dungeons Medievais (Fantasia Sombria)
+ *
+ * ÍNDICE DE REGRAS E CONTEÚDO NESTE ARQUIVO:
+ *
+ * 1. GERADOR NARRATIVO
+ *    - Temas de Aventura: Caçada/Eliminação, Resgate/Escolta, Coleta/Exploração, Sobrevivência/Anomalia.
+ *    - Ganchos (Hooks), Objetivos Secundários e Reviravoltas (Twists).
+ *    - Dicas de Conexão: Dicas para o mestre amarrar os plots.
+ *
+ * 2. DESIGN DE ENCONTROS (SISTEMA & LORE)
+ *    - Locações (Ambientes para Dungeons).
+ *    - Antagonistas e Monstros Básicos: Com atributos e Ranks SWADE predefinidos (Extras e Cartas Selvagens).
+ *    - Perigos Ambientais: Armadilhas e Puzzles atrelados a rolagem de Perícias SWADE.
+ *    - Recompensas: Pistas, Loot de Monstro e Loot de Chefe (Itens rúnicos e Essências).
  */
 
 export const adventureData = {

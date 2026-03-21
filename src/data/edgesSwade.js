@@ -1,3 +1,15 @@
+/**
+ * Vantagens Core - Savage Worlds (SWADE)
+ *
+ * ÍNDICE DE REGRAS E CONTEÚDO NESTE ARQUIVO:
+ * - Antecedentes: Vantagens inatas e socioeconômicas (Ex: Atraente, Rico, Sorte, Antecedente Arcano)
+ * - Combate: Vantagens táticas para Lutar e Atirar (Ex: Ambidestro, Frenesi, Esquiva, Primeiro Ataque)
+ * - Liderança: Modificadores em área para aliados (Ex: Comando, Inspirar)
+ * - Poder: Vantagens que afetam feitiços e Pontos de Poder (Ex: Canalização, Recarga Rápida)
+ * - Profissional: Bônus massivos em perícias específicas (Ex: Acrobata, Erudito, Ladrão)
+ * - Social e Estranho: Manipulação social e efeitos únicos (Ex: Provocar, Curandeiro, Senso de Perigo)
+ */
+
 export const EDGES_SWADE = [
   // --- SWADE: ANTECEDENTES ---
   {

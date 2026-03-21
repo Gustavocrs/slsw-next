@@ -1,3 +1,10 @@
+/**
+ * Modificador de Efeitos / Condições (Character Status)
+ *
+ * ÍNDICE DE REGRAS NESTE ARQUIVO:
+ * - Definição de Status (Envenenado, Paralisado, Congelado).
+ * - Manipulação de Array: Lógica de adição/remoção segura do status para persistência.
+ */
 export const STATUS_EFFECT_PRESETS = [
   {key: "envenenado", label: "Envenenado"},
   {key: "paralisado", label: "Paralisado"},
