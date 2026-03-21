@@ -28,6 +28,7 @@ import {
   IconButton,
   Tabs,
   Tab,
+  Alert,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -45,11 +46,12 @@ import {
 import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 import {ConfirmDialog} from "@/components/ConfirmDialog";
+import GameFileManager from "@/components/GameFileManager";
 
 export default function QuestBoard({tableId, isGM}) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {showNotification} = useUIStore();
+  const {showNotification, selectedTable} = useUIStore();
 
   // Dialog States
   const [generatorOpen, setGeneratorOpen] = useState(false);
@@ -268,6 +270,7 @@ export default function QuestBoard({tableId, isGM}) {
             <Tab label="Resumo" />
             <Tab label="Narrativa (IA)" />
             <Tab label="Prompts de Imagens (IA)" />
+            <Tab label="Arquivos" />
           </Tabs>
         </Box>
 
@@ -304,7 +307,7 @@ export default function QuestBoard({tableId, isGM}) {
                     </Typography>
                     <Typography variant="body2">{quest.objective}</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <Typography
                       variant="caption"
                       color="text.secondary"
@@ -314,7 +317,7 @@ export default function QuestBoard({tableId, isGM}) {
                     </Typography>
                     <Typography variant="body2">{quest.location}</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <Typography
                       variant="caption"
                       color="warning.main"
@@ -689,6 +692,68 @@ export default function QuestBoard({tableId, isGM}) {
                   );
                 })}
               </Box>
+            </Box>
+          )}
+
+          {questTab === 3 && (
+            <Box>
+              {!quest._id ? (
+                <Alert severity="warning" sx={{mb: 2}}>
+                  Salve esta operação no banco de missões primeiro para poder
+                  anexar arquivos a ela.
+                </Alert>
+              ) : (
+                <>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{mb: 2}}
+                  >
+                    Anexe mapas, artes de monstros e pistas exclusivas desta
+                    operação. Elas só aparecerão na mesa principal quando a
+                    missão estiver "Ativa".
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Typography
+                        variant="subtitle2"
+                        color="secondary"
+                        sx={{mb: 1}}
+                      >
+                        Arquivos do Mestre (Secretos)
+                      </Typography>
+                      <GameFileManager
+                        tableId={tableId}
+                        files={(selectedTable?.files || []).filter(
+                          (f) => f.questId === quest._id,
+                        )}
+                        isGM={isGM}
+                        onlySecret={true}
+                        forceSecretUpload={true}
+                        questId={quest._id}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography
+                        variant="subtitle2"
+                        color="primary"
+                        sx={{mb: 1}}
+                      >
+                        Pistas (Públicas)
+                      </Typography>
+                      <GameFileManager
+                        tableId={tableId}
+                        files={(selectedTable?.files || []).filter(
+                          (f) => f.questId === quest._id,
+                        )}
+                        isGM={isGM}
+                        excludeSecret={true}
+                        questId={quest._id}
+                      />
+                    </Grid>
+                  </Grid>
+                </>
+              )}
             </Box>
           )}
         </Box>

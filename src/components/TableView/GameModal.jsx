@@ -1292,6 +1292,12 @@ function GameModal() {
   const npcList = allPlayers.filter((p) => p.isNpc);
   const realPlayerList = allPlayers.filter((p) => !p.isNpc);
 
+  // Filtrar arquivos para exibir apenas materiais gerais ou de missões ativas
+  const activeQuestIds = activeQuests.map((q) => q._id);
+  const visibleFiles = (selectedTable?.files || []).filter(
+    (file) => !file.questId || activeQuestIds.includes(file.questId),
+  );
+
   // Computar presença atual do usuário para a TopBar
   let myPresence = "pending";
   if (isGM) {
@@ -2070,11 +2076,12 @@ function GameModal() {
                         color="text.secondary"
                         sx={{display: "block", mb: 2}}
                       >
-                        Visível apenas para o Mestre.
+                        Visível apenas para o Mestre. (Arquivos de missões
+                        ocultas não aparecem aqui).
                       </Typography>
                       <GameFileManager
                         tableId={selectedTable?._id}
-                        files={selectedTable?.files || []}
+                        files={visibleFiles}
                         isGM={true}
                         hideList={false}
                         onlySecret={true}
@@ -2095,7 +2102,7 @@ function GameModal() {
                       </Typography>
                       <GameFileManager
                         tableId={selectedTable?._id}
-                        files={selectedTable?.files || []}
+                        files={visibleFiles}
                         isGM={isGM}
                         hideUpload={!isGM}
                         excludeSecret={true}

@@ -14,7 +14,7 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const body = await request.json();
-    const {step, adventure} = body;
+    const {step, adventure, previousText} = body;
 
     if (!step || !adventure) {
       return NextResponse.json(
@@ -45,12 +45,19 @@ Escreva 3 parágrafos narrativos em Português do Brasil descrevendo a cena inic
 
       case "narrative_image":
         prompt = `
-Aja estritamente como um gerador de prompts de imagens para IA (Midjourney/Stable Diffusion).
-Cenário: ${adventure.location}. Tema: ${adventure.theme}.
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets (Midjourney/DALL-E).
+Theme: ${adventure.theme}
+Location: ${adventure.location}
+${previousText ? `\n# NARRATIVE CONTEXT (Base your visual description exactly on this):\n${previousText}\n` : ""}
 
-TAREFA:
-Não escreva texto narrativo. Retorne APENAS 1 prompt em INGLÊS otimizado para Midjourney/DALL-E. O prompt DEVE obrigatoriamente começar com a frase "A high quality image of..." descrevendo visualmente este cenário inicial.
-RESTRIÇÃO: O ambiente da Dungeon é ESTRITAMENTE Fantasia Medieval. Adicione restrições contra elementos modernos (ex: "medieval fantasy setting, no firearms, no modern weapons, no sci-fi").
+# OBJECTIVE
+Create exactly 1 highly detailed image prompt in ENGLISH capturing the initial scene.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. Include exclusions for modern elements (e.g., "medieval fantasy setting, no firearms, no modern weapons, no sci-fi").
+- Start the prompt with: "A high quality image of..."
+- Output ONLY the prompt. Do not include conversational text or markdown blocks.
 `;
         break;
 
@@ -82,26 +89,41 @@ Descreva como são as salas onde essas armadilhas estão escondidas e como os mo
 
       case "map_image":
         prompt = `
-Aja estritamente como um gerador de prompts de imagens para IA.
-Localização: ${adventure.location}. Tema: ${adventure.theme}. Estrutura: ${adventure.rooms} salas.
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets.
+Theme: ${adventure.theme}
+Location: ${adventure.location}
+Total Rooms: ${adventure.rooms}
+${previousText ? `\n# NARRATIVE CONTEXT (Base your visuals on this map description):\n${previousText}\n` : ""}
 
-TAREFA:
-Não escreva texto narrativo. Gere múltiplos prompts em INGLÊS, separando cada um por uma linha em branco:
-1. O primeiro prompt DEVE ser para o mapa visual geral (começando com "Generate a top-down RPG battlemap image of...").
-2. Em seguida, gere de 2 a 3 prompts adicionais, um para cada sala/área importante da dungeon (começando com "A high quality environment concept art of room...").
-RESTRIÇÃO: Ambiente de fantasia medieval. Inclua restrições contra armas de fogo e tecnologia moderna (ex: "medieval fantasy, no firearms, no sci-fi").
+# OBJECTIVE
+Generate exactly ${adventure.rooms + 1} image prompts in ENGLISH.
+- Prompt 1: An overall top-down RPG battlemap showing all ${adventure.rooms} rooms interconnected.
+- Prompts 2 to ${adventure.rooms + 1}: Individual environment concept arts for EACH of the ${adventure.rooms} individual rooms described.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. NO firearms, NO modern technology (e.g., "medieval fantasy, no firearms, no sci-fi").
+- The overall map prompt MUST start with: "Generate a top-down RPG battlemap image of..."
+- Each individual room prompt MUST start with: "A high quality environment concept art of room..."
+- Separate each prompt with a blank line. Output ONLY the prompts.
 `;
         break;
 
       case "encounters_image":
         prompt = `
-Aja estritamente como um gerador de prompts de imagens para IA (Midjourney/Stable Diffusion).
-Monstros: ${adventure.encounters?.map((e) => e.name).join(", ")}
-Armadilhas: ${adventure.traps?.join(", ")}
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets.
+Monsters: ${adventure.encounters?.map((e) => e.name).join(", ")}
+Traps: ${adventure.traps?.join(", ")}
+${previousText ? `\n# NARRATIVE CONTEXT (Base your visual description exactly on this):\n${previousText}\n` : ""}
 
-TAREFA:
-Não escreva texto narrativo. Retorne APENAS 1 prompt em INGLÊS. O prompt DEVE obrigatoriamente começar com "Generate an image of..." descrevendo visualmente o monstro mais assustador ou a armadilha mais letal descritos acima.
-RESTRIÇÃO: Estilo Fantasia Medieval. Especifique que monstros/personagens na cena não devem ter armas modernas (ex: "medieval fantasy rpg style, no guns, no modern weapons").
+# OBJECTIVE
+Create exactly 1 highly detailed image prompt in ENGLISH capturing the most terrifying monster or deadliest trap from the narrative.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. Exclude modern items (e.g., "medieval fantasy rpg style, no guns, no modern weapons").
+- Start the prompt with: "Generate an image of..."
+- Output ONLY the prompt. Do not include conversational text.
 `;
         break;
 
@@ -118,24 +140,34 @@ Descreva a aparência aterrorizante/imponente do Boss e suas táticas de combate
 
       case "boss_image":
         prompt = `
-Aja estritamente como um gerador de prompts de imagens para IA (Midjourney/Stable Diffusion).
-Chefe: ${adventure.antagonist?.name || "Desconhecido"} - ${adventure.antagonist?.description || ""}
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets.
+Boss: ${adventure.antagonist?.name || "Unknown"} - ${adventure.antagonist?.description || ""}
+${previousText ? `\n# NARRATIVE CONTEXT (Base your visual description exactly on this):\n${previousText}\n` : ""}
 
-TAREFA:
-Não escreva texto narrativo. Retorne APENAS 1 prompt em INGLÊS. O prompt DEVE obrigatoriamente começar com "A highly detailed cinematic image of..." focando no design aterrorizante deste Boss.
-RESTRIÇÃO: Boss e ambiente de Fantasia Medieval. Adicione exclusões claras de armas modernas (ex: "medieval dark fantasy, no firearms, no guns, no modern elements").
+# OBJECTIVE
+Create exactly 1 highly detailed image prompt in ENGLISH focusing on the terrifying character design of this Boss.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. Exclude modern items (e.g., "medieval dark fantasy, no firearms, no guns, no modern elements").
+- Start the prompt with: "A highly detailed cinematic image of..."
+- Output ONLY the prompt. Do not include conversational text.
 `;
         break;
 
       case "loot_image":
         prompt = `
-Aja estritamente como um gerador de prompts de imagens para IA (Midjourney/Stable Diffusion).
-Os jogadores derrotaram o Boss e encontraram os seguintes itens épicos:
-Loot do Boss: ${adventure.bossLoot?.join(", ")}
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets.
+Boss Loot: ${adventure.bossLoot?.join(", ")}
 
-TAREFA:
-Não escreva texto narrativo. Escolha 1 ou 2 dos loots acima e retorne os prompts em INGLÊS separados por linha. O prompt DEVE obrigatoriamente começar com "A high quality concept art image of an item..." focando em texturas e brilho mágico do item.
-RESTRIÇÃO: Itens de Fantasia Medieval. Proibido armas de fogo ou tecnologia (ex: "medieval fantasy item, no modern technology, no firearms").
+# OBJECTIVE
+Select 1 or 2 items from the loot list and generate individual image prompts in ENGLISH focusing on their textures and magical glow.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. Exclude modern technology (e.g., "medieval fantasy item, no modern technology, no firearms").
+- Start each prompt with: "A high quality concept art image of an item..."
+- Separate prompts with a blank line. Output ONLY the prompts.
 `;
         break;
 

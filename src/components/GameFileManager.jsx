@@ -24,6 +24,7 @@ import {
   Download as DownloadIcon,
   Delete as DeleteIcon,
   Close as CloseIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import {
   BsFiletypePdf,
@@ -34,6 +35,7 @@ import {
   BsCardImage,
   BsFileEarmark,
 } from "react-icons/bs";
+import {ConfirmDialog} from "@/components/ConfirmDialog";
 import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 
@@ -43,6 +45,7 @@ export default function GameFileManager({
   isGM,
   hideList = false,
   hideUpload = false,
+  questId = null, // ID da missão vinculada a este painel
   onlySecret = false, // Mostrar apenas arquivos secretos
   excludeSecret = false, // Esconder arquivos secretos
   forceSecretUpload = false, // Forçar upload como secreto
@@ -57,6 +60,12 @@ export default function GameFileManager({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState("");
   const [lightboxLoading, setLightboxLoading] = useState(false);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState(null);
+
+  const [publicConfirmOpen, setPublicConfirmOpen] = useState(false);
+  const [fileToMakePublic, setFileToMakePublic] = useState(null);
 
   const filteredFiles = files.filter((file) => {
     if (onlySecret && !file.secret) return false;
@@ -88,6 +97,7 @@ export default function GameFileManager({
       // 2. Ajuste de nome e vínculo no Firestore
       attachment.name = customFileName || attachment.name;
       if (forceSecretUpload) attachment.secret = true;
+      if (questId) attachment.questId = questId; // Salva o vínculo da missão
       await APIService.addAttachmentToTable(tableId, attachment);
 
       showNotification("Arquivo anexado com sucesso!", "success");
@@ -101,14 +111,45 @@ export default function GameFileManager({
     }
   };
 
-  const handleDeleteFile = async (file) => {
-    if (!confirm(`Remover o arquivo "${file.name}"?`)) return;
+  const handleDeleteFileClick = (e, file) => {
+    e.stopPropagation();
+    setFileToDelete(file);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!fileToDelete) return;
     try {
-      await APIService.removeAttachmentFromTable(tableId, file);
+      await APIService.removeAttachmentFromTable(tableId, fileToDelete);
       showNotification("Arquivo removido.", "info");
     } catch (error) {
       console.error(error);
       showNotification("Erro ao remover arquivo.", "error");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setFileToDelete(null);
+    }
+  };
+
+  const handleMakePublicClick = (e, file) => {
+    e.stopPropagation();
+    setFileToMakePublic(file);
+    setPublicConfirmOpen(true);
+  };
+
+  const confirmMakePublic = async () => {
+    if (!fileToMakePublic) return;
+    try {
+      await APIService.removeAttachmentFromTable(tableId, fileToMakePublic);
+      const publicFile = {...fileToMakePublic, secret: false};
+      await APIService.addAttachmentToTable(tableId, publicFile);
+      showNotification("Pista liberada com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao liberar pista.", "error");
+    } finally {
+      setPublicConfirmOpen(false);
+      setFileToMakePublic(null);
     }
   };
 
@@ -250,10 +291,7 @@ export default function GameFileManager({
                       <IconButton
                         className="action-btn"
                         size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteFile(file);
-                        }}
+                        onClick={(e) => handleDeleteFileClick(e, file)}
                         title="Excluir"
                         sx={{
                           position: "absolute",
@@ -271,6 +309,32 @@ export default function GameFileManager({
                         }}
                       >
                         <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+
+                    {/* Botão de Liberar Pista Flutuante */}
+                    {isGM && file.secret && (
+                      <IconButton
+                        className="action-btn"
+                        size="small"
+                        onClick={(e) => handleMakePublicClick(e, file)}
+                        title="Liberar Pista para Jogadores"
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          left: 4,
+                          opacity: {xs: 1, md: 0}, // No mobile aparece sempre
+                          transition: "all 0.2s",
+                          bgcolor: "rgba(255, 255, 255, 0.85)",
+                          color: "success.main",
+                          zIndex: 10,
+                          "&:hover": {
+                            bgcolor: "success.main",
+                            color: "white",
+                          },
+                        }}
+                      >
+                        <VisibilityIcon fontSize="small" />
                       </IconButton>
                     )}
 
@@ -448,6 +512,26 @@ export default function GameFileManager({
           )}
         </Box>
       </Dialog>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDeleteFile}
+        title="Excluir Arquivo"
+      >
+        <Typography>Remover o arquivo "{fileToDelete?.name}"?</Typography>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        isOpen={publicConfirmOpen}
+        onClose={() => setPublicConfirmOpen(false)}
+        onConfirm={confirmMakePublic}
+        title="Liberar Pista"
+      >
+        <Typography>
+          Liberar a pista "{fileToMakePublic?.name}" para todos os jogadores?
+        </Typography>
+      </ConfirmDialog>
     </Box>
   );
 }
