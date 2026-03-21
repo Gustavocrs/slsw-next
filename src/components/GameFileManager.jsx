@@ -25,6 +25,7 @@ import {
   Delete as DeleteIcon,
   Close as CloseIcon,
   Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
 import {
   BsFiletypePdf,
@@ -66,6 +67,9 @@ export default function GameFileManager({
 
   const [publicConfirmOpen, setPublicConfirmOpen] = useState(false);
   const [fileToMakePublic, setFileToMakePublic] = useState(null);
+
+  const [secretConfirmOpen, setSecretConfirmOpen] = useState(false);
+  const [fileToMakeSecret, setFileToMakeSecret] = useState(null);
 
   const filteredFiles = files.filter((file) => {
     if (onlySecret && !file.secret) return false;
@@ -150,6 +154,28 @@ export default function GameFileManager({
     } finally {
       setPublicConfirmOpen(false);
       setFileToMakePublic(null);
+    }
+  };
+
+  const handleMakeSecretClick = (e, file) => {
+    e.stopPropagation();
+    setFileToMakeSecret(file);
+    setSecretConfirmOpen(true);
+  };
+
+  const confirmMakeSecret = async () => {
+    if (!fileToMakeSecret) return;
+    try {
+      await APIService.removeAttachmentFromTable(tableId, fileToMakeSecret);
+      const secretFile = {...fileToMakeSecret, secret: true};
+      await APIService.addAttachmentToTable(tableId, secretFile);
+      showNotification("Arquivo ocultado com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      showNotification("Erro ao ocultar arquivo.", "error");
+    } finally {
+      setSecretConfirmOpen(false);
+      setFileToMakeSecret(null);
     }
   };
 
@@ -335,6 +361,32 @@ export default function GameFileManager({
                         }}
                       >
                         <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    )}
+
+                    {/* Botão de Ocultar Pista Flutuante */}
+                    {isGM && !file.secret && (
+                      <IconButton
+                        className="action-btn"
+                        size="small"
+                        onClick={(e) => handleMakeSecretClick(e, file)}
+                        title="Ocultar dos Jogadores"
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          left: 4,
+                          opacity: {xs: 1, md: 0}, // No mobile aparece sempre
+                          transition: "all 0.2s",
+                          bgcolor: "rgba(255, 255, 255, 0.85)",
+                          color: "warning.main",
+                          zIndex: 10,
+                          "&:hover": {
+                            bgcolor: "warning.main",
+                            color: "white",
+                          },
+                        }}
+                      >
+                        <VisibilityOffIcon fontSize="small" />
                       </IconButton>
                     )}
 
@@ -530,6 +582,18 @@ export default function GameFileManager({
       >
         <Typography>
           Liberar a pista "{fileToMakePublic?.name}" para todos os jogadores?
+        </Typography>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        isOpen={secretConfirmOpen}
+        onClose={() => setSecretConfirmOpen(false)}
+        onConfirm={confirmMakeSecret}
+        title="Ocultar Pista"
+      >
+        <Typography>
+          Deseja ocultar a pista "{fileToMakeSecret?.name}" dos jogadores e
+          movê-la de volta para os Arquivos do Mestre?
         </Typography>
       </ConfirmDialog>
     </Box>

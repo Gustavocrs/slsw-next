@@ -76,9 +76,9 @@ export default function QuestBoard({tableId, isGM}) {
   const [aiResults, setAiResults] = useState({});
   const [loadingStep, setLoadingStep] = useState(null);
 
-  const loadQuests = async () => {
+  const loadQuests = async (silent = false) => {
     if (!tableId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     const data = await APIService.getTableQuests(tableId);
     // Ordena para que as mais novas fiquem no topo
     setQuests(
@@ -86,19 +86,32 @@ export default function QuestBoard({tableId, isGM}) {
         (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
       ),
     );
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   useEffect(() => {
     loadQuests();
   }, [tableId]);
 
-  const handleToggleActive = async (quest) => {
-    await APIService.updateQuestStatus(tableId, quest._id, !quest.isActive);
+  const handleToggleActive = async (quest, e) => {
+    if (e) e.stopPropagation();
+
+    // Atualização Otimista para evitar que a tela pisque
+    setQuests(
+      quests.map((q) =>
+        q._id === quest._id ? {...q, isActive: !q.isActive} : q,
+      ),
+    );
     if (selectedQuest?._id === quest._id) {
       setSelectedQuest({...quest, isActive: !quest.isActive});
     }
-    loadQuests();
+    try {
+      await APIService.updateQuestStatus(tableId, quest._id, !quest.isActive);
+      loadQuests(true);
+    } catch (err) {
+      showNotification("Erro ao atualizar status da missão.", "error");
+      loadQuests(true);
+    }
   };
 
   const handleDeleteRequest = (questId) => {
@@ -113,7 +126,7 @@ export default function QuestBoard({tableId, isGM}) {
     setDetailsOpen(false);
     setSelectedQuest(null);
     setQuestToDelete(null);
-    loadQuests();
+    loadQuests(true);
   };
 
   const handleOpenGenerator = async () => {
@@ -150,7 +163,7 @@ export default function QuestBoard({tableId, isGM}) {
         delete next["unsaved_draft"];
         return next;
       });
-      loadQuests(); // Refresh the list
+      loadQuests(true); // Atualiza a lista silenciosamente
     } catch (e) {
       showNotification("Erro ao salvar aventura.", "error");
     } finally {
@@ -224,7 +237,7 @@ export default function QuestBoard({tableId, isGM}) {
     }
     setLoadingStep(null);
     if (quest._id) {
-      loadQuests(); // Atualiza a lista apenas se a quest já existia
+      loadQuests(true); // Atualiza a lista silenciosamente apenas se a quest já existia
     }
   };
 
@@ -803,6 +816,8 @@ export default function QuestBoard({tableId, isGM}) {
           size="small"
           variant={quest.isActive ? "filled" : "outlined"}
           sx={{ml: 2, fontWeight: "bold"}}
+          clickable
+          onClick={(e) => handleToggleActive(quest, e)}
         />
       </ListItemButton>
     </ListItem>
