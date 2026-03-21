@@ -27,10 +27,10 @@ import {
   SportsEsports as GameIcon,
   Pets as BestiaryIcon,
 } from "@mui/icons-material";
-import CreateTableModal from "./Table/CreateTableModal";
-import TableListModal from "./Table/TableListModal";
-import TableDetailsModal from "./Table/TableDetailsModal";
-import InspectSheetModal from "./Table/InspectSheetModal";
+import CreateTableModal from "./TableView/CreateTableModal";
+import TableListModal from "./TableView/TableListModal";
+import TableDetailsModal from "./TableView/TableDetailsModal";
+import InspectSheetModal from "./TableView/InspectSheetModal";
 import {db} from "@/lib/firebase";
 import MessagesDashboard from "./Messages";
 

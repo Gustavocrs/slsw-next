@@ -26,6 +26,8 @@ import {
   AccordionDetails,
   TextField,
   IconButton,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -38,6 +40,7 @@ import {
   VisibilityOff as VisibilityOffIcon,
   ExpandMore as ExpandMoreIcon,
   ContentCopy as ContentCopyIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
@@ -61,6 +64,8 @@ export default function QuestBoard({tableId, isGM}) {
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedQuest, setSelectedQuest] = useState(null);
+
+  const [questTab, setQuestTab] = useState(0);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [questToDelete, setQuestToDelete] = useState(null);
@@ -153,18 +158,32 @@ export default function QuestBoard({tableId, isGM}) {
 
   const handleOpenQuestDetails = (quest) => {
     setSelectedQuest(quest);
+    setQuestTab(0);
     setDetailsOpen(true);
   };
 
-  const handleGenerateAI = async (quest) => {
+  const handleGenerateTexts = async (quest) => {
     const steps = [
-      {id: "narrative", label: "Descrição Narrativa"},
-      {id: "encounters", label: "Encontros e Desafios"},
-      {id: "boss", label: "O Boss Final"},
-      {id: "loot", label: "Espólios e Recompensas"},
-      {id: "scenery", label: "Cenários e Pistas"},
+      {id: "narrative_text", label: "Introdução e Narrativa"},
+      {id: "map_text", label: "Mapa e Investigação"},
+      {id: "encounters_text", label: "Encontros e Desafios"},
+      {id: "boss_text", label: "O Boss Final"},
     ];
+    await runAIGeneration(quest, steps);
+  };
 
+  const handleGenerateImages = async (quest) => {
+    const steps = [
+      {id: "narrative_image", label: "Cenário Inicial"},
+      {id: "map_image", label: "Mapa e Salas da Dungeon"},
+      {id: "encounters_image", label: "Encontros e Armadilhas"},
+      {id: "boss_image", label: "Boss Final"},
+      {id: "loot_image", label: "Arte dos Espólios"},
+    ];
+    await runAIGeneration(quest, steps);
+  };
+
+  const runAIGeneration = async (quest, steps) => {
     const questId = quest._id || "unsaved_draft";
     let currentResults = {...(aiResults[questId] || quest.aiContent || {})};
 
@@ -229,440 +248,450 @@ export default function QuestBoard({tableId, isGM}) {
       );
     };
 
-    const extractTextAndPrompt = (content, stepId) => {
-      if (!content) return {text: "", prompt: ""};
-      if (stepId === "loot" || stepId === "scenery") {
-        return {
-          text: "",
-          prompt: content.replace(/\[PROMPT DE IMAGEM\]/gi, "").trim(),
-        };
-      }
-      const parts = content.split(/\[PROMPT DE IMAGEM\]/i);
-      return {text: parts[0]?.trim() || "", prompt: parts[1]?.trim() || ""};
-    };
-
     return (
-      <Box sx={{display: "flex", flexDirection: "column", gap: 1, mt: 2}}>
-        {/* Resumo */}
-        <Accordion
-          defaultExpanded
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Resumo
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="caption" color="primary" fontWeight="bold">
-              SITUAÇÃO (HOOK)
-            </Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>
-              {quest.hook}
-            </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          mt: 2,
+          height: "100%",
+        }}
+      >
+        <Box sx={{borderBottom: 1, borderColor: "divider", mb: 2}}>
+          <Tabs
+            value={questTab}
+            onChange={(e, v) => setQuestTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label="Resumo" />
+            <Tab label="Narrativa (IA)" />
+            <Tab label="Prompts de Imagens (IA)" />
+          </Tabs>
+        </Box>
 
-            <Typography variant="caption" color="primary" fontWeight="bold">
-              OBJETIVO
-            </Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>
-              {quest.objective}
-            </Typography>
-
-            <Typography variant="caption" color="primary" fontWeight="bold">
-              LOCAL DA FENDA
-            </Typography>
-            <Typography variant="body2">{quest.location}</Typography>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Detalhada */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Detalhada
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography
-              variant="caption"
-              color="warning.main"
-              fontWeight="bold"
-            >
-              COMPLICAÇÃO
-            </Typography>
-            <Typography variant="body2" sx={{mb: 1.5}}>
-              {quest.complication}
-            </Typography>
-
-            <Typography
-              variant="caption"
-              color="secondary.main"
-              fontWeight="bold"
-            >
-              REVIRAVOLTA
-            </Typography>
-            <Typography variant="body2">{quest.twist}</Typography>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Estrutura */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Estrutura
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2">
-              <strong>Tamanho Estimado:</strong> {quest.rooms} salas mapeadas.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Encontros */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Encontros
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            {quest.clues?.length > 0 && (
-              <Box sx={{mb: 2}}>
-                <Typography
-                  variant="caption"
-                  color="secondary.main"
-                  fontWeight="bold"
-                >
-                  PISTAS E INVESTIGAÇÃO
-                </Typography>
-                {quest.clues.map((c, i) => (
-                  <Typography key={i} variant="body2">
-                    • {c}
-                  </Typography>
-                ))}
-              </Box>
-            )}
-            {quest.traps?.length > 0 && (
-              <Box sx={{mb: 2}}>
-                <Typography
-                  variant="caption"
-                  color="info.main"
-                  fontWeight="bold"
-                >
-                  ARMADILHAS E ENIGMAS
-                </Typography>
-                {quest.traps.map((t, i) => (
-                  <Typography key={i} variant="body2">
-                    • {t}
-                  </Typography>
-                ))}
-              </Box>
-            )}
-            {quest.encounters?.length > 0 && (
+        <Box sx={{flexGrow: 1, overflowY: "auto", pb: 2}}>
+          {questTab === 0 && (
+            <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+              {/* Resumo/Detalhada */}
               <Box>
                 <Typography
-                  variant="caption"
-                  color="warning.main"
-                  fontWeight="bold"
-                  display="block"
-                  sx={{mb: 0.5}}
+                  variant="h6"
+                  color="primary"
+                  sx={{borderBottom: "1px solid #e0e0e0", pb: 1, mb: 2}}
                 >
-                  ◆ MONSTROS EXTRAS
+                  Situação e Objetivo
                 </Typography>
-                {quest.encounters.map((enc, i) => (
-                  <Box
-                    key={i}
-                    sx={{mb: i === quest.encounters.length - 1 ? 0 : 1}}
-                  >
-                    <Typography variant="body2">
-                      <strong>{enc.name}</strong> ({enc.type})
-                    </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
                     <Typography
                       variant="caption"
                       color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      GANCHO
+                    </Typography>
+                    <Typography variant="body2">{quest.hook}</Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      OBJETIVO
+                    </Typography>
+                    <Typography variant="body2">{quest.objective}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      LOCAL DA FENDA
+                    </Typography>
+                    <Typography variant="body2">{quest.location}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography
+                      variant="caption"
+                      color="warning.main"
+                      fontWeight="bold"
+                    >
+                      COMPLICAÇÃO
+                    </Typography>
+                    <Typography variant="body2">
+                      {quest.complication}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      color="secondary.main"
+                      fontWeight="bold"
+                    >
+                      REVIRAVOLTA
+                    </Typography>
+                    <Typography variant="body2">{quest.twist}</Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Estrutura / Encontros */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  sx={{borderBottom: "1px solid #e0e0e0", pb: 1, mb: 2}}
+                >
+                  Estrutura e Desafios
+                </Typography>
+                <Typography variant="body2" sx={{mb: 2}}>
+                  <strong>Tamanho Estimado:</strong> {quest.rooms} salas
+                  mapeadas.
+                </Typography>
+
+                {quest.clues?.length > 0 && (
+                  <Box sx={{mb: 2}}>
+                    <Typography
+                      variant="caption"
+                      color="secondary.main"
+                      fontWeight="bold"
                       display="block"
                     >
-                      {enc.stats}
+                      PISTAS E INVESTIGAÇÃO
                     </Typography>
+                    <List dense disablePadding>
+                      {quest.clues.map((c, i) => (
+                        <ListItem key={i} disablePadding sx={{py: 0.5}}>
+                          <ListItemText
+                            primary={`• ${c}`}
+                            primaryTypographyProps={{variant: "body2"}}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+
+                {quest.traps?.length > 0 && (
+                  <Box sx={{mb: 2}}>
+                    <Typography
+                      variant="caption"
+                      color="info.main"
+                      fontWeight="bold"
+                      display="block"
+                    >
+                      ARMADILHAS E ENIGMAS
+                    </Typography>
+                    <List dense disablePadding>
+                      {quest.traps.map((t, i) => (
+                        <ListItem key={i} disablePadding sx={{py: 0.5}}>
+                          <ListItemText
+                            primary={`• ${t}`}
+                            primaryTypographyProps={{variant: "body2"}}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+
+                {quest.encounters?.length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="warning.main"
+                      fontWeight="bold"
+                      display="block"
+                      sx={{mb: 1}}
+                    >
+                      ◆ MONSTROS EXTRAS
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {quest.encounters.map((enc, i) => (
+                        <Grid item xs={12} sm={6} key={i}>
+                          <Paper
+                            variant="outlined"
+                            sx={{p: 1.5, bgcolor: "#fffbf0"}}
+                          >
+                            <Typography variant="body2">
+                              <strong>{enc.name}</strong> ({enc.type})
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              {enc.stats}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="success.main"
+                              display="block"
+                              sx={{mt: 0.5}}
+                            >
+                              Loot: {enc.loot}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Chefe Final */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  sx={{borderBottom: "1px solid #e0e0e0", pb: 1, mb: 2}}
+                >
+                  Chefe Final
+                </Typography>
+                <Paper
+                  variant="outlined"
+                  sx={{p: 2, bgcolor: "#fff5f5", borderColor: "#ffcdd2"}}
+                >
+                  <Typography
+                    variant="caption"
+                    color="error.main"
+                    fontWeight="bold"
+                    display="block"
+                    sx={{mb: 1}}
+                  >
+                    ◆ BOSS
+                  </Typography>
+                  {typeof quest.antagonist === "string" ? (
+                    <Typography variant="body2">{quest.antagonist}</Typography>
+                  ) : (
+                    <Box>
+                      <Typography variant="body2">
+                        <strong>{quest.antagonist?.name}:</strong>{" "}
+                        {quest.antagonist?.description}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                        sx={{mt: 1}}
+                      >
+                        {quest.antagonist?.stats}
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+              </Box>
+
+              {/* Espólios e XP */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  sx={{borderBottom: "1px solid #e0e0e0", pb: 1, mb: 2}}
+                >
+                  Recompensas e Experiência
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
                     <Typography
                       variant="caption"
                       color="success.main"
+                      fontWeight="bold"
                       display="block"
                     >
-                      Loot: {enc.loot}
+                      LOOT DO CHEFE
                     </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Chefe Final */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Chefe Final
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography
-              variant="caption"
-              color="error.main"
-              fontWeight="bold"
-              display="block"
-            >
-              ◆ BOSS
-            </Typography>
-            {typeof quest.antagonist === "string" ? (
-              <Typography variant="body2">{quest.antagonist}</Typography>
-            ) : (
-              <Box sx={{mt: 0.5}}>
-                <Typography variant="body2">
-                  <strong>{quest.antagonist?.name}:</strong>{" "}
-                  {quest.antagonist?.description}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{mt: 0.5}}
-                >
-                  {quest.antagonist?.stats}
-                </Typography>
-              </Box>
-            )}
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Espólios */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              Espólios
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography
-              variant="caption"
-              color="success.main"
-              fontWeight="bold"
-              display="block"
-            >
-              LOOT DO CHEFE E RECOMPENSAS
-            </Typography>
-            {quest.bossLoot && (
-              <Typography variant="body2" sx={{mb: 0.5}}>
-                <strong>Loot do Chefe:</strong> {quest.bossLoot.join(", ")}
-              </Typography>
-            )}
-            <Typography variant="body2">
-              <strong>Recompensa do Sistema/Guilda:</strong> {quest.reward}
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* XP */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="primary">
-              XP
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2">
-              <strong>Experiência Sugerida:</strong> 3 XP (Padrão SWADE) ou 1
-              Avanço se concluída com sucesso.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* ✨ Assistente Inteligente (Gemini) */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="secondary">
-              ✨ Assistente IA (Gerar História e Imagens)
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
-              Use o Gemini para transformar o esqueleto dessa missão em uma
-              narrativa detalhada e prompts de imagem prontos.
-            </Typography>
-
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<AutoAwesomeIcon />}
-              onClick={() => handleGenerateAI(quest)}
-              disabled={loadingStep !== null}
-              sx={{mb: 3}}
-            >
-              {loadingStep
-                ? "Conectando ao Gemini..."
-                : "Escrever Missão Passo a Passo"}
-            </Button>
-
-            <Typography
-              variant="subtitle1"
-              color="secondary"
-              fontWeight="bold"
-              sx={{mb: 2}}
-            >
-              📖 Narrativa da Missão
-            </Typography>
-            <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
-              {[
-                {id: "narrative", label: "1. Introdução e Narrativa"},
-                {id: "encounters", label: "2. Encontros e Armadilhas"},
-                {id: "boss", label: "3. Cena do Boss Final"},
-              ].map((step) => {
-                const questId = quest._id || "unsaved_draft";
-                const content =
-                  aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
-                const {text} = extractTextAndPrompt(content, step.id);
-
-                return (
-                  <Box key={step.id}>
-                    <Typography
-                      variant="subtitle2"
-                      color="text.primary"
-                      fontWeight="bold"
-                    >
-                      {step.label}
-                      {loadingStep === step.id && (
-                        <span style={{marginLeft: 8, opacity: 0.7}}>
-                          ⏳ Gerando...
-                        </span>
-                      )}
-                      {text && (
-                        <span style={{marginLeft: 8, color: "green"}}>✅</span>
-                      )}
+                    <Typography variant="body2">
+                      {quest.bossLoot?.join(", ") || "Nenhum loot especial"}
                     </Typography>
-                    {text && (
-                      <Paper
-                        sx={{
-                          p: 2,
-                          mt: 1,
-                          bgcolor: "#f8fafc",
-                          color: "#1e293b",
-                          whiteSpace: "pre-wrap",
-                          fontSize: "0.9rem",
-                          border: "1px solid #e2e8f0",
-                        }}
-                      >
-                        {text}
-                      </Paper>
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Prompts para as Imagens */}
-        <Accordion
-          disableGutters
-          elevation={0}
-          sx={{border: "1px solid #e0e0e0", "&:before": {display: "none"}}}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight="bold" color="secondary">
-              🎨 Prompts para as Imagens
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
-              {[
-                {id: "narrative", label: "1. Introdução e Narrativa"},
-                {id: "encounters", label: "2. Encontros e Armadilhas"},
-                {id: "boss", label: "3. Cena do Boss Final"},
-                {id: "loot", label: "4. Arte dos Espólios"},
-                {id: "scenery", label: "5. Arte do Cenário"},
-              ].map((step) => {
-                const questId = quest._id || "unsaved_draft";
-                const content =
-                  aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
-                const {prompt} = extractTextAndPrompt(content, step.id);
-
-                return (
-                  <Box key={`prompt-${step.id}`}>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
                     <Typography
                       variant="caption"
+                      color="success.main"
                       fontWeight="bold"
                       display="block"
                     >
-                      {step.label}
-                      {loadingStep === step.id && (
-                        <span style={{marginLeft: 8, opacity: 0.7}}>⏳</span>
-                      )}
+                      RECOMPENSA DO SISTEMA/GUILDA
                     </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        alignItems: "flex-start",
-                        mt: 0.5,
-                      }}
+                    <Typography variant="body2">{quest.reward}</Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="caption"
+                      color="primary"
+                      fontWeight="bold"
+                      display="block"
                     >
-                      <TextField
-                        multiline
-                        fullWidth
-                        size="small"
-                        value={prompt}
-                        InputProps={{readOnly: true}}
-                        placeholder={
-                          loadingStep === step.id
-                            ? "Aguardando IA..."
-                            : "Nenhum prompt gerado."
-                        }
-                      />
-                      <IconButton
-                        onClick={() => copyToClipboard(prompt)}
-                        color="primary"
-                        disabled={!prompt}
-                      >
-                        <ContentCopyIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                );
-              })}
+                      EXPERIÊNCIA SUGERIDA (XP)
+                    </Typography>
+                    <Typography variant="body2">
+                      3 XP (Padrão SWADE) ou 1 Avanço se concluída com sucesso.
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Box>
             </Box>
-          </AccordionDetails>
-        </Accordion>
+          )}
+
+          {questTab === 1 && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+                Gere os textos descritivos das cenas para narrar para seus
+                jogadores de forma imersiva.
+              </Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => handleGenerateTexts(quest)}
+                disabled={loadingStep !== null}
+                sx={{mb: 3}}
+              >
+                {loadingStep ? "Gerando..." : "Gerar Narrativa IA"}
+              </Button>
+
+              <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+                {[
+                  {id: "narrative_text", label: "1. Introdução e Narrativa"},
+                  {id: "map_text", label: "2. Mapa e Investigação"},
+                  {id: "encounters_text", label: "3. Encontros e Armadilhas"},
+                  {id: "boss_text", label: "4. Cena do Boss Final"},
+                ].map((step) => {
+                  const questId = quest._id || "unsaved_draft";
+                  const content =
+                    aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
+
+                  return (
+                    <Box key={step.id}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.primary"
+                        fontWeight="bold"
+                      >
+                        {step.label}
+                        {loadingStep === step.id && (
+                          <span style={{marginLeft: 8, opacity: 0.7}}>
+                            ⏳ Gerando...
+                          </span>
+                        )}
+                        {content && (
+                          <span style={{marginLeft: 8, color: "green"}}>
+                            ✅
+                          </span>
+                        )}
+                      </Typography>
+                      {content && (
+                        <Paper
+                          sx={{
+                            p: 2,
+                            mt: 1,
+                            bgcolor: "#f8fafc",
+                            color: "#1e293b",
+                            whiteSpace: "pre-wrap",
+                            fontSize: "0.9rem",
+                            border: "1px solid #e2e8f0",
+                          }}
+                        >
+                          {content}
+                        </Paper>
+                      )}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+
+          {questTab === 2 && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+                Gere prompts em INGLÊS prontos para usar no Midjourney, DALL-E
+                ou Stable Diffusion.
+              </Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => handleGenerateImages(quest)}
+                disabled={loadingStep !== null}
+                sx={{mb: 3}}
+              >
+                {loadingStep ? "Gerando..." : "Gerar Prompts de Imagem"}
+              </Button>
+
+              <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
+                {[
+                  {id: "narrative_image", label: "1. Cenário Inicial"},
+                  {id: "map_image", label: "2. Mapa e Salas da Dungeon"},
+                  {id: "encounters_image", label: "3. Encontros e Armadilhas"},
+                  {id: "boss_image", label: "4. Cena do Boss Final"},
+                  {id: "loot_image", label: "5. Arte dos Espólios"},
+                ].map((step) => {
+                  const questId = quest._id || "unsaved_draft";
+                  const prompt =
+                    aiResults[questId]?.[step.id] || quest.aiContent?.[step.id];
+
+                  return (
+                    <Box key={`prompt-${step.id}`}>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        display="block"
+                      >
+                        {step.label}
+                        {loadingStep === step.id && (
+                          <span style={{marginLeft: 8, opacity: 0.7}}>
+                            ⏳ Gerando...
+                          </span>
+                        )}
+                        {prompt && (
+                          <span style={{marginLeft: 8, color: "green"}}>
+                            ✅
+                          </span>
+                        )}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          alignItems: "flex-start",
+                          mt: 1,
+                        }}
+                      >
+                        <TextField
+                          multiline
+                          minRows={3}
+                          fullWidth
+                          size="small"
+                          value={prompt || ""}
+                          InputProps={{readOnly: true}}
+                          placeholder={
+                            loadingStep === step.id
+                              ? "Aguardando IA..."
+                              : "Nenhum prompt gerado."
+                          }
+                        />
+                        <IconButton
+                          onClick={() => copyToClipboard(prompt)}
+                          color="primary"
+                          disabled={!prompt}
+                          sx={{bgcolor: "rgba(0,0,0,0.04)"}}
+                        >
+                          <ContentCopyIcon />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+        </Box>
       </Box>
     );
   };
@@ -759,8 +788,7 @@ export default function QuestBoard({tableId, isGM}) {
       <Dialog
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        maxWidth="md"
-        fullWidth
+        fullScreen
       >
         {selectedQuest && (
           <>
@@ -781,21 +809,32 @@ export default function QuestBoard({tableId, isGM}) {
               >
                 {selectedQuest.title}
               </Typography>
-              <Chip
-                icon={
-                  selectedQuest.isActive ? (
-                    <VisibilityIcon fontSize="small" />
-                  ) : (
-                    <VisibilityOffIcon fontSize="small" />
-                  )
-                }
-                label={
-                  selectedQuest.isActive ? "Visível na Mesa" : "Oculta (Banco)"
-                }
-                color={selectedQuest.isActive ? "info" : "default"}
-                variant={selectedQuest.isActive ? "filled" : "outlined"}
-                sx={{fontWeight: "bold"}}
-              />
+              <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                <Chip
+                  icon={
+                    selectedQuest.isActive ? (
+                      <VisibilityIcon fontSize="small" />
+                    ) : (
+                      <VisibilityOffIcon fontSize="small" />
+                    )
+                  }
+                  label={
+                    selectedQuest.isActive
+                      ? "Visível na Mesa"
+                      : "Oculta (Banco)"
+                  }
+                  color={selectedQuest.isActive ? "info" : "default"}
+                  variant={selectedQuest.isActive ? "filled" : "outlined"}
+                  sx={{fontWeight: "bold"}}
+                />
+                <IconButton
+                  onClick={() => setDetailsOpen(false)}
+                  color="inherit"
+                  size="small"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
             </DialogTitle>
             <Box
               sx={{

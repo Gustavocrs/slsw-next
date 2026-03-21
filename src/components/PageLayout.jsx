@@ -14,14 +14,14 @@ import Sidebar from "@/components/Sidebar";
 import {useAuth} from "@/hooks";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useCharacterAPI} from "@/hooks";
-import GameModal from "@/components/Table/GameModal";
+import GameModal from "@/components/TableView/GameModal";
 import APIService from "@/lib/api";
 import {collection, query, onSnapshot} from "firebase/firestore";
 import {db} from "@/lib/firebase";
-import CreateTableModal from "@/components/Table/CreateTableModal";
-import TableListModal from "@/components/Table/TableListModal";
-import TableDetailsModal from "@/components/Table/TableDetailsModal";
-import InspectSheetModal from "@/components/Table/InspectSheetModal";
+import CreateTableModal from "@/components/TableView/CreateTableModal";
+import TableListModal from "@/components/TableView/TableListModal";
+import TableDetailsModal from "@/components/TableView/TableDetailsModal";
+import InspectSheetModal from "@/components/TableView/InspectSheetModal";
 import MessagesDashboard from "@/components/Messages";
 
 export default function PageLayout() {
