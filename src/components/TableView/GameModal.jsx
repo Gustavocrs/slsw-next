@@ -102,6 +102,7 @@ import BookView from "@/components/BookView";
 import UserMenu from "@/components/UserMenu";
 import InspectSheetModal from "./InspectSheetModal";
 import QuestBoard from "./QuestBoard";
+import BestiaryView from "@/components/BestiaryView";
 import {calculateMaxMana} from "@/lib/rpgEngine";
 import {
   getTableGameSession,
@@ -472,6 +473,7 @@ function GameModal() {
   const [selectedGameLocks, setSelectedGameLocks] = useState([]);
   const [savingGameSettings, setSavingGameSettings] = useState(false);
   const [isBookOpen, setIsBookOpen] = useState(true);
+  const [isBestiaryOpen, setIsBestiaryOpen] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -489,14 +491,26 @@ function GameModal() {
     if (isBookOpen) {
       if (inspectModalOpen) toggleInspectModal();
       if (chatOpen) toggleChat();
+      if (isBestiaryOpen) setIsBestiaryOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBookOpen]);
+
+  // Efeito para exclusividade: Bestiário
+  useEffect(() => {
+    if (isBestiaryOpen) {
+      if (inspectModalOpen) toggleInspectModal();
+      if (chatOpen) toggleChat();
+      if (isBookOpen) setIsBookOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBestiaryOpen]);
 
   // Efeito para exclusividade: Ficha
   useEffect(() => {
     if (inspectModalOpen) {
       if (isBookOpen) setIsBookOpen(false);
+      if (isBestiaryOpen) setIsBestiaryOpen(false);
       if (chatOpen) toggleChat();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -506,6 +520,7 @@ function GameModal() {
   useEffect(() => {
     if (chatOpen) {
       if (isBookOpen) setIsBookOpen(false);
+      if (isBestiaryOpen) setIsBestiaryOpen(false);
       if (inspectModalOpen) toggleInspectModal();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -516,12 +531,13 @@ function GameModal() {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         if (isBookOpen) setIsBookOpen(false);
+        else if (isBestiaryOpen) setIsBestiaryOpen(false);
         else if (inspectModalOpen) toggleInspectModal();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isBookOpen, inspectModalOpen, toggleInspectModal]);
+  }, [isBookOpen, isBestiaryOpen, inspectModalOpen, toggleInspectModal]);
 
   // Efeito para sincronização em tempo real e verificação de segurança
   useEffect(() => {
@@ -1482,9 +1498,9 @@ function GameModal() {
             )}
 
             <IconButton
-              onClick={() => console.log("Abrir Bestiário")}
+              onClick={() => setIsBestiaryOpen(!isBestiaryOpen)}
               title="Bestiário"
-              sx={{color: "action.active"}}
+              sx={{color: isBestiaryOpen ? "primary.main" : "action.active"}}
             >
               <BestiaryIcon />
             </IconButton>
@@ -1551,6 +1567,17 @@ function GameModal() {
               >
                 <BookView twoPageMode={true} />
               </Box>
+            </Box>
+          ) : isBestiaryOpen ? (
+            <Box
+              sx={{
+                height: "100%",
+                overflow: "hidden",
+                bgcolor: "#fff",
+                p: 0,
+              }}
+            >
+              <BestiaryView />
             </Box>
           ) : inspectModalOpen ? (
             <Box
