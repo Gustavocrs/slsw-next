@@ -14,14 +14,22 @@ import {
   TextField,
   InputAdornment,
   CircularProgress,
+  Button,
 } from "@mui/material";
-import {Search as SearchIcon, Pets as PetsIcon} from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  Pets as PetsIcon,
+  Settings as SettingsIcon,
+} from "@mui/icons-material";
+import {useRouter} from "next/navigation";
 import MonsterCard from "./MonsterCard";
 import {useBestiaryStore} from "../../stores/bestiaryStore";
 
 export default function BestiaryView() {
   const {loading, filters, setFilters, fetchMonsters, getFilteredMonsters} =
     useBestiaryStore();
+
+  const router = useRouter();
 
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -86,6 +94,15 @@ export default function BestiaryView() {
             <Typography variant="caption" color="text.secondary">
               Catálogo de criaturas e entidades mapeadas.
             </Typography>
+            <Box sx={{mt: 1}}>
+              <Button
+                size="small"
+                startIcon={<SettingsIcon />}
+                onClick={() => router.push("/bestiary/admin")}
+              >
+                Painel de Ingestão (Admin)
+              </Button>
+            </Box>
           </Grid>
 
           <Grid item xs={12} md={5}>

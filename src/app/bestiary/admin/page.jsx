@@ -20,6 +20,12 @@ import {
   UploadFile as UploadIcon,
   CheckCircle as CheckIcon,
 } from "@mui/icons-material";
+import {db} from "@/lib/firebase";
+import {writeBatch, doc, collection} from "firebase/firestore";
+import {
+  parseZadmarToughness,
+  normalizeZadmarAttributes,
+} from "@/lib/swadeEngine";
 
 export default function BestiaryAdminPage() {
   const [jsonInput, setJsonInput] = useState("");
@@ -43,22 +49,41 @@ export default function BestiaryAdminPage() {
         );
       }
 
-      // Envio para a API Next.js que fará o Batch Write no Firestore
-      const response = await fetch("/api/bestiary", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload),
-      });
+      const bestiaryRef = collection(db, "monsters");
+      const CHUNK_SIZE = 450;
+      let totalImported = 0;
 
-      const result = await response.json();
+      for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+        const chunk = payload.slice(i, i + CHUNK_SIZE);
+        const batch = writeBatch(db);
 
-      if (!response.ok) {
-        throw new Error(result.error || "Erro desconhecido na API.");
+        chunk.forEach((monster) => {
+          const normalizedStats = parseZadmarToughness(monster.toughness);
+          const normalizedAttributes = normalizeZadmarAttributes(
+            monster.attributes,
+          );
+
+          const docData = {
+            ...monster,
+            attributes: normalizedAttributes,
+            toughness: normalizedStats.toughness,
+            armor: normalizedStats.armor,
+            updatedAt: new Date().toISOString(),
+          };
+
+          const docRef = monster.id
+            ? doc(bestiaryRef, String(monster.id))
+            : doc(bestiaryRef);
+          batch.set(docRef, docData, {merge: true});
+        });
+
+        await batch.commit();
+        totalImported += chunk.length;
       }
 
       setStatus({
         type: "success",
-        message: `Sucesso! ${result.count} criatura(s) cadastradas no Firestore.`,
+        message: `Sucesso! ${totalImported} criatura(s) cadastradas no Firestore.`,
       });
       setJsonInput(""); // Limpa após o sucesso
     } catch (error) {

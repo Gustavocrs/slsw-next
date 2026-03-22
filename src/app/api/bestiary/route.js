@@ -25,31 +25,38 @@ export async function POST(request) {
       );
     }
 
-    const batch = writeBatch(db);
     const bestiaryRef = collection(db, "monsters");
 
-    monsters.forEach((monster) => {
-      const normalizedStats = parseZadmarToughness(monster.toughness);
-      const normalizedAttributes = normalizeZadmarAttributes(
-        monster.attributes,
-      );
+    // O Firestore permite no máximo 500 operações por batch.
+    // Dividimos em pedaços de 450 para segurança
+    const CHUNK_SIZE = 450;
+    for (let i = 0; i < monsters.length; i += CHUNK_SIZE) {
+      const chunk = monsters.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
 
-      const docData = {
-        ...monster,
-        attributes: normalizedAttributes,
-        toughness: normalizedStats.toughness,
-        armor: normalizedStats.armor,
-        updatedAt: new Date().toISOString(),
-      };
+      chunk.forEach((monster) => {
+        const normalizedStats = parseZadmarToughness(monster.toughness);
+        const normalizedAttributes = normalizeZadmarAttributes(
+          monster.attributes,
+        );
 
-      // Utiliza o ID providenciado ou gera um novo caso seja indefinido
-      const docRef = monster.id
-        ? doc(bestiaryRef, monster.id)
-        : doc(bestiaryRef);
-      batch.set(docRef, docData, {merge: true});
-    });
+        const docData = {
+          ...monster,
+          attributes: normalizedAttributes,
+          toughness: normalizedStats.toughness,
+          armor: normalizedStats.armor,
+          updatedAt: new Date().toISOString(),
+        };
 
-    await batch.commit();
+        // Força ID como string para evitar erro fatal do Firestore
+        const docRef = monster.id
+          ? doc(bestiaryRef, String(monster.id))
+          : doc(bestiaryRef);
+        batch.set(docRef, docData, {merge: true});
+      });
+
+      await batch.commit();
+    }
 
     return NextResponse.json({
       success: true,
@@ -59,7 +66,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Erro na API de Bestiário:", error);
     return NextResponse.json(
-      {error: "Erro interno ao processar e salvar os monstros."},
+      {error: `Erro interno: ${error.message}`},
       {status: 500},
     );
   }

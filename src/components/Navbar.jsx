@@ -3,6 +3,7 @@
 import React, {useState, useEffect} from "react";
 import {styled} from "@mui/material/styles";
 import {collection, doc, onSnapshot, query} from "firebase/firestore";
+import {useRouter} from "next/navigation";
 import {useAuth} from "@/hooks";
 import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import APIService from "@/lib/api";
@@ -145,6 +146,7 @@ function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
   } = useUIStore();
   const setNotifications = useUIStore((state) => state.setNotifications);
 
+  const router = useRouter();
   // Ler cores da ficha atual para personalizar o Header
   const character = useCharacterStore((state) => state.character);
   const headerColors = {
@@ -303,8 +305,7 @@ function Navbar({onToggleSidebar, currentView, onViewChange, onSave, onLoad}) {
                   customcolors={headerColors}
                   startIcon={<BestiaryIcon />}
                   onClick={() => {
-                    // TODO: Implementar a chamada para o modal ou view do Bestiário
-                    console.log("Abrir Bestiário");
+                    router.push("/bestiary");
                   }}
                 >
                   {isMobile ? "" : "Bestiário"}
