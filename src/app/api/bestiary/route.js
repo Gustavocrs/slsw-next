@@ -26,7 +26,7 @@ export async function POST(request) {
     }
 
     const batch = writeBatch(db);
-    const bestiaryRef = collection(db, "bestiary");
+    const bestiaryRef = collection(db, "monsters");
 
     monsters.forEach((monster) => {
       const normalizedStats = parseZadmarToughness(monster.toughness);

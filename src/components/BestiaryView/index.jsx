@@ -1,306 +1,156 @@
+/**
+ * BestiaryView
+ * Malha de visualização do bestiário.
+ * Implementa layout de grid para os MonsterCards e prepara terreno para Infinite Scroll.
+ */
+
 "use client";
 
-import React, {useState, useMemo} from "react";
+import React, {useRef, useCallback, useEffect, useState} from "react";
 import {
   Box,
   Typography,
   Grid,
-  Paper,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
   TextField,
   InputAdornment,
-  Chip,
-  Avatar,
+  CircularProgress,
 } from "@mui/material";
 import {Search as SearchIcon, Pets as PetsIcon} from "@mui/icons-material";
-import {bestiaryData} from "../../data/bestiary";
+import MonsterCard from "./MonsterCard";
+import {useBestiaryStore} from "../../stores/bestiaryStore";
 
 export default function BestiaryView() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMonster, setSelectedMonster] = useState(null);
+  const {loading, filters, setFilters, fetchMonsters, getFilteredMonsters} =
+    useBestiaryStore();
 
-  const filteredMonsters = useMemo(() => {
-    if (!searchTerm) return bestiaryData;
-    return bestiaryData.filter((m) =>
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-  }, [searchTerm]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  // Referência para o IntersectionObserver (Infinite Scroll)
+  const observer = useRef();
+  const lastMonsterElementRef = useCallback(
+    (node) => {
+      if (loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          // TODO: Acionar função `fetchNextPage()` do Zustand aqui
+          console.log("Intersected! Fetch more monsters...");
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loadingMore, hasMore],
+  );
+
+  useEffect(() => {
+    fetchMonsters();
+  }, [fetchMonsters]);
+
+  const filteredMonsters = getFilteredMonsters();
 
   return (
-    <Box sx={{display: "flex", height: "100%", width: "100%", bgcolor: "#fff"}}>
-      {/* Esquerda: Lista de Monstros */}
+    <Box
+      sx={{
+        height: "100%",
+        width: "100%",
+        bgcolor: "#fff",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Header & Search */}
       <Box
         sx={{
-          width: {xs: "100%", md: "350px"},
-          borderRight: "1px solid #e0e0e0",
-          display: {xs: selectedMonster ? "none" : "flex", md: "flex"},
-          flexDirection: "column",
+          p: {xs: 2, md: 3},
+          borderBottom: "1px solid #e2e8f0",
           bgcolor: "#f8fafc",
         }}
       >
-        <Box sx={{p: 2, borderBottom: "1px solid #e0e0e0"}}>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            color="primary"
-            sx={{mb: 2, display: "flex", alignItems: "center", gap: 1}}
-          >
-            <PetsIcon /> Bestiário
-          </Typography>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Buscar criatura..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-        <List sx={{flexGrow: 1, overflowY: "auto", p: 0}}>
-          {filteredMonsters.map((monster) => (
-            <ListItem key={monster.id} disablePadding divider>
-              <ListItemButton
-                selected={selectedMonster?.id === monster.id}
-                onClick={() => setSelectedMonster(monster)}
-                sx={{
-                  "&.Mui-selected": {
-                    bgcolor: "rgba(0, 184, 212, 0.1)",
-                    borderLeft: "4px solid #00b8d4",
-                  },
-                }}
-              >
-                <ListItemText
-                  primary={monster.name}
-                  secondary={`Rank ${monster.rank} • ${monster.type}`}
-                  primaryTypographyProps={{fontWeight: "bold"}}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          {filteredMonsters.length === 0 && (
-            <Box sx={{p: 3, textAlign: "center", color: "text.secondary"}}>
-              <Typography variant="body2">
-                Nenhuma criatura encontrada.
-              </Typography>
-            </Box>
-          )}
-        </List>
+        <Grid
+          container
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Grid item xs={12} md={4}>
+            <Typography
+              variant="h5"
+              fontWeight="900"
+              color="#0f172a"
+              sx={{display: "flex", alignItems: "center", gap: 1}}
+            >
+              <PetsIcon sx={{color: "#667eea"}} />
+              Bestiário SWADE
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Catálogo de criaturas e entidades mapeadas.
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Buscar pelo nome..."
+              value={filters.name}
+              onChange={(e) => setFilters({name: e.target.value})}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{color: "#94a3b8"}} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{bgcolor: "#fff", borderRadius: 1}}
+            />
+          </Grid>
+        </Grid>
       </Box>
 
-      {/* Direita: Detalhes do Monstro */}
+      {/* Grid Content */}
       <Box
         sx={{
           flexGrow: 1,
-          display: {xs: !selectedMonster ? "none" : "flex", md: "flex"},
-          flexDirection: "column",
           overflowY: "auto",
-          bgcolor: "#fff",
+          p: {xs: 2, md: 3},
+          bgcolor: "#f1f5f9",
         }}
       >
-        {selectedMonster ? (
-          <Box sx={{p: {xs: 2, md: 4}}}>
-            <Box sx={{display: {xs: "block", md: "none"}, mb: 2}}>
-              <Typography
-                variant="button"
-                color="primary"
-                sx={{cursor: "pointer", fontWeight: "bold"}}
-                onClick={() => setSelectedMonster(null)}
-              >
-                ← Voltar para lista
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{mb: 4, display: "flex", gap: 3, alignItems: "flex-start"}}
-            >
-              <Avatar
-                variant="rounded"
-                sx={{
-                  width: 100,
-                  height: 100,
-                  bgcolor: "#e2e8f0",
-                  color: "#64748b",
-                }}
-              >
-                <PetsIcon sx={{fontSize: 40}} />
-              </Avatar>
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="text.primary"
-                  sx={{mb: 1}}
-                >
-                  {selectedMonster.name}
-                </Typography>
-                <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
-                  <Chip
-                    label={`Rank ${selectedMonster.rank}`}
-                    color="error"
-                    size="small"
-                    sx={{fontWeight: "bold"}}
-                  />
-                  <Chip
-                    label={selectedMonster.type}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Box>
-              </Box>
-            </Box>
-
-            <Paper variant="outlined" sx={{p: 2, mb: 3, bgcolor: "#f8fafc"}}>
-              <Typography
-                variant="body1"
-                sx={{fontStyle: "italic", color: "text.secondary"}}
-              >
-                "{selectedMonster.description}"
-              </Typography>
-            </Paper>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  color="primary"
-                  sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
-                >
-                  Atributos
-                </Typography>
-                <Box sx={{display: "flex", gap: 2, flexWrap: "wrap", mb: 2}}>
-                  {Object.entries(selectedMonster.attributes).map(
-                    ([key, val]) => (
-                      <Box
-                        key={key}
-                        sx={{
-                          textAlign: "center",
-                          bgcolor: "#f1f5f9",
-                          p: 1,
-                          borderRadius: 1,
-                          minWidth: 60,
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            textTransform: "uppercase",
-                            fontWeight: "bold",
-                            color: "text.secondary",
-                          }}
-                        >
-                          {key}
-                        </Typography>
-                        <Typography variant="body1" fontWeight="bold">
-                          {val}
-                        </Typography>
-                      </Box>
-                    ),
-                  )}
-                </Box>
-
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  color="primary"
-                  sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
-                >
-                  Estatísticas Derivadas
-                </Typography>
-                <Box sx={{display: "flex", gap: 3, mb: 2}}>
-                  <Typography variant="body2">
-                    <strong>Movimento:</strong> {selectedMonster.pace}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Aparar:</strong> {selectedMonster.parry}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Resistência:</strong> {selectedMonster.toughness}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  color="primary"
-                  sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
-                >
-                  Perícias e Habilidades
-                </Typography>
-                <Typography variant="body2" sx={{mb: 3}}>
-                  {selectedMonster.skills}
-                </Typography>
-
-                {selectedMonster.specialAbilities &&
-                  selectedMonster.specialAbilities.length > 0 && (
-                    <>
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight="bold"
-                        color="primary"
-                        sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
-                      >
-                        Habilidades Especiais
-                      </Typography>
-                      <Box sx={{mb: 3}}>
-                        {selectedMonster.specialAbilities.map(
-                          (ability, idx) => (
-                            <Typography
-                              key={idx}
-                              variant="body2"
-                              sx={{mb: 0.5}}
-                            >
-                              <strong>{ability.name}:</strong>{" "}
-                              {ability.description}
-                            </Typography>
-                          ),
-                        )}
-                      </Box>
-                    </>
-                  )}
-
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  color="primary"
-                  sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
-                >
-                  Espólios (Loot)
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="success.main"
-                  fontWeight="bold"
-                >
-                  {selectedMonster.loot}
-                </Typography>
-              </Grid>
-            </Grid>
+        {loading ? (
+          <Box sx={{display: "flex", justifyContent: "center", py: 8}}>
+            <CircularProgress />
+          </Box>
+        ) : filteredMonsters.length === 0 ? (
+          <Box sx={{textAlign: "center", color: "text.secondary", py: 8}}>
+            <Typography variant="body1">
+              Nenhuma criatura encontrada.
+            </Typography>
           </Box>
         ) : (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              color: "text.secondary",
-            }}
-          >
-            <Typography variant="h6">
-              Selecione uma criatura para ver os detalhes
-            </Typography>
+          <Grid container spacing={2}>
+            {filteredMonsters.map((monster, index) => {
+              const isLast = filteredMonsters.length === index + 1;
+              return (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  key={monster.id}
+                  ref={isLast ? lastMonsterElementRef : null}
+                >
+                  <MonsterCard monster={monster} />
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
+
+        {loadingMore && (
+          <Box sx={{display: "flex", justifyContent: "center", py: 2}}>
+            <CircularProgress size={24} />
           </Box>
         )}
       </Box>

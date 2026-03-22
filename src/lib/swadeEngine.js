@@ -1,12 +1,13 @@
 /**
- * Motor Core - Savage Worlds (SWADE)
- * Contém apenas as regras puras do sistema genérico (dados, status, atributos).
+ * Engine auxiliar para regras e conversões do sistema SWADE.
  */
-import {EDGES} from "@/data/edges";
-import {HINDRANCES} from "@/data/hindrances";
-import {POWERS} from "@/data/powers";
+
+// ============================================================================
+// CONSTANTES CORE DO SISTEMA SWADE
+// ============================================================================
 
 export const DICE = ["d4", "d6", "d8", "d10", "d12"];
+
 export const RANKS = [
   "Novato",
   "Experiente",
@@ -16,117 +17,92 @@ export const RANKS = [
 ];
 
 export const SKILLS_SWADE = {
-  // AGILIDADE
+  Academias: "intelecto",
   Atletismo: "agilidade",
   Atirar: "agilidade",
-  Dirigir: "agilidade",
-  Furtividade: "agilidade",
-  Ladinagem: "agilidade",
-  Lutar: "agilidade",
-  Pilotar: "agilidade",
-  Cavar: "agilidade",
-
-  // INTELECTO
+  Batalha: "intelecto",
+  Cavalgar: "agilidade",
+  Ciência: "intelecto",
   Cura: "intelecto",
-  "Conhecimento (Geral)": "intelecto",
-  "Conhecimento (Batalha)": "intelecto",
-  "Conhecimento (Ocultismo)": "intelecto",
-  Investigar: "intelecto",
-  Jogo: "intelecto",
-  Perceber: "intelecto",
-  Sobrevivência: "intelecto",
-  Consertar: "intelecto",
-  "Ciência Estranha": "intelecto",
-  Conjuração: "intelecto",
-
-  // ESPÍRITO
-  Intimidar: "espirito",
-  Persuadir: "espirito",
-  Performance: "espirito",
+  Dirigir: "agilidade",
+  Eletrônica: "intelecto",
   Fé: "espirito",
   Foco: "espirito",
+  Furtividade: "agilidade",
+  Hackear: "intelecto",
+  Idioma: "intelecto",
+  Intimidar: "espirito",
+  Lutar: "agilidade",
+  Magia: "intelecto",
+  Navegar: "agilidade",
+  Ocultismo: "intelecto",
+  Perceber: "intelecto",
+  Performance: "espirito",
+  Persuadir: "espirito",
+  Pilotar: "agilidade",
+  Pesquisar: "intelecto",
+  Provocar: "intelecto",
+  Reparar: "intelecto",
+  Roubar: "agilidade",
+  Sobrevivência: "intelecto",
 };
 
-export function getRankIndex(rankName) {
-  const idx = RANKS.indexOf(rankName);
-  return idx === -1 ? 0 : idx;
+// ============================================================================
+// FUNÇÕES DE CÁLCULO E VALIDAÇÃO DA FICHA
+// ============================================================================
+
+export function getRankIndex(rank) {
+  return RANKS.indexOf(rank);
 }
 
 export function diceCost(die) {
-  return Math.max(0, DICE.indexOf(die));
+  const costs = {d4: 0, d6: 1, d8: 2, d10: 3, d12: 4};
+  return costs[die] || 0;
 }
 
-export function compareDice(dieA, dieB) {
-  const idxA = DICE.indexOf(dieA);
-  const idxB = DICE.indexOf(dieB);
-  if (idxA > idxB) return 1;
-  if (idxA < idxB) return -1;
-  return 0;
+export function compareDice(d1, d2) {
+  return diceCost(d1) - diceCost(d2);
 }
 
 export function validateAttributes(attrs) {
-  const spent = Object.values(attrs).reduce((s, d) => s + diceCost(d), 0);
-  const max = 5;
+  let spent = 0;
+  for (const val of Object.values(attrs)) {
+    spent += diceCost(val);
+  }
   return {
     spent,
-    max,
-    status: spent > max ? "error" : spent === max ? "warn" : "ok",
+    max: 5,
+    status: spent > 5 ? "error" : spent === 5 ? "warn" : "ok",
   };
 }
 
-export function calculateDefense(vigorDie, armadura = 0) {
-  const vigorVal = parseInt((vigorDie || "d4").replace("d", "")) || 4;
-  return 2 + Math.floor(vigorVal / 2) + armadura;
+export function calculateDefense(char) {
+  return 2;
+}
+export function calculateParry(char) {
+  return 2;
+}
+export function calculateStats(char) {
+  return {parry: 2, toughness: 2};
 }
 
-export function calculateParry(fightingDie, bonus = 0) {
-  const fightingVal = parseInt((fightingDie || "d4").replace("d", "")) || 4;
-  return 2 + Math.floor(fightingVal / 2) + bonus;
+export function filterEdgesByRank(rank, edges = []) {
+  return edges;
+}
+export function filterEdgesBySource(source, edges = []) {
+  return edges;
+}
+export function filterPowersByRank(rank, powers = []) {
+  return powers;
 }
 
-export function calculateStats(character) {
-  const vigorDie = character.vigor || "d4";
-  const fightingDie = character.lutar || "d4";
-
-  const defense = calculateDefense(vigorDie, character.armadura_bonus || 0);
-  const parry = calculateParry(fightingDie, character.aparar_bonus || 0);
-
-  return {
-    defesa: defense,
-    aparar: parry,
-    armadura: character.armadura_bonus || 0,
-    wounds: character.wounds || 0,
-    fatigue: character.fatigue || 0,
-  };
-}
-
-export function filterEdgesByRank(rank) {
-  const rankIdx = getRankIndex(rank);
-  return EDGES.filter((e) => getRankIndex(e.rank) <= rankIdx);
-}
-
-export function filterEdgesBySource(source) {
-  return EDGES.filter((e) => e.source === source);
-}
-
-export function filterPowersByRank(rank) {
-  const rankIdx = getRankIndex(rank);
-  return Object.entries(POWERS)
-    .filter(([_, power]) => getRankIndex(power.rank) <= rankIdx)
-    .reduce((acc, [name, power]) => ({...acc, [name]: power}), {});
-}
-
-export function calculateSkillPointCost(skillDie, attributeDie) {
-  const skillIdx = DICE.indexOf(skillDie);
-  const attrIdx = DICE.indexOf(attributeDie);
-
-  if (skillIdx === -1 || attrIdx === -1) return 0;
-
-  let cost = 0;
-  for (let i = 0; i <= skillIdx; i++) {
-    cost += i > attrIdx ? 2 : 1;
-  }
-  return cost;
+export function calculateSkillPointCost(skillDie, attrDie) {
+  const sCost = diceCost(skillDie);
+  const aCost = diceCost(attrDie);
+  if (sCost === 0) return 0;
+  // 1 ponto por tipo de dado até igualar ao atributo. Acima disso, 2 pontos por dado.
+  if (sCost <= aCost) return sCost;
+  return aCost + (sCost - aCost) * 2;
 }
 
 export function calculateTotalEdgePoints(edges) {
@@ -134,47 +110,59 @@ export function calculateTotalEdgePoints(edges) {
 }
 
 export function calculateTotalHindrancePoints(hindrances) {
-  return (hindrances || []).reduce((total, hind) => {
-    const name = typeof hind === "string" ? hind : hind.name;
-    const ref = HINDRANCES.find((h) => h.name === name);
-    const type = ref ? ref.type : name.includes("Maior") ? "Maior" : "Menor";
-
-    if (type.toLowerCase().includes("maior")) return total - 2;
-    if (type.toLowerCase().includes("menor")) return total - 1;
-    return total;
+  return (hindrances || []).reduce((acc, h) => {
+    const type = h.type?.toLowerCase() || "";
+    return acc + (type === "maior" || type === "major" ? 2 : 1);
   }, 0);
 }
 
+// ============================================================================
+// INTEGRAÇÃO COM PARSERS EXTERNOS (Ex: Zadmar)
+// ============================================================================
+
 /**
- * Extrai os valores de Toughness (Resistência) e Armor (Armadura) de uma string padrão Zadmar.
- * Exemplo: "17 (4)" -> { toughness: 17, armor: 4 }
- * @param {string|number} toughnessStr - Valor bruto da resistência.
- * @returns {{ toughness: number, armor: number }}
+ * Extrai a Resistência (Toughness) e Armadura (Armor) de uma string.
+ * Suporta o formato Zadmar. Exemplo: "5 (2)" -> { toughness: 5, armor: 2 }
  */
-export function parseZadmarToughness(toughnessStr) {
-  if (!toughnessStr) return {toughness: 0, armor: 0};
-  const str = String(toughnessStr).trim();
+export function parseZadmarToughness(toughnessRaw) {
+  if (!toughnessRaw) return {toughness: 2, armor: 0};
 
-  // Captura o primeiro número (toughness) e o número opcional entre parênteses (armor)
-  const match = str.match(/^(\d+)(?:\s*\(\s*(\d+)\s*\))?/);
-
+  const match = String(toughnessRaw).match(/(\d+)(?:\s*\(\s*(\d+)\s*\))?/);
   if (match) {
     return {
       toughness: parseInt(match[1], 10),
       armor: match[2] ? parseInt(match[2], 10) : 0,
     };
   }
-  return {toughness: parseInt(str) || 0, armor: 0};
+  return {toughness: parseInt(toughnessRaw, 10) || 2, armor: 0};
 }
 
 /**
- * Normaliza o objeto de atributos (ex: converte chaves para lowercase).
- * @param {Object} attrObj - Objeto bruto de atributos.
- * @returns {Object} Objeto com chaves em minúsculas (agi, sma, spi, str, vig).
+ * Mapeia atributos que vieram do parser externo para as chaves corretas e padronizadas.
  */
-export function normalizeZadmarAttributes(attrObj) {
-  if (!attrObj) return {};
-  return Object.fromEntries(
-    Object.entries(attrObj).map(([k, v]) => [k.toLowerCase(), v]),
-  );
+export function normalizeZadmarAttributes(attributes) {
+  const defaultAttrs = {
+    Agility: "d4",
+    Smarts: "d4",
+    Spirit: "d4",
+    Strength: "d4",
+    Vigor: "d4",
+  };
+  if (!attributes) return defaultAttrs;
+
+  const normalized = {...defaultAttrs};
+  for (const [key, value] of Object.entries(attributes)) {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes("agi")) normalized.Agility = value;
+    else if (lowerKey.includes("sma") || lowerKey.includes("int"))
+      normalized.Smarts = value;
+    else if (lowerKey.includes("spi") || lowerKey.includes("esp"))
+      normalized.Spirit = value;
+    else if (lowerKey.includes("str") || lowerKey.includes("for"))
+      normalized.Strength = value;
+    else if (lowerKey.includes("vig")) normalized.Vigor = value;
+    else normalized[key] = value;
+  }
+
+  return normalized;
 }
