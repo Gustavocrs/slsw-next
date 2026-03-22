@@ -34,6 +34,7 @@ import {
   Description as SheetIcon,
   Close as CloseIcon,
   Message as MessageIcon,
+  DeleteSweep as CleanIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
@@ -235,6 +236,29 @@ export default function UserMenu() {
             </Badge>
           </ListItemIcon>
           <ListItemText>Minhas Mesas</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={async () => {
+            handleClose();
+            try {
+              showNotification(
+                "Verificando e limpando arquivos órfãos...",
+                "info",
+              );
+              const deletedCount = await APIService.cleanupUnusedFiles();
+              showNotification(
+                `Limpeza concluída! ${deletedCount} arquivos foram apagados do disco.`,
+                "success",
+              );
+            } catch (e) {
+              showNotification("Erro ao limpar disco.", "error");
+            }
+          }}
+        >
+          <ListItemIcon>
+            <CleanIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Limpar Servidor</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>

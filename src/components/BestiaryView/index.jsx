@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from "react";
+import React, {useState, useMemo} from "react";
 import {
   Box,
   Typography,
@@ -16,45 +16,18 @@ import {
   Avatar,
 } from "@mui/material";
 import {Search as SearchIcon, Pets as PetsIcon} from "@mui/icons-material";
-
-// Dados falsos temporários para construir o layout
-const DUMMY_MONSTERS = [
-  {
-    id: 1,
-    name: "Goblin Rastejante",
-    type: "Humanóide",
-    rank: "E",
-    description: "Uma criatura pequena e vil que vive em cavernas úmidas.",
-    attributes: {agi: "d8", sma: "d4", spi: "d4", str: "d4", vig: "d6"},
-    skills: "Lutar d6, Furtividade d8, Perceber d6",
-    pace: 6,
-    parry: 5,
-    toughness: 5,
-    loot: "Dentes de goblin, trapos",
-  },
-  {
-    id: 2,
-    name: "Espectro de Gelo",
-    type: "Morto-Vivo / Elemental",
-    rank: "C",
-    description:
-      "Espíritos amaldiçoados de aventureiros que morreram congelados.",
-    attributes: {agi: "d6", sma: "d6", spi: "d8", str: "d6", vig: "d8"},
-    skills: "Lutar d8, Perceber d8, Furtividade d6",
-    pace: 6,
-    parry: 6,
-    toughness: 6,
-    loot: "Essência gélida, Ectoplasma",
-  },
-];
+import {bestiaryData} from "../../data/bestiary";
 
 export default function BestiaryView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonster, setSelectedMonster] = useState(null);
 
-  const filteredMonsters = DUMMY_MONSTERS.filter((m) =>
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredMonsters = useMemo(() => {
+    if (!searchTerm) return bestiaryData;
+    return bestiaryData.filter((m) =>
+      m.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [searchTerm]);
 
   return (
     <Box sx={{display: "flex", height: "100%", width: "100%", bgcolor: "#fff"}}>
@@ -268,6 +241,34 @@ export default function BestiaryView() {
                 <Typography variant="body2" sx={{mb: 3}}>
                   {selectedMonster.skills}
                 </Typography>
+
+                {selectedMonster.specialAbilities &&
+                  selectedMonster.specialAbilities.length > 0 && (
+                    <>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        color="primary"
+                        sx={{mb: 1, borderBottom: "1px solid #e2e8f0", pb: 0.5}}
+                      >
+                        Habilidades Especiais
+                      </Typography>
+                      <Box sx={{mb: 3}}>
+                        {selectedMonster.specialAbilities.map(
+                          (ability, idx) => (
+                            <Typography
+                              key={idx}
+                              variant="body2"
+                              sx={{mb: 0.5}}
+                            >
+                              <strong>{ability.name}:</strong>{" "}
+                              {ability.description}
+                            </Typography>
+                          ),
+                        )}
+                      </Box>
+                    </>
+                  )}
 
                 <Typography
                   variant="subtitle1"

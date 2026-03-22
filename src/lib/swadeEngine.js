@@ -144,3 +144,37 @@ export function calculateTotalHindrancePoints(hindrances) {
     return total;
   }, 0);
 }
+
+/**
+ * Extrai os valores de Toughness (Resistência) e Armor (Armadura) de uma string padrão Zadmar.
+ * Exemplo: "17 (4)" -> { toughness: 17, armor: 4 }
+ * @param {string|number} toughnessStr - Valor bruto da resistência.
+ * @returns {{ toughness: number, armor: number }}
+ */
+export function parseZadmarToughness(toughnessStr) {
+  if (!toughnessStr) return {toughness: 0, armor: 0};
+  const str = String(toughnessStr).trim();
+
+  // Captura o primeiro número (toughness) e o número opcional entre parênteses (armor)
+  const match = str.match(/^(\d+)(?:\s*\(\s*(\d+)\s*\))?/);
+
+  if (match) {
+    return {
+      toughness: parseInt(match[1], 10),
+      armor: match[2] ? parseInt(match[2], 10) : 0,
+    };
+  }
+  return {toughness: parseInt(str) || 0, armor: 0};
+}
+
+/**
+ * Normaliza o objeto de atributos (ex: converte chaves para lowercase).
+ * @param {Object} attrObj - Objeto bruto de atributos.
+ * @returns {Object} Objeto com chaves em minúsculas (agi, sma, spi, str, vig).
+ */
+export function normalizeZadmarAttributes(attrObj) {
+  if (!attrObj) return {};
+  return Object.fromEntries(
+    Object.entries(attrObj).map(([k, v]) => [k.toLowerCase(), v]),
+  );
+}

@@ -116,6 +116,16 @@ class APIService {
         const docId = characterData._id;
         delete payload._id; // Não salvar o ID dentro do doc
         const docRef = doc(db, "characters", docId);
+
+        // Verifica se a imagem mudou ou foi removida para apagar a antiga do servidor
+        const oldSnap = await getDoc(docRef);
+        if (oldSnap.exists()) {
+          const oldData = oldSnap.data();
+          if (oldData.imagem_url && oldData.imagem_url !== payload.imagem_url) {
+            await this.deleteFile(oldData.imagem_url);
+          }
+        }
+
         await updateDoc(docRef, payload);
         return {_id: docId, ...payload};
       }
@@ -138,7 +148,15 @@ class APIService {
   // 3. DELETAR
   static async deleteCharacter(characterId) {
     try {
-      await deleteDoc(doc(db, "characters", characterId));
+      const docRef = doc(db, "characters", characterId);
+
+      // Deletar a imagem associada, se existir
+      const oldSnap = await getDoc(docRef);
+      if (oldSnap.exists() && oldSnap.data().imagem_url) {
+        await this.deleteFile(oldSnap.data().imagem_url);
+      }
+
+      await deleteDoc(docRef);
       return {success: true};
     } catch (error) {
       console.error("Firebase: Erro ao deletar:", error);
@@ -286,7 +304,20 @@ class APIService {
   // 8. DELETAR MESA
   static async deleteTable(tableId) {
     try {
-      await deleteDoc(doc(db, "tables", tableId));
+      const tableRef = doc(db, "tables", tableId);
+
+      // Deletar todos os arquivos associados a esta mesa
+      const tableSnap = await getDoc(tableRef);
+      if (tableSnap.exists()) {
+        const data = tableSnap.data();
+        if (data.files && Array.isArray(data.files)) {
+          for (const f of data.files) {
+            if (f.url) await this.deleteFile(f.url);
+          }
+        }
+      }
+
+      await deleteDoc(tableRef);
       return {success: true};
     } catch (error) {
       console.error("Erro ao deletar mesa:", error);
@@ -507,8 +538,76 @@ class APIService {
         files: arrayRemove(attachmentData),
         updatedAt: serverTimestamp(),
       });
+      // Deletar o arquivo físico do servidor
+      if (attachmentData.url) {
+        await this.deleteFile(attachmentData.url);
+      }
     } catch (error) {
       console.error("Erro ao remover anexo:", error);
+      throw error;
+    }
+  }
+
+  // 14.1 DELETAR ARQUIVO FÍSICO DO SERVIDOR
+  static async deleteFile(fileUrlOrName) {
+    if (!fileUrlOrName) return;
+    try {
+      const fileName = fileUrlOrName.split("/").pop();
+      if (!fileName) return;
+
+      await fetch(`/api/upload?file=${encodeURIComponent(fileName)}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Erro ao deletar arquivo do servidor:", error);
+    }
+  }
+
+  // 14.2 LIMPEZA DE ARQUIVOS ÓRFÃOS DO SERVIDOR
+  static async cleanupUnusedFiles() {
+    try {
+      // 1. Obter todos os arquivos no servidor
+      const res = await fetch("/api/upload");
+      if (!res.ok) throw new Error("Erro ao listar arquivos do servidor");
+      const {files} = await res.json();
+
+      if (!files || files.length === 0) return 0;
+
+      // 2. Coletar todas as URLs de arquivos em uso no Firestore
+      const usedFiles = new Set();
+
+      // Buscar imagens de TODOS os personagens
+      const charsSnapshot = await getDocs(collection(db, "characters"));
+      charsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.imagem_url) {
+          usedFiles.add(data.imagem_url.split("/").pop());
+        }
+      });
+
+      // Buscar arquivos anexados a TODAS as mesas
+      const tablesSnapshot = await getDocs(collection(db, "tables"));
+      tablesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.files && Array.isArray(data.files)) {
+          data.files.forEach((f) => {
+            if (f.url) usedFiles.add(f.url.split("/").pop());
+          });
+        }
+      });
+
+      // 3. Comparar e excluir os que não estão em uso
+      let deletedCount = 0;
+      for (const file of files) {
+        if (!usedFiles.has(file)) {
+          await this.deleteFile(file);
+          deletedCount++;
+        }
+      }
+
+      return deletedCount;
+    } catch (error) {
+      console.error("Erro na limpeza de arquivos:", error);
       throw error;
     }
   }
@@ -746,6 +845,27 @@ class APIService {
   // 21. DELETAR QUEST DA MESA
   static async deleteQuestFromTable(tableId, questId) {
     try {
+      // Deletar os arquivos da mesa vinculados a esta quest
+      const tableRef = doc(db, "tables", tableId);
+      const tableSnap = await getDoc(tableRef);
+      if (tableSnap.exists()) {
+        const tableData = tableSnap.data();
+        if (tableData.files) {
+          const questFiles = tableData.files.filter(
+            (f) => f.questId === questId,
+          );
+          if (questFiles.length > 0) {
+            for (const f of questFiles) {
+              if (f.url) await this.deleteFile(f.url);
+            }
+            const remainingFiles = tableData.files.filter(
+              (f) => f.questId !== questId,
+            );
+            await updateDoc(tableRef, {files: remainingFiles});
+          }
+        }
+      }
+
       await deleteDoc(doc(db, "tables", tableId, "quests", questId));
       return {success: true};
     } catch (error) {
