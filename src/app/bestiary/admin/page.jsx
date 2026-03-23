@@ -26,11 +26,13 @@ import {
   parseZadmarToughness,
   normalizeZadmarAttributes,
 } from "@/lib/swadeEngine";
+import {useBestiaryStore} from "@/stores/bestiaryStore";
 
 export default function BestiaryAdminPage() {
   const [jsonInput, setJsonInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', message: string }
+  const fetchMonsters = useBestiaryStore((state) => state.fetchMonsters);
 
   const handleProcess = async () => {
     setStatus(null);
@@ -80,6 +82,9 @@ export default function BestiaryAdminPage() {
         await batch.commit();
         totalImported += chunk.length;
       }
+
+      // Força a atualização da lista de monstros na store do Bestiário
+      await fetchMonsters(true);
 
       setStatus({
         type: "success",

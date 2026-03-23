@@ -904,6 +904,33 @@ class APIService {
       throw error;
     }
   }
+
+  // 24. SALVAR/ATUALIZAR MONSTRO DO BESTIÁRIO
+  static async saveMonster(monsterData) {
+    try {
+      const bestiaryRef = collection(db, "monsters");
+      const payload = this._cleanData({
+        ...monsterData,
+        updatedAt: serverTimestamp(),
+      });
+
+      if (monsterData._id || monsterData.id) {
+        const docId = monsterData._id || monsterData.id;
+        delete payload._id; // Remove para não salvar recursivamente
+        delete payload.id;
+        const docRef = doc(db, "monsters", docId);
+        await updateDoc(docRef, payload);
+        return {_id: docId, id: docId, ...payload};
+      } else {
+        payload.createdAt = serverTimestamp();
+        const docRef = await addDoc(bestiaryRef, payload);
+        return {_id: docRef.id, id: docRef.id, ...payload};
+      }
+    } catch (error) {
+      console.error("Erro ao salvar monstro:", error);
+      throw error;
+    }
+  }
 }
 
 export default APIService;

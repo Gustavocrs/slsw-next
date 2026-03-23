@@ -29,20 +29,31 @@ import {
   Settings as SettingsIcon,
   FileDownload as FileDownloadIcon,
   Close as CloseIcon,
+  FormatListBulleted as ListIcon,
 } from "@mui/icons-material";
 import MonsterCard from "./MonsterCard";
+import MonsterFormDialog from "./MonsterFormDialog";
 import {useBestiaryStore} from "../../stores/bestiaryStore";
 import BestiaryAdminPage from "@/app/bestiary/admin/page";
 
 export default function BestiaryView() {
-  const {loading, monsters, filters, setFilters, fetchMonsters, deleteMonster} =
-    useBestiaryStore();
+  const {
+    loading,
+    monsters,
+    filters,
+    setFilters,
+    fetchMonsters,
+    deleteMonster,
+    saveMonster,
+  } = useBestiaryStore();
 
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [adminPanelOpen, setAdminPanelOpen] = useState(false);
   const [monsterToDelete, setMonsterToDelete] = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [monsterToEdit, setMonsterToEdit] = useState(null);
 
   // Referência para o IntersectionObserver (Infinite Scroll)
   const observer = useRef();
@@ -65,10 +76,29 @@ export default function BestiaryView() {
     fetchMonsters();
   }, [fetchMonsters]);
 
+  // Ordem oficial de Ranks (do menor pro maior poder)
+  const RANK_ORDER = [
+    "Extra",
+    "Carta Selvagem",
+    "Novato",
+    "Experiente",
+    "Veterano",
+    "Heroico",
+    "Lendário",
+  ];
+
   // Extrai dinamicamente todos os Ranks presentes nos monstros para o filtro
   const availableRanks = useMemo(() => {
     const ranks = new Set(monsters.map((m) => m.rank).filter(Boolean));
-    return Array.from(ranks).sort();
+    return Array.from(ranks).sort((a, b) => {
+      const indexA = RANK_ORDER.indexOf(a);
+      const indexB = RANK_ORDER.indexOf(b);
+      // Se ambos não estiverem na lista padrão, ordena alfabeticamente
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+      if (indexA === -1) return 1; // Itens desconhecidos vão pro final
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
   }, [monsters]);
 
   const filteredMonsters = useMemo(() => {
@@ -97,6 +127,19 @@ export default function BestiaryView() {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportIndex = () => {
+    const namesStr = filteredMonsters
+      .map((m) => m.name || "Criatura Desconhecida")
+      .join("\n");
+    const blob = new Blob([namesStr], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bestiario_indice.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDeleteMonster = (monster) => {
     setMonsterToDelete(monster);
   };
@@ -110,6 +153,18 @@ export default function BestiaryView() {
       setSelectedMonster(null);
     }
     setMonsterToDelete(null);
+  };
+
+  const handleOpenForm = (monster = null) => {
+    setMonsterToEdit(monster);
+    setFormOpen(true);
+  };
+
+  const handleSaveMonster = async (data) => {
+    const saved = await saveMonster(data);
+    // Atualiza automaticamente o monstro selecionado para refletir as edições
+    // ou seleciona a criatura que acabou de ser criada.
+    setSelectedMonster(saved);
   };
 
   return (
@@ -137,42 +192,71 @@ export default function BestiaryView() {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Grid item xs={12} md={4}>
-            <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+          <Grid item xs={12} md={5}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                justifyContent: "space-between",
+              }}
+            >
               <Typography
                 variant="h5"
                 fontWeight="900"
                 color="#0f172a"
-                sx={{display: "flex", alignItems: "center", gap: 1}}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  m: 0,
+                  lineHeight: 1,
+                }}
               >
                 <PetsIcon sx={{color: "#667eea"}} />
                 Bestiário
               </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setAdminPanelOpen(true)}
-                title="Painel de Ingestão (Admin)"
-              >
-                <SettingsIcon sx={{color: "#94a3b8"}} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={handleExportJson}
-                title="Exportar JSON atual"
-              >
-                <FileDownloadIcon sx={{color: "#94a3b8"}} />
-              </IconButton>
+              <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleOpenForm(null)}
+                  sx={{
+                    mr: 1,
+                    bgcolor: "#667eea",
+                    "&:hover": {bgcolor: "#5a67d8"},
+                    textTransform: "none",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Novo Monstro
+                </Button>
+                <IconButton
+                  size="small"
+                  onClick={handleExportIndex}
+                  title="Exportar Índice (Apenas Nomes)"
+                >
+                  <ListIcon sx={{color: "#94a3b8"}} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => setAdminPanelOpen(true)}
+                  title="Painel de Ingestão Avançado"
+                >
+                  <SettingsIcon sx={{color: "#94a3b8"}} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={handleExportJson}
+                  title="Exportar JSON atual"
+                >
+                  <FileDownloadIcon sx={{color: "#94a3b8"}} />
+                </IconButton>
+              </Box>
             </Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{display: "block", mt: 0.5}}
-            >
-              Catálogo de criaturas e entidades mapeadas.
-            </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={7}>
             <Box sx={{display: "flex", gap: 2}}>
               <TextField
                 fullWidth
@@ -332,6 +416,7 @@ export default function BestiaryView() {
               <MonsterCard
                 monster={selectedMonster}
                 onDelete={handleDeleteMonster}
+                onEdit={handleOpenForm}
               />
             </Box>
           )}
@@ -382,6 +467,14 @@ export default function BestiaryView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de Criação / Edição de Monstro */}
+      <MonsterFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSave={handleSaveMonster}
+        initialData={monsterToEdit}
+      />
     </Box>
   );
 }

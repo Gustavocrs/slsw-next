@@ -32,9 +32,9 @@ export const useBestiaryStore = create((set, get) => ({
    * @async
    * @returns {Promise<void>}
    */
-  fetchMonsters: async () => {
+  fetchMonsters: async (force = false) => {
     // Evita refetch desnecessário se a lista já estiver carregada na memória
-    if (get().monsters.length > 0) return;
+    if (!force && get().monsters.length > 0) return;
 
     set({loading: true, error: null});
     try {
@@ -60,6 +60,35 @@ export const useBestiaryStore = create((set, get) => ({
       }));
     } catch (error) {
       console.error("[useBestiaryStore] Erro ao excluir monstro:", error);
+    }
+  },
+
+  /**
+   * Salva ou atualiza um monstro.
+   * @async
+   * @param {Object} monsterData - Dados do monstro
+   */
+  saveMonster: async (monsterData) => {
+    try {
+      const saved = await APIService.saveMonster(monsterData);
+      set((state) => {
+        const exists = state.monsters.some(
+          (m) => m._id === saved._id || m.id === saved._id,
+        );
+        if (exists) {
+          return {
+            monsters: state.monsters.map((m) =>
+              m._id === saved._id || m.id === saved._id ? {...m, ...saved} : m,
+            ),
+          };
+        } else {
+          return {monsters: [...state.monsters, saved]};
+        }
+      });
+      return saved;
+    } catch (error) {
+      console.error("[useBestiaryStore] Erro ao salvar monstro:", error);
+      throw error;
     }
   },
 

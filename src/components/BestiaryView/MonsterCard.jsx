@@ -17,7 +17,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {Pets as PetsIcon, Delete as DeleteIcon} from "@mui/icons-material";
+import {
+  Pets as PetsIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+} from "@mui/icons-material";
 
 const statBoxStyle = {
   p: 1,
@@ -27,7 +31,7 @@ const statBoxStyle = {
   border: "1px solid rgba(148, 163, 184, 0.2)",
 };
 
-export default function MonsterCard({monster, onDelete}) {
+export default function MonsterCard({monster, onDelete, onEdit}) {
   if (!monster) return null;
 
   // Atributos SWADE padrão
@@ -54,16 +58,33 @@ export default function MonsterCard({monster, onDelete}) {
         overflowY: "auto",
       }}
     >
-      {/* Botão de Excluir */}
-      {onDelete && (
+      {/* Botões de Ação */}
+      {(onDelete || onEdit) && (
         <Box
           sx={{
             position: "absolute",
             top: 0,
             right: 0,
             zIndex: 10,
+            display: "flex",
+            gap: 0.5,
           }}
         >
+          {onEdit && (
+            <Tooltip title="Editar Criatura">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => onEdit(monster)}
+                sx={{
+                  bgcolor: alpha("#667eea", 0.1),
+                  "&:hover": {bgcolor: alpha("#667eea", 0.2)},
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Excluir Criatura">
             <IconButton
               size="small"
