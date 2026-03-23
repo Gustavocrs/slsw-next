@@ -80,8 +80,7 @@ export default function MonsterFormDialog({
       attributes: {...prev.attributes, [attr]: value},
     }));
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const processFile = async (file) => {
     if (!file) return;
     setUploading(true);
     try {
@@ -95,6 +94,20 @@ export default function MonsterFormDialog({
     }
   };
 
+  const handleFileChange = (e) => processFile(e.target.files[0]);
+
+  // Intercepta o "Ctrl+V" na área de transferência
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let item of items) {
+      if (item.type.startsWith("image/")) {
+        processFile(item.getAsFile());
+        break; // Processa apenas a primeira imagem encontrada
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     setSaving(true);
     await onSave(formData);
@@ -103,7 +116,13 @@ export default function MonsterFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      onPaste={handlePaste}
+    >
       <Box
         sx={{
           display: "flex",
@@ -174,7 +193,7 @@ export default function MonsterFormDialog({
               startIcon={<UploadIcon />}
               disabled={uploading}
             >
-              Upload Foto
+              Upload Foto (ou Ctrl+V)
               <input
                 type="file"
                 hidden

@@ -50,7 +50,16 @@ export const useBestiaryStore = create((set, get) => ({
         return {...m, rank: r};
       });
 
-      set({monsters: cleanedData, loading: false});
+      // Remove monstros duplicados baseando-se no nome
+      const uniqueMonstersMap = new Map();
+      cleanedData.forEach((m) => {
+        const nameKey = (m.name || "").toLowerCase().trim();
+        if (!uniqueMonstersMap.has(nameKey)) {
+          uniqueMonstersMap.set(nameKey, m);
+        }
+      });
+
+      set({monsters: Array.from(uniqueMonstersMap.values()), loading: false});
     } catch (error) {
       console.error("[useBestiaryStore] Erro ao buscar monstros:", error);
       set({error: error.message, loading: false});
