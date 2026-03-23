@@ -22,6 +22,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Chip,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -87,9 +88,11 @@ export default function BestiaryView() {
     "Lendário",
   ];
 
-  // Extrai dinamicamente todos os Ranks presentes nos monstros para o filtro
+  // Garante a presença dos Ranks padrão, mas também adiciona os que vieram do BD
   const availableRanks = useMemo(() => {
-    const ranks = new Set(monsters.map((m) => m.rank).filter(Boolean));
+    const dbRanks = monsters.map((m) => m.rank).filter(Boolean);
+    const ranks = new Set([...RANK_ORDER, ...dbRanks]);
+
     return Array.from(ranks).sort((a, b) => {
       const indexA = RANK_ORDER.indexOf(a);
       const indexB = RANK_ORDER.indexOf(b);
@@ -215,6 +218,15 @@ export default function BestiaryView() {
               >
                 <PetsIcon sx={{color: "#667eea"}} />
                 Bestiário
+                <Chip
+                  label={monsters.length}
+                  size="small"
+                  sx={{
+                    fontWeight: "bold",
+                    bgcolor: "rgba(102, 126, 234, 0.1)",
+                    color: "#667eea",
+                  }}
+                />
               </Typography>
               <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}>
                 <Button
