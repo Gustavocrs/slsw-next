@@ -65,11 +65,21 @@ export default function BestiaryAdminPage() {
             monster.attributes,
           );
 
+          // Normaliza o rank para evitar "Novato (Carta Selvagem)" e afins no filtro
+          let cleanRank = monster.rank;
+          if (
+            typeof cleanRank === "string" &&
+            cleanRank.includes("(Carta Selvagem)")
+          ) {
+            cleanRank = "Carta Selvagem";
+          }
+
           const docData = {
             ...monster,
             attributes: normalizedAttributes,
             toughness: normalizedStats.toughness,
             armor: normalizedStats.armor,
+            rank: cleanRank,
             updatedAt: new Date().toISOString(),
           };
 

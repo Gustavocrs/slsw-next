@@ -40,7 +40,17 @@ export const useBestiaryStore = create((set, get) => ({
     try {
       // Centralizamos a chamada através do APIService
       const data = await APIService.getAllMonsters();
-      set({monsters: data, loading: false});
+
+      // Limpeza em tempo de execução para corrigir dados legados do banco
+      const cleanedData = data.map((m) => {
+        let r = m.rank;
+        if (typeof r === "string" && r.includes("(Carta Selvagem)")) {
+          r = "Carta Selvagem";
+        }
+        return {...m, rank: r};
+      });
+
+      set({monsters: cleanedData, loading: false});
     } catch (error) {
       console.error("[useBestiaryStore] Erro ao buscar monstros:", error);
       set({error: error.message, loading: false});

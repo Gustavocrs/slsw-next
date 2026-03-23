@@ -243,19 +243,20 @@ export default function BestiaryView() {
                 >
                   Novo Monstro
                 </Button>
-                <IconButton
-                  size="small"
-                  onClick={handleExportIndex}
-                  title="Exportar Índice (Apenas Nomes)"
-                >
-                  <ListIcon sx={{color: "#94a3b8"}} />
-                </IconButton>
+
                 <IconButton
                   size="small"
                   onClick={() => setAdminPanelOpen(true)}
                   title="Painel de Ingestão Avançado"
                 >
                   <SettingsIcon sx={{color: "#94a3b8"}} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={handleExportIndex}
+                  title="Exportar Índice (Apenas Nomes)"
+                >
+                  <ListIcon sx={{color: "#94a3b8"}} />
                 </IconButton>
                 <IconButton
                   size="small"
