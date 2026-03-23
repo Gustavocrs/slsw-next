@@ -17,6 +17,8 @@ import {
   CloudUpload as UploadIcon,
   Close as CloseIcon,
   Pets as PetsIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 
@@ -49,6 +51,7 @@ export default function MonsterFormDialog({
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   useEffect(() => {
     if (open && initialData) {
@@ -108,6 +111,61 @@ export default function MonsterFormDialog({
     }
   };
 
+  const handleGenerateImage = async () => {
+    setGeneratingImage(true);
+    try {
+      // 1. Gera o prompt otimizado usando a rota de prompts já existente
+      const promptRes = await fetch("/api/generate/prompt", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          character: {
+            nome: formData.name,
+            arquetipo: formData.type || "Criatura Monstruosa",
+            conceito: `Monstro de RPG - Rank: ${formData.rank}`,
+            descricao: `Atributos Básicos: ${Object.entries(formData.attributes)
+              .map(([k, v]) => `${k} ${v}`)
+              .join(
+                ", ",
+              )}. Perícias: ${formData.skills || "Nenhuma"}. Resistência: ${formData.toughness}.`,
+          },
+          context:
+            "Concept art de um monstro assustador. Fundo limpo e centralizado, estilo retrato (portrait) para ser usado como token em VTT.",
+          artStyle: "dark_fantasy",
+        }),
+      });
+
+      if (!promptRes.ok) throw new Error("Falha ao gerar o prompt");
+      const promptData = await promptRes.json();
+      const generatedPrompt = promptData.prompt;
+
+      // 2. Envia o prompt para a rota de geração de imagem (Ajuste caso a rota seja diferente)
+      const imgRes = await fetch("/api/generate/image", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({prompt: generatedPrompt}),
+      });
+
+      if (!imgRes.ok) {
+        const errData = await imgRes.json().catch(() => ({}));
+        throw new Error(errData.error || "Falha ao gerar a imagem na API.");
+      }
+
+      const imgData = await imgRes.json();
+      const newImageUrl = imgData.url || imgData.imageUrl;
+      if (newImageUrl) {
+        handleChange("imagem_url", newImageUrl);
+      } else {
+        throw new Error("URL da imagem não recebida.");
+      }
+    } catch (err) {
+      console.error("Erro na geração da imagem:", err);
+      alert(`Erro ao tentar gerar a imagem com IA: ${err.message}`);
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setSaving(true);
     await onSave(formData);
@@ -160,12 +218,29 @@ export default function MonsterFormDialog({
               }}
             >
               {formData.imagem_url ? (
-                <Box
-                  component="img"
-                  src={formData.imagem_url}
-                  alt="Preview"
-                  sx={{width: "100%", height: "100%", objectFit: "cover"}}
-                />
+                <>
+                  <Box
+                    component="img"
+                    src={formData.imagem_url}
+                    alt="Preview"
+                    sx={{width: "100%", height: "100%", objectFit: "cover"}}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleChange("imagem_url", "")}
+                    title="Remover Imagem"
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      bgcolor: "rgba(0,0,0,0.6)",
+                      color: "#fff",
+                      "&:hover": {bgcolor: "rgba(220,38,38,0.9)"},
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </>
               ) : (
                 <PetsIcon sx={{fontSize: 64, color: "#94a3b8", opacity: 0.5}} />
               )}
@@ -185,13 +260,38 @@ export default function MonsterFormDialog({
                   <CircularProgress size={32} />
                 </Box>
               )}
+
+              {generatingImage && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bgcolor: "rgba(255,255,255,0.8)",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={32} color="secondary" />
+                  <Typography
+                    variant="caption"
+                    color="secondary"
+                    fontWeight="bold"
+                  >
+                    Gerando IA...
+                  </Typography>
+                </Box>
+              )}
             </Box>
             <Button
               variant="outlined"
               component="label"
               fullWidth
               startIcon={<UploadIcon />}
-              disabled={uploading}
+              disabled={uploading || generatingImage}
             >
               Upload Foto (ou Ctrl+V)
               <input
@@ -200,6 +300,30 @@ export default function MonsterFormDialog({
                 accept="image/*"
                 onChange={handleFileChange}
               />
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              startIcon={<AutoAwesomeIcon />}
+              disabled={uploading || generatingImage || !formData.name}
+              onClick={handleGenerateImage}
+              sx={{mt: 1}}
+            >
+              Gerar com IA
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="error"
+              fullWidth
+              startIcon={<DeleteIcon />}
+              disabled={uploading || generatingImage || !formData.imagem_url}
+              onClick={() => handleChange("imagem_url", "")}
+              sx={{mt: 1}}
+            >
+              Remover Imagem
             </Button>
           </Grid>
 

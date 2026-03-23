@@ -14,11 +14,11 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const body = await request.json();
-    const {step, adventure, previousText} = body;
+    const {step, adventure, previousText, monster} = body;
 
-    if (!step || !adventure) {
+    if (!step || (!adventure && !monster)) {
       return NextResponse.json(
-        {error: "Faltando parâmetros 'step' ou 'adventure'."},
+        {error: "Faltando parâmetros 'step', 'adventure' ou 'monster'."},
         {status: 400},
       );
     }
@@ -168,6 +168,24 @@ Select 1 or 2 items from the loot list and generate individual image prompts in 
 - Strictly Medieval Fantasy. Exclude modern technology (e.g., "medieval fantasy item, no modern technology, no firearms").
 - Start each prompt with: "A high quality concept art image of an item..."
 - Separate prompts with a blank line. Output ONLY the prompts.
+`;
+        break;
+
+      case "monster_image":
+        prompt = `
+# SYSTEM CONTEXT
+You are an expert AI Prompt Engineer for RPG visual assets.
+Monster: ${monster?.name || "Unknown"}
+Stats/Features: ${JSON.stringify(monster?.attributes || monster?.toughness || "No details")}
+
+# OBJECTIVE
+Create exactly 1 highly detailed image prompt in ENGLISH focusing on the character design of this creature.
+
+# CONSTRAINTS
+- Strictly Medieval Fantasy. Exclude modern items (e.g., "medieval fantasy rpg style, no guns, no modern weapons").
+- The image will be used in a small size (max 300px height). Focus on a clean, simple background and a clear portrait/token style of the monster's face/upper body. Avoid tiny cluttered details.
+- Start the prompt with: "A high quality character portrait concept art of..."
+- Output ONLY the prompt. Do not include conversational text.
 `;
         break;
 
