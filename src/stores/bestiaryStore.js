@@ -1,6 +1,5 @@
 import {create} from "zustand";
-import {collection, getDocs} from "firebase/firestore";
-import {db} from "../lib/firebase"; // Ajuste o caminho conforme sua estrutura
+import APIService from "@/lib/api";
 
 /**
  * @typedef {Object} BestiaryFilters
@@ -34,17 +33,33 @@ export const useBestiaryStore = create((set, get) => ({
    * @returns {Promise<void>}
    */
   fetchMonsters: async () => {
+    // Evita refetch desnecessário se a lista já estiver carregada na memória
+    if (get().monsters.length > 0) return;
+
     set({loading: true, error: null});
     try {
-      const querySnapshot = await getDocs(collection(db, "monsters"));
-      const monstersList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      set({monsters: monstersList, loading: false});
+      // Centralizamos a chamada através do APIService
+      const data = await APIService.getAllMonsters();
+      set({monsters: data, loading: false});
     } catch (error) {
       console.error("[useBestiaryStore] Erro ao buscar monstros:", error);
       set({error: error.message, loading: false});
+    }
+  },
+
+  /**
+   * Exclui um monstro do banco de dados e atualiza a store global.
+   * @async
+   * @param {string} id - ID do monstro
+   */
+  deleteMonster: async (id) => {
+    try {
+      await APIService.deleteMonster(id);
+      set((state) => ({
+        monsters: state.monsters.filter((m) => m._id !== id && m.id !== id),
+      }));
+    } catch (error) {
+      console.error("[useBestiaryStore] Erro ao excluir monstro:", error);
     }
   },
 
@@ -64,23 +79,4 @@ export const useBestiaryStore = create((set, get) => ({
     set({
       filters: {name: "", rank: "", type: ""},
     }),
-
-  // --- SELETORES / GETTERS ---
-
-  /**
-   * Retorna a lista de monstros aplicando os filtros atuais (Nome, Rank e Tipo).
-   * @returns {Array} Array de criaturas filtradas.
-   */
-  getFilteredMonsters: () => {
-    const {monsters, filters} = get();
-    return monsters.filter((monster) => {
-      const matchName =
-        monster.nome?.toLowerCase().includes(filters.name.toLowerCase()) ??
-        true;
-      const matchRank = filters.rank ? monster.rank === filters.rank : true;
-      const matchType = filters.type ? monster.tipo === filters.type : true;
-
-      return matchName && matchRank && matchType;
-    });
-  },
 }));

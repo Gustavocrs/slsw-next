@@ -873,6 +873,37 @@ class APIService {
       throw error;
     }
   }
+
+  // =================================================================
+  // MÉTODOS DE BESTIÁRIO
+  // =================================================================
+
+  // 22. BUSCAR TODOS OS MONSTROS DO BESTIÁRIO
+  static async getAllMonsters() {
+    try {
+      const q = query(collection(db, "monsters"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({
+        _id: doc.id,
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      console.error("Erro ao buscar monstros:", error);
+      return [];
+    }
+  }
+
+  // 23. DELETAR MONSTRO DO BESTIÁRIO
+  static async deleteMonster(monsterId) {
+    try {
+      await deleteDoc(doc(db, "monsters", monsterId));
+      return {success: true};
+    } catch (error) {
+      console.error("Erro ao deletar monstro:", error);
+      throw error;
+    }
+  }
 }
 
 export default APIService;

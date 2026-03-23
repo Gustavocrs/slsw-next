@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, {useRef, useCallback, useEffect, useState} from "react";
+import React, {useRef, useCallback, useEffect, useState, useMemo} from "react";
 import {
   Box,
   Typography,
@@ -15,26 +15,34 @@ import {
   InputAdornment,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogContent,
+  MenuItem,
+  DialogTitle,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import {
   Search as SearchIcon,
   Pets as PetsIcon,
   Settings as SettingsIcon,
   FileDownload as FileDownloadIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import {useRouter} from "next/navigation";
 import MonsterCard from "./MonsterCard";
 import {useBestiaryStore} from "../../stores/bestiaryStore";
+import BestiaryAdminPage from "@/app/bestiary/admin/page";
 
 export default function BestiaryView() {
-  const {loading, filters, setFilters, fetchMonsters, getFilteredMonsters} =
+  const {loading, monsters, filters, setFilters, fetchMonsters, deleteMonster} =
     useBestiaryStore();
-
-  const router = useRouter();
 
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [selectedMonster, setSelectedMonster] = useState(null);
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const [monsterToDelete, setMonsterToDelete] = useState(null);
 
   // Referência para o IntersectionObserver (Infinite Scroll)
   const observer = useRef();
@@ -57,7 +65,26 @@ export default function BestiaryView() {
     fetchMonsters();
   }, [fetchMonsters]);
 
-  const filteredMonsters = getFilteredMonsters();
+  // Extrai dinamicamente todos os Ranks presentes nos monstros para o filtro
+  const availableRanks = useMemo(() => {
+    const ranks = new Set(monsters.map((m) => m.rank).filter(Boolean));
+    return Array.from(ranks).sort();
+  }, [monsters]);
+
+  const filteredMonsters = useMemo(() => {
+    const filtered = monsters.filter((monster) => {
+      const mName = monster.name || "";
+      const matchName = mName
+        .toLowerCase()
+        .includes(filters.name.toLowerCase());
+      const matchRank = filters.rank ? monster.rank === filters.rank : true;
+      const matchType = filters.type ? monster.type === filters.type : true;
+      return matchName && matchRank && matchType;
+    });
+
+    // Ordena em ordem alfabética pelo nome da criatura
+    return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [monsters, filters]);
 
   const handleExportJson = () => {
     const dataStr = JSON.stringify(filteredMonsters, null, 2);
@@ -68,6 +95,21 @@ export default function BestiaryView() {
     a.download = "bestiario_swade.json";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDeleteMonster = (monster) => {
+    setMonsterToDelete(monster);
+  };
+
+  const confirmDelete = async () => {
+    if (!monsterToDelete) return;
+    // Pega o ID seguro do Firebase (_id) se existir, caso contrário o id local
+    const targetId = monsterToDelete._id || monsterToDelete.id;
+    await deleteMonster(targetId);
+    if (selectedMonster?._id === targetId || selectedMonster?.id === targetId) {
+      setSelectedMonster(null);
+    }
+    setMonsterToDelete(null);
   };
 
   return (
@@ -104,11 +146,11 @@ export default function BestiaryView() {
                 sx={{display: "flex", alignItems: "center", gap: 1}}
               >
                 <PetsIcon sx={{color: "#667eea"}} />
-                Bestiário SWADE
+                Bestiário
               </Typography>
               <IconButton
                 size="small"
-                onClick={() => router.push("/bestiary/admin")}
+                onClick={() => setAdminPanelOpen(true)}
                 title="Painel de Ingestão (Admin)"
               >
                 <SettingsIcon sx={{color: "#94a3b8"}} />
@@ -130,22 +172,39 @@ export default function BestiaryView() {
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={5}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Buscar pelo nome..."
-              value={filters.name}
-              onChange={(e) => setFilters({name: e.target.value})}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{color: "#94a3b8"}} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{bgcolor: "#fff", borderRadius: 1}}
-            />
+          <Grid item xs={12} md={6}>
+            <Box sx={{display: "flex", gap: 2}}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Buscar pelo nome..."
+                value={filters.name}
+                onChange={(e) => setFilters({name: e.target.value})}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{color: "#94a3b8"}} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{bgcolor: "#fff", borderRadius: 1}}
+              />
+              <TextField
+                select
+                size="small"
+                label="Rank"
+                value={filters.rank || ""}
+                onChange={(e) => setFilters({rank: e.target.value})}
+                sx={{minWidth: 130, bgcolor: "#fff", borderRadius: 1}}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {availableRanks.map((rank) => (
+                  <MenuItem key={rank} value={rank}>
+                    {rank}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
           </Grid>
         </Grid>
       </Box>
@@ -269,12 +328,60 @@ export default function BestiaryView() {
               </Typography>
             </Box>
           ) : (
-            <Box sx={{maxWidth: "800px", mx: "auto", height: "100%"}}>
-              <MonsterCard monster={selectedMonster} />
+            <Box sx={{height: "100%"}}>
+              <MonsterCard
+                monster={selectedMonster}
+                onDelete={handleDeleteMonster}
+              />
             </Box>
           )}
         </Grid>
       </Grid>
+
+      {/* Modal do Painel de Ingestão */}
+      <Dialog
+        open={adminPanelOpen}
+        onClose={() => setAdminPanelOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Box sx={{display: "flex", justifyContent: "flex-end", pt: 1, pr: 1}}>
+          <IconButton onClick={() => setAdminPanelOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <DialogContent sx={{pt: 0, pb: 4}}>
+          <BestiaryAdminPage />
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Dialog
+        open={Boolean(monsterToDelete)}
+        onClose={() => setMonsterToDelete(null)}
+      >
+        <DialogTitle>Excluir Criatura</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tem certeza que deseja excluir{" "}
+            <strong>{monsterToDelete?.name}</strong> do bestiário? Esta ação não
+            pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{p: 2, pt: 0}}>
+          <Button onClick={() => setMonsterToDelete(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

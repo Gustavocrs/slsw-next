@@ -97,10 +97,15 @@ export default function BestiaryAdminPage() {
   };
 
   return (
-    <Box
-      sx={{p: {xs: 2, md: 4}, maxWidth: 900, mx: "auto", minHeight: "100vh"}}
-    >
-      <Paper sx={{p: {xs: 2, md: 4}, borderRadius: 2}}>
+    <Box sx={{maxWidth: 900, mx: "auto"}}>
+      <Paper
+        sx={{
+          p: {xs: 2, md: 4},
+          borderRadius: 2,
+          boxShadow: "none",
+          bgcolor: "transparent",
+        }}
+      >
         <Typography
           variant="h4"
           fontWeight="800"

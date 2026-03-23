@@ -7,9 +7,17 @@
 "use client";
 
 import React from "react";
-import {Box, Typography, Chip, Divider, Grid} from "@mui/material";
+import {
+  Box,
+  Typography,
+  Chip,
+  Divider,
+  Grid,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {Pets as PetsIcon} from "@mui/icons-material";
+import {Pets as PetsIcon, Delete as DeleteIcon} from "@mui/icons-material";
 
 const statBoxStyle = {
   p: 1,
@@ -19,7 +27,7 @@ const statBoxStyle = {
   border: "1px solid rgba(148, 163, 184, 0.2)",
 };
 
-export default function MonsterCard({monster}) {
+export default function MonsterCard({monster, onDelete}) {
   if (!monster) return null;
 
   // Atributos SWADE padrão
@@ -41,207 +49,290 @@ export default function MonsterCard({monster}) {
   return (
     <Box
       sx={{
-        p: 2,
-        borderRadius: "12px",
-        border: `1px solid ${alpha("#667eea", 0.18)}`,
-        background: `linear-gradient(180deg, ${alpha("#667eea", 0.05)} 0%, #ffffff 100%)`,
-        boxShadow: `0 10px 22px ${alpha("#0f172a", 0.06)}`,
-        display: "flex",
-        flexDirection: "column",
         height: "100%",
-        gap: 2,
+        position: "relative",
+        overflowY: "auto",
       }}
     >
-      {/* Header: Nome, Rank e Tipo */}
-      <Box sx={{display: "flex", alignItems: "flex-start", gap: 1.5}}>
+      {/* Botão de Excluir */}
+      {onDelete && (
         <Box
           sx={{
-            width: 42,
-            height: 42,
-            borderRadius: "8px",
-            display: "grid",
-            placeItems: "center",
-            color: "#667eea",
-            bgcolor: alpha("#667eea", 0.14),
-            flexShrink: 0,
+            position: "absolute",
+            top: 0,
+            right: 0,
+            zIndex: 10,
           }}
         >
-          <PetsIcon />
-        </Box>
-        <Box sx={{minWidth: 0, flexGrow: 1}}>
-          <Typography
-            variant="subtitle1"
-            sx={{fontWeight: 800, color: "#0f172a", lineHeight: 1.1}}
-            noWrap
-          >
-            {monster.name || "Criatura Desconhecida"}
-          </Typography>
-          <Box sx={{display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap"}}>
-            <Chip
-              label={`Rank ${monster.rank || "?"}`}
+          <Tooltip title="Excluir Criatura">
+            <IconButton
               size="small"
+              color="error"
+              onClick={() => onDelete(monster)}
               sx={{
-                height: 20,
-                fontSize: "0.65rem",
-                fontWeight: 700,
                 bgcolor: alpha("#b91c1c", 0.1),
-                color: "#b91c1c",
-              }}
-            />
-            <Chip
-              label={monster.type || "Besta"}
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: "0.65rem",
-                fontWeight: 700,
-                bgcolor: alpha("#475569", 0.1),
-                color: "#475569",
-              }}
-            />
-          </Box>
-        </Box>
-      </Box>
-
-      <Divider sx={{borderColor: alpha("#94a3b8", 0.15)}} />
-
-      {/* Atributos Básicos */}
-      <Box
-        sx={{display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 0.5}}
-      >
-        {attributes.map((attr) => (
-          <Box key={attr.label} sx={statBoxStyle}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 800,
-                color: "#64748b",
-                display: "block",
-                fontSize: "0.6rem",
+                "&:hover": {bgcolor: alpha("#b91c1c", 0.2)},
               }}
             >
-              {attr.label}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{fontWeight: 900, color: "#0f172a"}}
-            >
-              {attr.value}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Estatísticas Derivadas */}
-      <Box
-        sx={{display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1}}
-      >
-        {derived.map((stat) => (
-          <Box
-            key={stat.label}
-            sx={{
-              ...statBoxStyle,
-              border: `1px solid ${alpha(stat.accent, 0.2)}`,
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 800,
-                color: "#64748b",
-                display: "block",
-                fontSize: "0.6rem",
-              }}
-            >
-              {stat.label}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{fontWeight: 900, color: stat.accent}}
-            >
-              {stat.value}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Perícias */}
-      {monster.skills && (
-        <Box>
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 800,
-              color: "#64748b",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-            }}
-          >
-            Perícias
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{color: "#334155", fontSize: "0.8rem", mt: 0.5}}
-          >
-            {monster.skills}
-          </Typography>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       )}
 
-      {/* Habilidades Especiais */}
-      {monster.specialAbilities && monster.specialAbilities.length > 0 && (
-        <Box sx={{flexGrow: 1}}>
-          <Typography
-            variant="caption"
+      <Grid container spacing={3} sx={{height: "100%"}}>
+        {/* Lado Esquerdo - Detalhes do Monstro */}
+        <Grid
+          item
+          xs={12}
+          md={7}
+          lg={8}
+          sx={{display: "flex", flexDirection: "column", gap: 2}}
+        >
+          {/* Header: Nome, Rank e Tipo */}
+          <Box
             sx={{
-              fontWeight: 800,
-              color: "#64748b",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 1.5,
+              pr: {xs: 4, md: 0},
             }}
           >
-            Habilidades Especiais
-          </Typography>
-          <Box
-            sx={{mt: 0.5, display: "flex", flexDirection: "column", gap: 0.5}}
-          >
-            {monster.specialAbilities.map((ability, idx) => (
+            <Box sx={{minWidth: 0, flexGrow: 1}}>
               <Typography
-                key={idx}
-                variant="body2"
-                sx={{fontSize: "0.8rem", color: "#334155", lineHeight: 1.2}}
+                variant="subtitle1"
+                sx={{fontWeight: 800, color: "#0f172a", lineHeight: 1.1}}
               >
-                <strong style={{color: "#0f172a"}}>{ability.name}:</strong>{" "}
-                {ability.description}
+                {monster.name || "Criatura Desconhecida"}
               </Typography>
+              <Box sx={{display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap"}}>
+                <Chip
+                  label={`Rank ${monster.rank || "?"}`}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    bgcolor: alpha("#b91c1c", 0.1),
+                    color: "#b91c1c",
+                  }}
+                />
+                <Chip
+                  label={monster.type || "Besta"}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    bgcolor: alpha("#475569", 0.1),
+                    color: "#475569",
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+
+          <Divider sx={{borderColor: alpha("#94a3b8", 0.15)}} />
+
+          {/* Atributos Básicos */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: 0.5,
+            }}
+          >
+            {attributes.map((attr) => (
+              <Box key={attr.label} sx={statBoxStyle}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 800,
+                    color: "#64748b",
+                    display: "block",
+                    fontSize: "0.6rem",
+                  }}
+                >
+                  {attr.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{fontWeight: 900, color: "#0f172a"}}
+                >
+                  {attr.value}
+                </Typography>
+              </Box>
             ))}
           </Box>
-        </Box>
-      )}
 
-      {/* Loot (Espólios) */}
-      {monster.loot && (
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 1,
-            borderTop: `1px dashed ${alpha("#94a3b8", 0.3)}`,
-          }}
+          {/* Estatísticas Derivadas */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 1,
+            }}
+          >
+            {derived.map((stat) => (
+              <Box
+                key={stat.label}
+                sx={{
+                  ...statBoxStyle,
+                  border: `1px solid ${alpha(stat.accent, 0.2)}`,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 800,
+                    color: "#64748b",
+                    display: "block",
+                    fontSize: "0.6rem",
+                  }}
+                >
+                  {stat.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{fontWeight: 900, color: stat.accent}}
+                >
+                  {stat.value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Perícias */}
+          {monster.skills && (
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Perícias
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{color: "#334155", fontSize: "0.8rem", mt: 0.5}}
+              >
+                {monster.skills}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Habilidades Especiais */}
+          {monster.specialAbilities && monster.specialAbilities.length > 0 && (
+            <Box sx={{flexGrow: 1}}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Habilidades Especiais
+              </Typography>
+              <Box
+                sx={{
+                  mt: 0.5,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0.5,
+                }}
+              >
+                {monster.specialAbilities.map((ability, idx) => (
+                  <Typography
+                    key={idx}
+                    variant="body2"
+                    sx={{fontSize: "0.8rem", color: "#334155", lineHeight: 1.2}}
+                  >
+                    <strong style={{color: "#0f172a"}}>{ability.name}:</strong>{" "}
+                    {ability.description}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {/* Loot (Espólios) */}
+          {monster.loot && (
+            <Box
+              sx={{
+                mt: "auto",
+                pt: 1,
+                borderTop: `1px dashed ${alpha("#94a3b8", 0.3)}`,
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{fontWeight: 800, color: "#059669", display: "block"}}
+              >
+                💎 Espólios Base
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{color: "#10b981", fontSize: "0.75rem", fontWeight: 600}}
+              >
+                {monster.loot}
+              </Typography>
+            </Box>
+          )}
+        </Grid>
+
+        {/* Lado Direito - Imagem */}
+        <Grid
+          item
+          xs={12}
+          md={5}
+          lg={4}
+          sx={{display: "flex", flexDirection: "column"}}
         >
-          <Typography
-            variant="caption"
-            sx={{fontWeight: 800, color: "#059669", display: "block"}}
+          <Box
+            sx={{
+              width: "100%",
+              minHeight: {xs: 200, md: "100%"},
+              borderRadius: "8px",
+              border: `1px solid ${alpha("#94a3b8", 0.2)}`,
+              bgcolor: alpha("#0f172a", 0.03),
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}
           >
-            💎 Espólios Base
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{color: "#10b981", fontSize: "0.75rem", fontWeight: 600}}
-          >
-            {monster.loot}
-          </Typography>
-        </Box>
-      )}
+            {monster.imagem_url ? (
+              <Box
+                component="img"
+                src={monster.imagem_url}
+                alt={monster.name}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              />
+            ) : (
+              <Box sx={{textAlign: "center", color: "#94a3b8"}}>
+                <PetsIcon sx={{fontSize: 64, mb: 1, opacity: 0.5}} />
+                <Typography variant="caption" display="block">
+                  Sem Imagem
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
