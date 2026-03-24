@@ -12,6 +12,7 @@ import {
   MenuItem,
   IconButton,
   Typography,
+  Snackbar,
 } from "@mui/material";
 import {
   CloudUpload as UploadIcon,
@@ -52,6 +53,7 @@ export default function MonsterFormDialog({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
 
   useEffect(() => {
     if (open && initialData) {
@@ -120,18 +122,15 @@ export default function MonsterFormDialog({
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           character: {
-            nome: formData.name,
+            nome: `${formData.name}, Criatura do Livro de Monstros de Pathfinder RPG`,
             arquetipo: formData.type || "Criatura Monstruosa",
             conceito: `Monstro de RPG - Rank: ${formData.rank}`,
-            descricao: `Atributos Básicos: ${Object.entries(formData.attributes)
-              .map(([k, v]) => `${k} ${v}`)
-              .join(
-                ", ",
-              )}. Perícias: ${formData.skills || "Nenhuma"}. Resistência: ${formData.toughness}.`,
+            descricao:
+              "Ilustração de monstro altamente detalhada, design oficial de RPG de mesa.",
           },
           context:
             "Concept art de um monstro assustador. Fundo limpo e centralizado, estilo retrato (portrait) para ser usado como token em VTT.",
-          artStyle: "dark_fantasy",
+          artStyle: "solo_leveling",
         }),
       });
 
@@ -139,28 +138,12 @@ export default function MonsterFormDialog({
       const promptData = await promptRes.json();
       const generatedPrompt = promptData.prompt;
 
-      // 2. Envia o prompt para a rota de geração de imagem (Ajuste caso a rota seja diferente)
-      const imgRes = await fetch("/api/generate/image", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({prompt: generatedPrompt}),
-      });
-
-      if (!imgRes.ok) {
-        const errData = await imgRes.json().catch(() => ({}));
-        throw new Error(errData.error || "Falha ao gerar a imagem na API.");
-      }
-
-      const imgData = await imgRes.json();
-      const newImageUrl = imgData.url || imgData.imageUrl;
-      if (newImageUrl) {
-        handleChange("imagem_url", newImageUrl);
-      } else {
-        throw new Error("URL da imagem não recebida.");
-      }
+      // 2. Copia o prompt para a área de transferência em vez de tentar gerar a imagem (por enquanto)
+      await navigator.clipboard.writeText(generatedPrompt.trim());
+      setPromptCopied(true);
     } catch (err) {
       console.error("Erro na geração da imagem:", err);
-      alert(`Erro ao tentar gerar a imagem com IA: ${err.message}`);
+      alert(`Erro ao tentar gerar o prompt com IA: ${err.message}`);
     } finally {
       setGeneratingImage(false);
     }
@@ -311,7 +294,7 @@ export default function MonsterFormDialog({
               onClick={handleGenerateImage}
               sx={{mt: 1}}
             >
-              Gerar com IA
+              Gerar prompt com IA
             </Button>
 
             <Button
@@ -476,6 +459,14 @@ export default function MonsterFormDialog({
           )}
         </Button>
       </DialogActions>
+
+      <Snackbar
+        open={promptCopied}
+        autoHideDuration={3000}
+        onClose={() => setPromptCopied(false)}
+        message="Prompt copiado!"
+        anchorOrigin={{vertical: "bottom", horizontal: "center"}}
+      />
     </Dialog>
   );
 }

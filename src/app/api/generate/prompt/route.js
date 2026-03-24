@@ -19,15 +19,15 @@ export async function POST(request) {
 
     const stylePrompts = {
       solo_leveling:
-        "Anime Style, Solo Leveling Manhwa Art Style, High Quality, 8k resolution, Cinematic Lighting.",
+        "Anime Style, Solo Leveling Manhwa Art Style, High Quality, Cinematic Lighting.",
       dark_fantasy:
-        "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, 8k resolution, dramatic shadows.",
+        "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, dramatic shadows.",
       cyberpunk:
-        "Cyberpunk anime style, neon lighting, futuristic, high quality, 8k resolution.",
+        "Cyberpunk anime style, neon lighting, futuristic, high quality,",
       ghibli:
-        "Studio Ghibli style, vibrant colors, magical, detailed anime background, soft lighting, 8k resolution.",
+        "Studio Ghibli style, vibrant colors, magical, detailed anime background, soft lighting",
       comic_book:
-        "American Comic Book style, heavy ink lines, dynamic shading, vibrant colors, 8k resolution.",
+        "American Comic Book style, heavy ink lines, dynamic shading, vibrant colors",
     };
 
     const selectedStylePrompt =
