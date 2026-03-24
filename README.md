@@ -1,36 +1,38 @@
-# 🎮 Solo Leveling: Savage Worlds RPG Manager
+# Solo Leveling: Savage Worlds RPG Manager (SLSW)
 
-Uma plataforma web completa para gerenciamento de mesas de RPG, adaptando o universo de **Solo Leveling** para o sistema de regras **Savage Worlds (SWADE)**.
+> **Eleve sua campanha de RPG ao Nível S!** 🔥
 
-Este projeto permite a criação de fichas de personagens, gerenciamento de campanhas, rolagem de dados, chat em tempo real e consulta de regras, tudo integrado em uma interface moderna e responsiva.
+Uma plataforma web completa e imersiva para gerenciamento de mesas de RPG, unindo a adrenalina do universo de **Solo Leveling** com a ação ágil e tática do sistema **Savage Worlds (SWADE)**.
 
-## ✨ Funcionalidades Principais
+Diga adeus às dezenas de abas abertas, papéis perdidos e cálculos complexos. O **SLSW RPG Manager** entrega uma experiência _all-in-one_ em tempo real. Tudo que você precisa para explorar Dungeons mortais está aqui, em uma interface moderna e responsiva.
 
-### 👤 Gerenciamento de Personagens
+## ✨ Por que o SLSW é a plataforma definitiva para sua mesa?
 
-- **Ficha Completa SWADE:** Atributos, Perícias, Vantagens, Complicações e Equipamentos.
-- **Sistema de Despertar:** Aba exclusiva para definir a Origem, Sensação, Afinidade de Mana e o Poder Único do caçador.
-- **Cálculos Automáticos:** Defesa, Aparar, Resistência e penalidades de ferimentos calculados automaticamente.
-- **Gerador de Prompt IA:** Cria prompts detalhados baseados na ficha para gerar a arte do personagem em IAs generativas.
+### 👤 Arsenal do Caçador (Experiência do Jogador)
 
-### 🏰 Gestão de Mesas (Game Master)
+- **Fichas Vivas e Automatizadas (SWADE):** Gerencie Atributos, Perícias e Equipamentos com facilidade. Defesa, Aparar, Resistência e penalidades de ferimento são calculados instantaneamente. Foco na ação, não na matemática!
+- **O Sistema de Despertar (Exclusivo!):** Uma interface dedicada para customizar a essência do seu caçador. Defina sua Origem, Sensação, Afinidade de Mana e desenvolva seu Poder Único.
+- **Integração com IA para Artes:** Quer ver o rosto do seu personagem? O sistema analisa sua ficha e gera um prompt detalhado e otimizado, pronto para ser usado em IAs geradoras de imagem (Midjourney, DALL-E, etc).
 
-- **Criação de Mesas:** Defina nome, descrição, data da sessão e links externos (VTT/Discord).
-- **Convites por E-mail:** Sistema de convite para jogadores via e-mail.
-- **Painel do GM:** Controle total sobre os jogadores, visualização de fichas e expulsão de membros.
-- **NPCs:** O GM pode adicionar seus próprios personagens como NPCs na mesa.
-- **Gerenciador de Arquivos:** Upload e compartilhamento de mapas, imagens e PDFs com os jogadores.
+### 👑 Domínio do Monarca (Ferramentas para o Mestre)
 
-### 🎲 Gameplay em Tempo Real
+- **Painel de Controle Total do GM:** Gerencie jogadores, monitore todas as fichas da mesa ao vivo, adicione NPCs personalizados e mantenha o fluxo da história sob controle.
+- **Gerenciador de Arquivos Integrado:** Esqueça o Google Drive na hora da tensão. Faça upload e compartilhe mapas, imagens de monstros e documentos importantes diretamente com os jogadores durante a sessão.
+- **Gestão Prática de Campanhas:** Crie sua mesa, configure links do VTT/Discord e envie convites diretamente para o e-mail dos seus jogadores.
 
-- **Sincronização ao Vivo:** Todas as alterações na ficha e na mesa são refletidas instantaneamente para todos (Firebase Firestore).
-- **Chat Integrado:**
-  - Chat Global da mesa.
-  - Mensagens Privadas (Sussurros) entre jogadores ou com o GM.
-  - Histórico de mensagens persistente.
-- **Manual Integrado:** Consulta rápida às regras do cenário (Arquétipos, Runas, Dungeons) sem sair da tela.
+### ⚡ Imersão em Tempo Real
 
-## 🛠️ Tecnologias Utilizadas
+- **Sincronização Mágica:** Qualquer dano sofrido ou item ganho é atualizado na mesma hora para todos na mesa, graças ao poder do Firebase Firestore.
+- **Comunicação Tática (Chat Avançado):**
+  - Fale no canal global ou envie **Sussurros (Mensagens Privadas)** secretos para outros jogadores ou para o Mestre.
+  - Histórico persistente para você nunca perder um detalhe da narrativa.
+- **Manual de Regras In-App:** Bateu uma dúvida no meio do combate? Acesse o manual do cenário completo (Arquétipos, Runas, Dungeons, Regras de SWADE) sem precisar sair da sua ficha.
+
+---
+
+## 🛠️ O Motor do Sistema (Tech Stack)
+
+Construído com as melhores e mais modernas tecnologias do mercado para garantir estabilidade e fluidez:
 
 - **Frontend:** [Next.js](https://nextjs.org/) (React)
 - **Linguagem:** JavaScript (ES6+)
@@ -41,7 +43,7 @@ Este projeto permite a criação de fichas de personagens, gerenciamento de camp
   - **Firestore:** Banco de dados NoSQL em tempo real.
   - **Storage:** Armazenamento de imagens e arquivos.
 
-## 🚀 Como Executar o Projeto
+## 🚀 Entre na Dungeon: Como Executar Localmente
 
 ### Pré-requisitos
 
@@ -85,7 +87,7 @@ Este projeto permite a criação de fichas de personagens, gerenciamento de camp
 
 5. Acesse `http://localhost:3000` no seu navegador.
 
-## 🔒 Regras de Segurança (Firestore Security Rules)
+## 🛡️ Fortificação do Sistema (Firestore Security Rules)
 
 Para que o sistema de Chat e Mesas funcione corretamente, configure as regras do seu Firestore com o seguinte código:
 
