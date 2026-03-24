@@ -45,8 +45,8 @@ export async function POST(request) {
     const filePath = path.join(uploadDir, fileName);
     await writeFile(filePath, buffer);
 
-    // Retorna a URL correta do Next.js para arquivos estáticos na pasta public
-    const localUrl = `/uploads/${fileName}`;
+    // Usa a rota de API dedicada para contornar o cache de arquivos estáticos do Next.js standalone
+    const localUrl = `/api/files/${fileName}`;
     return NextResponse.json({url: localUrl});
   } catch (error) {
     console.error("Erro ao processar imagem IA:", error);

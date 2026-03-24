@@ -40,8 +40,8 @@ export async function POST(request) {
 
     await writeFile(filePath, buffer);
 
-    // Retorna a URL correta do Next.js (arquivos na pasta public/uploads ficam na rota /uploads/)
-    const url = `/uploads/${fileName}`;
+    // Usa a rota de API dedicada para contornar o cache de arquivos estáticos do Next.js standalone
+    const url = `/api/files/${fileName}`;
 
     return NextResponse.json({
       fileName,
