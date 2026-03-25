@@ -94,6 +94,7 @@ import {
   query,
   where,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
@@ -102,6 +103,7 @@ import BookView from "@/components/BookView";
 import UserMenu from "@/components/UserMenu";
 import InspectSheetModal from "./InspectSheetModal";
 import QuestBoard from "./QuestBoard";
+import MonsterCard from "@/components/BestiaryView/MonsterCard";
 import BestiaryView from "@/components/BestiaryView";
 import {calculateMaxMana} from "@/lib/rpgEngine";
 import {
@@ -461,6 +463,10 @@ function GameModal() {
   const [friendData, setFriendData] = useState(null);
   const [loadingFriend, setLoadingFriend] = useState(false);
 
+  const [monsterModalOpen, setMonsterModalOpen] = useState(false);
+  const [selectedMonsterData, setSelectedMonsterData] = useState(null);
+  const [loadingMonster, setLoadingMonster] = useState(false);
+
   // Estados para NPC e Troca de Mesa
   const [npcModalOpen, setNpcModalOpen] = useState(false);
   const [myCharacters, setMyCharacters] = useState([]);
@@ -709,6 +715,26 @@ function GameModal() {
       setFriendModalOpen(false);
     } finally {
       setLoadingFriend(false);
+    }
+  };
+
+  const handleOpenMonsterModal = async (monsterId) => {
+    setMonsterModalOpen(true);
+    setLoadingMonster(true);
+    setSelectedMonsterData(null);
+    try {
+      const docSnap = await getDoc(doc(db, "monsters", monsterId));
+      if (docSnap.exists()) {
+        setSelectedMonsterData({id: docSnap.id, ...docSnap.data()});
+      } else {
+        showNotification("Monstro não encontrado no bestiário.", "error");
+        setMonsterModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar monstro:", error);
+      showNotification("Erro ao carregar monstro.", "error");
+    } finally {
+      setLoadingMonster(false);
     }
   };
 
@@ -2013,22 +2039,57 @@ function GameModal() {
                                           </Typography>
                                         ) : (
                                           <>
-                                            <Typography
-                                              variant="caption"
-                                              display="block"
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                justifyContent: "space-between",
+                                                gap: 1,
+                                              }}
                                             >
-                                              <strong>
-                                                {quest.antagonist?.name}
-                                              </strong>{" "}
-                                              — {quest.antagonist?.description}
-                                            </Typography>
-                                            <Typography
-                                              variant="caption"
-                                              color="text.secondary"
-                                              display="block"
-                                            >
-                                              Status: {quest.antagonist?.stats}
-                                            </Typography>
+                                              <Box>
+                                                <Typography
+                                                  variant="caption"
+                                                  display="block"
+                                                >
+                                                  <strong>
+                                                    {quest.antagonist?.name}
+                                                  </strong>{" "}
+                                                  —{" "}
+                                                  {
+                                                    quest.antagonist
+                                                      ?.description
+                                                  }
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                  display="block"
+                                                >
+                                                  Status:{" "}
+                                                  {quest.antagonist?.stats}
+                                                </Typography>
+                                              </Box>
+                                              {quest.antagonist?.id && (
+                                                <Button
+                                                  size="small"
+                                                  variant="outlined"
+                                                  color="error"
+                                                  onClick={() =>
+                                                    handleOpenMonsterModal(
+                                                      quest.antagonist.id,
+                                                    )
+                                                  }
+                                                  sx={{
+                                                    minWidth: "auto",
+                                                    p: "2px 6px",
+                                                    fontSize: "0.6rem",
+                                                  }}
+                                                >
+                                                  Ficha
+                                                </Button>
+                                              )}
+                                            </Box>
                                           </>
                                         )}
                                       </Box>
@@ -2042,28 +2103,59 @@ function GameModal() {
                                             <strong>◆ Monstros:</strong>
                                           </Typography>
                                           {quest.encounters.map((enc, i) => (
-                                            <Box key={i} sx={{ml: 1, mb: 0.5}}>
-                                              <Typography
-                                                variant="caption"
-                                                display="block"
-                                              >
-                                                <strong>{enc.name}</strong> (
-                                                {enc.type})
-                                              </Typography>
-                                              <Typography
-                                                variant="caption"
-                                                color="text.secondary"
-                                                display="block"
-                                              >
-                                                {enc.stats}
-                                              </Typography>
-                                              <Typography
-                                                variant="caption"
-                                                color="success.main"
-                                                display="block"
-                                              >
-                                                Loot: {enc.loot}
-                                              </Typography>
+                                            <Box
+                                              key={i}
+                                              sx={{
+                                                ml: 1,
+                                                mb: 1,
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                justifyContent: "space-between",
+                                                gap: 1,
+                                              }}
+                                            >
+                                              <Box>
+                                                <Typography
+                                                  variant="caption"
+                                                  display="block"
+                                                >
+                                                  <strong>{enc.name}</strong> (
+                                                  {enc.type})
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                  display="block"
+                                                >
+                                                  {enc.stats}
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="success.main"
+                                                  display="block"
+                                                >
+                                                  Loot: {enc.loot}
+                                                </Typography>
+                                              </Box>
+                                              {enc.id && (
+                                                <Button
+                                                  size="small"
+                                                  variant="outlined"
+                                                  color="warning"
+                                                  onClick={() =>
+                                                    handleOpenMonsterModal(
+                                                      enc.id,
+                                                    )
+                                                  }
+                                                  sx={{
+                                                    minWidth: "auto",
+                                                    p: "2px 6px",
+                                                    fontSize: "0.6rem",
+                                                  }}
+                                                >
+                                                  Ficha
+                                                </Button>
+                                              )}
                                             </Box>
                                           ))}
                                         </>
@@ -3162,7 +3254,7 @@ function GameModal() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" component="span" fontWeight="bold">
             Licença de Caçador
           </Typography>
           <IconButton onClick={() => setFriendModalOpen(false)} size="small">
@@ -3418,6 +3510,49 @@ function GameModal() {
             </Grid>
           ) : (
             <Typography>Dados não encontrados.</Typography>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Ficha de Monstro */}
+      <Dialog
+        open={monsterModalOpen}
+        onClose={() => setMonsterModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6" component="span" fontWeight="bold">
+            Ficha do Bestiário
+          </Typography>
+          <IconButton onClick={() => setMonsterModalOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{p: 0, height: "70vh", bgcolor: "#f1f5f9"}}>
+          {loadingMonster ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : selectedMonsterData ? (
+            <Box sx={{p: {xs: 2, md: 4}, height: "100%"}}>
+              <MonsterCard monster={selectedMonsterData} />
+            </Box>
+          ) : (
+            <Box sx={{p: 3, textAlign: "center"}}>Monstro não encontrado.</Box>
           )}
         </DialogContent>
       </Dialog>

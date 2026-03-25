@@ -79,11 +79,15 @@ Escreva apenas o texto narrativo em Português. NÃO escreva prompts de imagem.
       case "encounters_text":
         prompt = `
 Você é um Mestre de RPG. Desenvolva os desafios da masmorra baseando-se nestes dados:
-Monstros: ${adventure.encounters?.map((e) => e.name).join(", ")}
+Ambiente/Local: ${adventure.location}
+Monstros Sorteados: ${adventure.encounters?.map((e) => e.name).join(", ")}
 Armadilhas: ${adventure.traps?.join(", ")}
 
 TAREFA:
-Descreva como são as salas onde essas armadilhas estão escondidas e como os monstros emboscam os jogadores (em Português). NÃO escreva prompts de imagem.
+1. Descreva como as armadilhas estão escondidas e como os monstros emboscam os jogadores.
+2. ADAPTAÇÃO DE AMBIENTE: Justifique criativamente a presença destes monstros específicos neste local. (Ex: Se for um "Zumbi" sorteado num ambiente de "Céu", descreva como ele chegou lá ou se adaptou).
+ATENÇÃO: Utilize EXATAMENTE os monstros listados acima. NÃO invente criaturas novas para mantermos a consistência com o bestiário.
+NÃO escreva prompts de imagem (escreva apenas texto narrativo em Português).
 `;
         break;
 
@@ -130,11 +134,15 @@ Create exactly 1 highly detailed image prompt in ENGLISH capturing the most terr
       case "boss_text":
         prompt = `
 Crie a cena climática do Chefe Final.
-Chefe: ${adventure.antagonist?.name || "Desconhecido"} - ${adventure.antagonist?.description || ""}
+Ambiente/Local: ${adventure.location}
+Chefe Sorteado: ${adventure.antagonist?.name || "Desconhecido"} - ${adventure.antagonist?.description || ""}
 Complicação durante a luta: ${adventure.complication}
 
 TAREFA:
-Descreva a aparência aterrorizante/imponente do Boss e suas táticas de combate na arena (em Português). NÃO escreva prompts de imagem.
+1. Descreva a aparência aterrorizante/imponente do Chefe e suas táticas de combate na arena.
+2. ADAPTAÇÃO: Integre o chefe ao ambiente, explicando como a arena ou o local da fenda favorece seu estilo de luta ou justifica sua presença ali.
+ATENÇÃO: Utilize EXATAMENTE o chefe sorteado. NÃO adicione outros monstros ou asseclas à cena.
+NÃO escreva prompts de imagem (escreva apenas texto narrativo em Português).
 `;
         break;
 

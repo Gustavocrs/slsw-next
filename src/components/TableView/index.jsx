@@ -77,6 +77,23 @@ export default function BestiaryView() {
     fetchMonsters();
   }, [fetchMonsters]);
 
+  // Pre-seleciona monstro se vier 'id' pela URL
+  useEffect(() => {
+    if (monsters.length > 0 && typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get("id");
+      if (idParam && !selectedMonster) {
+        const found = monsters.find(
+          (m) => m.id === idParam || m._id === idParam,
+        );
+        if (found) {
+          setSelectedMonster(found);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monsters]);
+
   // Ordem oficial de Ranks (do menor pro maior poder)
   const RANK_ORDER = [
     "Extra",
@@ -104,13 +121,6 @@ export default function BestiaryView() {
     });
   }, [monsters]);
 
-  // Extrai e ordena alfabeticamente os tipos únicos (ex: Fera, Morto-Vivo) existentes no banco
-  const availableTypes = useMemo(() => {
-    const dbTypes = monsters.map((m) => m.type).filter(Boolean);
-    const cleanedTypes = dbTypes.map((t) => t.split("/")[0].trim());
-    return Array.from(new Set(cleanedTypes)).sort((a, b) => a.localeCompare(b));
-  }, [monsters]);
-
   const filteredMonsters = useMemo(() => {
     const filtered = monsters.filter((monster) => {
       const mName = monster.name || "";
@@ -118,8 +128,7 @@ export default function BestiaryView() {
         .toLowerCase()
         .includes(filters.name.toLowerCase());
       const matchRank = filters.rank ? monster.rank === filters.rank : true;
-      const mType = monster.type ? monster.type.split("/")[0].trim() : "";
-      const matchType = filters.type ? mType === filters.type : true;
+      const matchType = filters.type ? monster.type === filters.type : true;
       return matchName && matchRank && matchType;
     });
 
@@ -309,21 +318,6 @@ export default function BestiaryView() {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
-                select
-                size="small"
-                label="Tipo"
-                value={filters.type || ""}
-                onChange={(e) => setFilters({type: e.target.value})}
-                sx={{minWidth: 130, bgcolor: "#fff", borderRadius: 1}}
-              >
-                <MenuItem value="">Todos</MenuItem>
-                {availableTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </TextField>
             </Box>
           </Grid>
         </Grid>
@@ -393,10 +387,7 @@ export default function BestiaryView() {
                       sx={{color: "#64748b"}}
                       display="block"
                     >
-                      {monster.type
-                        ? monster.type.split("/")[0].trim()
-                        : "Besta"}{" "}
-                      • Rank {monster.rank || "?"}
+                      {monster.type || "Besta"} • Rank {monster.rank || "?"}
                     </Typography>
                   </Box>
                 );

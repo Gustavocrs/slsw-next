@@ -139,7 +139,9 @@ export default function MonsterCard({monster, onDelete, onEdit}) {
                   }}
                 />
                 <Chip
-                  label={monster.type || "Besta"}
+                  label={
+                    monster.type ? monster.type.split("/")[0].trim() : "Besta"
+                  }
                   size="small"
                   sx={{
                     height: 20,

@@ -59,6 +59,7 @@ export default function MonsterFormDialog({
     if (open && initialData) {
       setFormData({
         ...initialData,
+        type: initialData.type ? initialData.type.split("/")[0].trim() : "",
         attributes: initialData.attributes || DEFAULT_ATTRIBUTES,
       });
     } else if (open) {

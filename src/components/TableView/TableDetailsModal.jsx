@@ -688,7 +688,7 @@ function TableDetailsModal() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" component="span" fontWeight="bold">
             Licença de Caçador
           </Typography>
           <IconButton onClick={() => setFriendModalOpen(false)} size="small">

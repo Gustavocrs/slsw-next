@@ -20,6 +20,8 @@ export async function POST(request) {
     const stylePrompts = {
       solo_leveling:
         "Anime Style, Solo Leveling Manhwa Art Style, High Quality, Cinematic Lighting.",
+      high_fantasy:
+        "High Fantasy, Heroic Realism, vibrant colors, magical atmosphere, golden hour lighting, epic scale, detailed digital painting, clean lines, D&D art style, cinematic composition.",
       dark_fantasy:
         "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, dramatic shadows.",
       cyberpunk:
@@ -31,7 +33,7 @@ export async function POST(request) {
     };
 
     const selectedStylePrompt =
-      stylePrompts[artStyle] || stylePrompts["solo_leveling"];
+      stylePrompts[artStyle] || stylePrompts["high_fantasy"];
 
     const prompt = `
       ${selectedStylePrompt}

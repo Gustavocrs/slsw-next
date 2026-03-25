@@ -433,9 +433,18 @@ export default function QuestBoard({tableId, isGM}) {
                             variant="outlined"
                             sx={{p: 1.5, bgcolor: "#fffbf0"}}
                           >
-                            <Typography variant="body2">
-                              <strong>{enc.name}</strong> ({enc.type})
-                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                justifyContent: "space-between",
+                                gap: 1,
+                              }}
+                            >
+                              <Typography variant="body2">
+                                <strong>{enc.name}</strong> ({enc.type})
+                              </Typography>
+                            </Box>
                             <Typography
                               variant="caption"
                               color="text.secondary"
@@ -485,10 +494,19 @@ export default function QuestBoard({tableId, isGM}) {
                     <Typography variant="body2">{quest.antagonist}</Typography>
                   ) : (
                     <Box>
-                      <Typography variant="body2">
-                        <strong>{quest.antagonist?.name}:</strong>{" "}
-                        {quest.antagonist?.description}
-                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          gap: 1,
+                        }}
+                      >
+                        <Typography variant="body2">
+                          <strong>{quest.antagonist?.name}:</strong>{" "}
+                          {quest.antagonist?.description}
+                        </Typography>
+                      </Box>
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -884,6 +902,7 @@ export default function QuestBoard({tableId, isGM}) {
             >
               <Typography
                 variant="h5"
+                component="span"
                 fontWeight="bold"
                 color={selectedQuest.isActive ? "#008394" : "text.primary"}
               >
