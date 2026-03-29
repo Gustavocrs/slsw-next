@@ -73,21 +73,48 @@ export async function GET(request) {
       );
     }
 
-    // 2. Prepara pools de monstros por Rank para enviar ao LLM (Contexto Enxuto)
-    const bossRanks = [
+    // 2. Prepara pools de monstros por Rank para enviar ao LLM (Contexto Lógico)
+    const rankOrder = [
       "Novato",
       "Experiente",
       "Veterano",
       "Heroico",
       "Lendário",
     ];
+    const rankIndex = rankOrder.includes(swadeRank)
+      ? rankOrder.indexOf(swadeRank)
+      : 0;
+
+    // Bosses: Rank atual da mesa ou no máximo 1 rank acima (para desafio de Chefe)
+    const allowedBossRanks = [swadeRank];
+    if (rankIndex < rankOrder.length - 1) {
+      allowedBossRanks.push(rankOrder[rankIndex + 1]);
+    }
+
+    // Minions (Lacaios): Rank atual da mesa ou inferiores
+    const allowedMinionRanks = rankOrder.slice(0, rankIndex + 1);
 
     let possibleBosses = allMonsters.filter(
-      (m) => bossRanks.includes(m.rank) || m.rank === swadeRank,
+      (m) => allowedBossRanks.includes(m.rank) && m.type !== "Extra",
     );
+
+    // Fallback: se não houver chefes (Cartas Selvagens) suficientes, aceita qualquer monstro dos ranks permitidos
+    if (possibleBosses.length === 0) {
+      possibleBosses = allMonsters.filter((m) =>
+        allowedBossRanks.includes(m.rank),
+      );
+    }
+
     let possibleMonsters = allMonsters.filter(
-      (m) => m.rank === swadeRank || m.rank === "Novato" || m.rank === "Extra",
+      (m) => allowedMinionRanks.includes(m.rank) && m.type === "Extra",
     );
+
+    // Fallback de Lacaios
+    if (possibleMonsters.length === 0) {
+      possibleMonsters = allMonsters.filter((m) =>
+        allowedMinionRanks.includes(m.rank),
+      );
+    }
 
     // Fallbacks
     if (possibleBosses.length === 0) possibleBosses = allMonsters;
@@ -110,10 +137,12 @@ export async function GET(request) {
     });
 
     const prompt = `
-      Você é um Mestre de RPG especialista em gerar missões coesas de Medieval High Fantasy.
-      Crie uma aventura garantindo que NENHUM elemento de tecnologia moderna exista.
+      Você é um Mestre de RPG especialista em gerar missões coesas de Medieval High Fantasy para Caçadores de Fendas/Portais.
+      Crie uma aventura garantindo que NENHUM elemento de tecnologia moderna exista dentro da masmorra.
       
       CRIE UMA MISSÃO COESA ONDE TUDO FAÇA SENTIDO JUNTO.
+      - Título: Crie um nome ÉPICO e ÚNICO para a operação (Ex: "Operação: Névoa Sangrenta" ou "O Sepulcro Esquecido").
+      - Tema: Uma breve descrição do bioma ou atmosfera (Ex: "Necrópole Congelada", "Ruínas Vulcânicas").
       - Local: Bioma medieval fantasia.
       - Gancho: Motivo da incursão.
       - Objetivo: Ligado estritamente ao gancho.
@@ -131,7 +160,8 @@ export async function GET(request) {
 
       Responda EXATAMENTE com a seguinte estrutura JSON (nada de markdown ou texto fora do JSON):
       {
-        "theme": "Medieval High Fantasy",
+        "title": "...",
+        "theme": "...",
         "hook": "...",
         "objective": "...",
         "location": "...",
@@ -189,7 +219,7 @@ export async function GET(request) {
 
     // 5. Monta e retorna o objeto esperado pelo Frontend
     const adventure = {
-      title: `Operação Fenda ${hunterRank} - Medieval`,
+      title: aiData.title || `Operação Fenda ${hunterRank}`,
       theme: aiData.theme,
       hook: aiData.hook,
       objective: aiData.objective,
