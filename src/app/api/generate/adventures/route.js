@@ -5,6 +5,19 @@ import {GoogleGenerativeAI} from "@google/generative-ai";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Algoritmo Fisher-Yates para embaralhamento de arrays in-place.
+ * @param {Array} array
+ * @returns {Array} Array embaralhado
+ */
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 export async function GET(request) {
   const {searchParams} = new URL(request.url);
   const players = parseInt(searchParams.get("players") || "4", 10);
@@ -80,11 +93,11 @@ export async function GET(request) {
     if (possibleBosses.length === 0) possibleBosses = allMonsters;
     if (possibleMonsters.length === 0) possibleMonsters = allMonsters;
 
-    const bossContext = possibleBosses
+    const bossContext = shuffleArray(possibleBosses)
       .slice(0, 40) // Limita a 40 para evitar estourar o limite de payload/tokens
       .map((m) => `{id: "${m.id}", name: "${m.name}", type: "${m.type}"}`)
       .join(", ");
-    const minionsContext = possibleMonsters
+    const minionsContext = shuffleArray(possibleMonsters)
       .slice(0, 80) // Limita a 80 para evitar estourar o limite de payload/tokens
       .map((m) => `{id: "${m.id}", name: "${m.name}", type: "${m.type}"}`)
       .join(", ");
