@@ -95,6 +95,7 @@ import {
   where,
   limit,
   getDoc,
+  getDocFromServer,
 } from "firebase/firestore";
 import {db} from "@/lib/firebase";
 import GameFileManager from "@/components/GameFileManager";
@@ -723,7 +724,7 @@ function GameModal() {
     setLoadingMonster(true);
     setSelectedMonsterData(null);
     try {
-      const docSnap = await getDoc(doc(db, "monsters", monsterId));
+      const docSnap = await getDocFromServer(doc(db, "monsters", monsterId));
       if (docSnap.exists()) {
         setSelectedMonsterData({id: docSnap.id, ...docSnap.data()});
       } else {

@@ -1,5 +1,6 @@
 "use client";
 
+import {useRouter} from "next/navigation";
 import React, {useState, useEffect} from "react";
 import {
   Box,
@@ -42,14 +43,19 @@ import {
   ExpandMore as ExpandMoreIcon,
   ContentCopy as ContentCopyIcon,
   Close as CloseIcon,
+  MenuBook as MenuBookIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import {useUIStore} from "@/stores/characterStore";
 import {ConfirmDialog} from "@/components/ConfirmDialog";
 import GameFileManager from "@/components/GameFileManager";
+import {doc, getDocFromServer} from "firebase/firestore";
+import {db} from "@/lib/firebase";
+import MonsterCard from "@/components/BestiaryView/MonsterCard";
 
 export default function QuestBoard({tableId, isGM}) {
   const [quests, setQuests] = useState([]);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const {showNotification, selectedTable} = useUIStore();
 
@@ -71,6 +77,11 @@ export default function QuestBoard({tableId, isGM}) {
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [questToDelete, setQuestToDelete] = useState(null);
+
+  // Estados do Modal do Bestiário
+  const [monsterModalOpen, setMonsterModalOpen] = useState(false);
+  const [selectedMonsterData, setSelectedMonsterData] = useState(null);
+  const [loadingMonster, setLoadingMonster] = useState(false);
 
   // Estados da Geração com IA
   const [aiResults, setAiResults] = useState({});
@@ -238,6 +249,30 @@ export default function QuestBoard({tableId, isGM}) {
     setLoadingStep(null);
     if (quest._id) {
       loadQuests(true); // Atualiza a lista silenciosamente apenas se a quest já existia
+    }
+  };
+
+  const handleViewInBestiary = async (monsterId) => {
+    if (!monsterId) {
+      showNotification("ID do monstro não encontrado.", "warning");
+      return;
+    }
+    setMonsterModalOpen(true);
+    setLoadingMonster(true);
+    setSelectedMonsterData(null);
+    try {
+      const docSnap = await getDocFromServer(doc(db, "monsters", monsterId));
+      if (docSnap.exists()) {
+        setSelectedMonsterData({id: docSnap.id, ...docSnap.data()});
+      } else {
+        showNotification("Monstro não encontrado no bestiário.", "error");
+        setMonsterModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar monstro:", error);
+      showNotification("Erro ao carregar monstro.", "error");
+    } finally {
+      setLoadingMonster(false);
     }
   };
 
@@ -436,7 +471,7 @@ export default function QuestBoard({tableId, isGM}) {
                             <Box
                               sx={{
                                 display: "flex",
-                                alignItems: "flex-start",
+                                alignItems: "center",
                                 justifyContent: "space-between",
                                 gap: 1,
                               }}
@@ -444,6 +479,13 @@ export default function QuestBoard({tableId, isGM}) {
                               <Typography variant="body2">
                                 <strong>{enc.name}</strong> ({enc.type})
                               </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewInBestiary(enc.id)}
+                                title="Ver no Bestiário"
+                              >
+                                <MenuBookIcon fontSize="inherit" />
+                              </IconButton>
                             </Box>
                             <Typography
                               variant="caption"
@@ -471,53 +513,67 @@ export default function QuestBoard({tableId, isGM}) {
               {/* Chefe Final */}
               <Box>
                 <Typography
-                  variant="h6"
-                  color="primary"
-                  sx={{borderBottom: "1px solid #e0e0e0", pb: 1, mb: 2}}
+                  variant="caption"
+                  color="error.main"
+                  fontWeight="bold"
+                  display="block"
+                  sx={{mb: 1, mt: 2}}
                 >
-                  Chefe Final
+                  ◆ CHEFE FINAL (BOSS)
                 </Typography>
-                <Paper
-                  variant="outlined"
-                  sx={{p: 2, bgcolor: "#fff5f5", borderColor: "#ffcdd2"}}
-                >
-                  <Typography
-                    variant="caption"
-                    color="error.main"
-                    fontWeight="bold"
-                    display="block"
-                    sx={{mb: 1}}
-                  >
-                    ◆ BOSS
-                  </Typography>
-                  {typeof quest.antagonist === "string" ? (
-                    <Typography variant="body2">{quest.antagonist}</Typography>
-                  ) : (
-                    <Box>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          justifyContent: "space-between",
-                          gap: 1,
-                        }}
-                      >
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Paper
+                      variant="outlined"
+                      sx={{p: 1.5, bgcolor: "#fff5f5", borderColor: "#ffcdd2"}}
+                    >
+                      {typeof quest.antagonist === "string" ? (
                         <Typography variant="body2">
-                          <strong>{quest.antagonist?.name}:</strong>{" "}
-                          {quest.antagonist?.description}
+                          {quest.antagonist}
                         </Typography>
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{mt: 1}}
-                      >
-                        {quest.antagonist?.stats}
-                      </Typography>
-                    </Box>
-                  )}
-                </Paper>
+                      ) : (
+                        <Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              <strong>{quest.antagonist?.name}</strong>
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleViewInBestiary(quest.antagonist.id)
+                              }
+                              title="Ver no Bestiário"
+                            >
+                              <MenuBookIcon fontSize="inherit" />
+                            </IconButton>
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                          >
+                            {quest.antagonist?.description}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                            sx={{mt: 0.5}}
+                          >
+                            {quest.antagonist?.stats}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                </Grid>
               </Box>
 
               {/* Espólios e XP */}
@@ -1194,6 +1250,49 @@ export default function QuestBoard({tableId, isGM}) {
           da mesa?
         </Typography>
       </ConfirmDialog>
+
+      {/* Modal de Ficha de Monstro */}
+      <Dialog
+        open={monsterModalOpen}
+        onClose={() => setMonsterModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6" component="span" fontWeight="bold">
+            Ficha do Bestiário
+          </Typography>
+          <IconButton onClick={() => setMonsterModalOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{p: 0, height: "70vh", bgcolor: "#f1f5f9"}}>
+          {loadingMonster ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : selectedMonsterData ? (
+            <Box sx={{p: {xs: 2, md: 4}, height: "100%"}}>
+              <MonsterCard monster={selectedMonsterData} />
+            </Box>
+          ) : (
+            <Box sx={{p: 3, textAlign: "center"}}>Monstro não encontrado.</Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
