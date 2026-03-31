@@ -32,4 +32,3 @@ services:
 
 networks:
   slsw-network:
-    external: true
