@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {getScenarioPromptStyles} from "@/scenarios/index.js";
 
 export async function POST(request) {
   try {
@@ -17,23 +18,11 @@ export async function POST(request) {
       .map((r) => `${r.name} (Nv ${r.nivel})`)
       .join(", ");
 
-    const stylePrompts = {
-      solo_leveling:
-        "Anime Style, Solo Leveling Manhwa Art Style, High Quality, Cinematic Lighting.",
-      high_fantasy:
-        "High Fantasy, Heroic Realism, vibrant colors, magical atmosphere, golden hour lighting, epic scale, detailed digital painting, clean lines, D&D art style, cinematic composition.",
-      dark_fantasy:
-        "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, dramatic shadows.",
-      cyberpunk:
-        "Cyberpunk anime style, neon lighting, futuristic, high quality,",
-      ghibli:
-        "Studio Ghibli style, vibrant colors, magical, detailed anime background, soft lighting",
-      comic_book:
-        "American Comic Book style, heavy ink lines, dynamic shading, vibrant colors",
-    };
+    const scenarioPromptStyles = getScenarioPromptStyles();
 
     const selectedStylePrompt =
-      stylePrompts[artStyle] || stylePrompts["high_fantasy"];
+      scenarioPromptStyles[artStyle] || scenarioPromptStyles["high_fantasy"] || 
+      "High Fantasy, Heroic Realism, vibrant colors, magical atmosphere, golden hour lighting, epic scale, detailed digital painting, clean lines, D&D art style, cinematic composition.";
 
     const prompt = `
       ${selectedStylePrompt}

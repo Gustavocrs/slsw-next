@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
-import {POWERS} from "@/lib/rpgEngine";
+import {getPowers} from "@/lib/rpgEngine";
 
 const InputRow = styled(Box)(({theme}) => ({
   display: "grid",
@@ -84,7 +84,8 @@ function MagiasList({
 }) {
   const [value, setValue] = useState(null);
 
-  const optionsMap = availableOptions || POWERS;
+  const powers = getPowers();
+  const optionsMap = availableOptions || powers;
   const optionsArray = React.useMemo(
     () =>
       Object.entries(optionsMap)

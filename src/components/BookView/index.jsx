@@ -26,7 +26,7 @@ import {
   KeyboardArrowUp as KeyboardArrowUpIcon,
 } from "@mui/icons-material";
 import manualSections from "@/data/manualSections";
-import {EDGES, RANKS} from "@/lib/rpgEngine";
+import {getEdges, RANKS} from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
@@ -359,7 +359,8 @@ function BookView({onOpenSidebar, twoPageMode = false}) {
 
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
           if (section.id === "vantagens-avancadas") {
-            const initialEdges = EDGES.filter((e) => e.source === "SL").sort(
+            const allEdges = getEdges();
+            const initialEdges = allEdges.filter((e) => e.source === "SL").sort(
               (a, b) => {
                 const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
                 if (rankDiff !== 0) return rankDiff;

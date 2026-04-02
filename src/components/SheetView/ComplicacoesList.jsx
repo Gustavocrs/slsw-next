@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
-import {HINDRANCES} from "@/lib/rpgEngine";
+import {getHindrances} from "@/lib/rpgEngine";
 
 const InputRow = styled(Box)(({theme}) => ({
   display: "grid",
@@ -85,6 +85,8 @@ function ComplicacoesList({items = [], onAdd, onRemove, disabled = false}) {
     onRemove?.(index);
   };
 
+  const hindrances = getHindrances();
+
   return (
     <Box sx={{mb: 2}}>
       {/* Input Row */}
@@ -93,7 +95,7 @@ function ComplicacoesList({items = [], onAdd, onRemove, disabled = false}) {
           value={value}
           disabled={disabled}
           onChange={(event, newValue) => setValue(newValue)}
-          options={HINDRANCES}
+          options={hindrances}
           getOptionLabel={(option) => option.name}
           renderInput={(params) => (
             <TextField

@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {db} from "@/lib/firebase";
 import {collection, getDocs} from "firebase/firestore";
 import {GoogleGenerativeAI} from "@google/generative-ai";
+import {getActiveScenario} from "@/scenarios/index.js";
 
 export const dynamic = "force-dynamic";
 

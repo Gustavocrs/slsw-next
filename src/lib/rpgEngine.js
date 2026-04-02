@@ -1,25 +1,39 @@
 /**
  * RPG Engine - Agregador (Facade)
- * Expõe funções unificadas do sistema core (SWADE) e de cenário (SL).
+ * Expõe funções unificadas do sistema core (SWADE) e de cenário ativo.
  * Use este arquivo para garantir compatibilidade nos componentes da UI.
  */
 
-import {EDGES} from "@/data/edges";
-import {HINDRANCES} from "@/data/hindrances";
-import {POWERS} from "@/data/powers";
-import * as SwadeEngine from "./swadeEngine";
-import * as SLEngine from "./slEngine";
+import {getActiveScenario} from "@/scenarios/index.js";
+import * as SwadeEngine from "./swadeEngine.js";
 
 export const DICE = SwadeEngine.DICE;
 export const RANKS = SwadeEngine.RANKS;
 
-// Unifica as perícias base com as exclusivas do cenário
-export const SKILLS = {
-  ...SwadeEngine.SKILLS_SWADE,
-  ...SLEngine.SKILLS_SL,
-};
+// Unifica as perícias base com as exclusivas do cenário ativo
+export const SKILLS = (() => {
+  const scenario = getActiveScenario();
+  return {
+    ...SwadeEngine.SKILLS_SWADE,
+    ...(scenario.skills || {}),
+  };
+})();
 
-export {EDGES, HINDRANCES, POWERS};
+// Getter dinâmico para dados do cenário (suporta hot-swap)
+export function getEdges() {
+  const scenario = getActiveScenario();
+  return [...(scenario.edges || [])].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getHindrances() {
+  const scenario = getActiveScenario();
+  return [...(scenario.hindrances || [])].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getPowers() {
+  const scenario = getActiveScenario();
+  return scenario.powers || {};
+}
 
 // Re-exports e Mapeamentos do SWADE Engine
 export const getRankIndex = SwadeEngine.getRankIndex;
@@ -30,8 +44,11 @@ export const calculateDefense = SwadeEngine.calculateDefense;
 export const calculateParry = SwadeEngine.calculateParry;
 export const calculateStats = SwadeEngine.calculateStats;
 
-// Re-exports e Mapeamentos do SL Engine
-export const calculateMaxMana = SLEngine.calculateMaxMana;
+// Re-exports do Cenário Ativo
+export const calculateMaxMana = (() => {
+  const scenario = getActiveScenario();
+  return scenario.calculateMaxMana || null;
+})();
 
 export function getSkillAttribute(skillName) {
   return SKILLS[skillName] || "agilidade";
@@ -61,9 +78,9 @@ export default {
   DICE,
   RANKS,
   SKILLS,
-  EDGES,
-  HINDRANCES,
-  POWERS,
+  getEdges,
+  getHindrances,
+  getPowers,
   getRankIndex,
   diceCost,
   compareDice,

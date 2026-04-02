@@ -96,12 +96,12 @@ import {
   calculateTotalHindrancePoints,
   calculateTotalSkillPoints,
   DICE,
-  EDGES,
+  getEdges,
   filterEdgesByRank,
   filterPowersByRank,
   getSkillAttribute,
-  HINDRANCES,
-  POWERS,
+  getHindrances,
+  getPowers,
   RANKS,
   SKILLS,
 } from "@/lib/rpgEngine";
@@ -342,13 +342,23 @@ const CONFIG_LABELS = {
   notes: "Notas",
 };
 
-const EDGE_DESCRIPTION_MAP = Object.fromEntries(
-  EDGES.map((edge) => [edge.name, edge.description]),
-);
+const EDGE_DESCRIPTION_MAP = (() => {
+  try {
+    const edges = getEdges();
+    return Object.fromEntries(edges.map((edge) => [edge.name, edge.description]));
+  } catch {
+    return {};
+  }
+})();
 
-const HINDRANCE_DESCRIPTION_MAP = Object.fromEntries(
-  HINDRANCES.map((hindrance) => [hindrance.name, hindrance.description]),
-);
+const HINDRANCE_DESCRIPTION_MAP = (() => {
+  try {
+    const hindrances = getHindrances();
+    return Object.fromEntries(hindrances.map((h) => [h.name, h.description]));
+  } catch {
+    return {};
+  }
+})();
 
 const OverviewPanel = ({
   title,
@@ -3277,7 +3287,8 @@ Negative Prompt: ${promptData.negativePrompt}.
                 <VantagesList
                   disabled={isFieldLocked("vantagens")}
                   items={(character.vantagens || []).map((v) => {
-                    const edge = EDGES.find((e) => e.name === v.name);
+                    const edges = getEdges();
+                    const edge = edges.find((e) => e.name === v.name);
                     return edge ? {...edge, ...v} : v;
                   })}
                   availableOptions={availableEdges}
@@ -3331,7 +3342,8 @@ Negative Prompt: ${promptData.negativePrompt}.
                 <ComplicacoesList
                   disabled={isFieldLocked("complicacoes")}
                   items={(character.complicacoes || []).map((c) => {
-                    const hind = HINDRANCES.find((h) => h.name === c.name);
+                    const hindrances = getHindrances();
+                    const hind = hindrances.find((h) => h.name === c.name);
                     return hind ? {...hind, ...c} : c;
                   })}
                   onAdd={(item) =>

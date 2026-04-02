@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import {Delete as DeleteIcon} from "@mui/icons-material";
-import {EDGES} from "@/lib/rpgEngine";
+import {getEdges} from "@/lib/rpgEngine";
 
 const InputRow = styled(Box)(({theme}) => ({
   display: "grid",
@@ -80,7 +80,8 @@ function VantagesList({
 }) {
   const [value, setValue] = React.useState(null);
 
-  const options = availableOptions || EDGES;
+  const edges = getEdges();
+  const options = availableOptions || edges;
 
   const handleAdd = () => {
     if (value) {
