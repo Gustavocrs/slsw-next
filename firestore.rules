@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Bestiário: Leitura pública para a API do Next.js (SSR/Edge) e escrita autenticada
+    match /monsters/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Fichas de Personagem: Leitura e escrita para usuários logados
+    match /characters/{document} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Cenários: Leitura e escrita pública (para API Next.js)
+    match /scenarios/{document} {
+      allow read, write: if true;
+    }
+
+    // Mesas e suas subcoleções (Quests, etc): Leitura e escrita para usuários logados
+    match /tables/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Fallback de segurança global para as demais coleções
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
