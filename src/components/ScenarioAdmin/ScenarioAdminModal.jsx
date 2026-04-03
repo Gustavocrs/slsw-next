@@ -478,14 +478,19 @@ export default function ScenarioAdminModal({open, onClose}) {
   }, [open, selectedScenarioId, loadScenario]);
 
   const handleUpdate = async (field, value) => {
-    if (!scenarioData?.id) {
-      console.warn("Scenario ID não disponível para salvar");
-      setSnackbar({open: true, message: "Selecione ou crie um cenário primeiro", severity: "warning"});
-      return;
-    }
     setSaving(true);
     try {
       const updated = {...scenarioData, [field]: value};
+      
+      const scenarioId = scenarioData?.id || scenarioData?.metadata?.id;
+      
+      if (!scenarioId) {
+        setScenarioData(updated);
+        setSnackbar({open: true, message: "Alteração local aplicada. Salve o cenário para persistir.", severity: "info"});
+        setSaving(false);
+        return;
+      }
+      
       await ScenarioService.saveScenario(updated);
       setScenarioData(updated);
       setSnackbar({open: true, message: "Salvo com sucesso!", severity: "success"});

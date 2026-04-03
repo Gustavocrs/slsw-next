@@ -107,6 +107,7 @@ import QuestBoard from "./QuestBoard";
 import MonsterCard from "@/components/BestiaryView/MonsterCard";
 import BestiaryView from "@/components/BestiaryView";
 import {calculateMaxMana} from "@/lib/rpgEngine";
+import * as ScenarioService from "@/lib/scenarioService.js";
 import {
   getTableGameSession,
   SHEET_LOCK_GROUPS,
@@ -481,6 +482,7 @@ function GameModal() {
   const [savingGameSettings, setSavingGameSettings] = useState(false);
   const [isBookOpen, setIsBookOpen] = useState(true);
   const [isBestiaryOpen, setIsBestiaryOpen] = useState(false);
+  const [scenarioLoreSections, setScenarioLoreSections] = useState([]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -612,6 +614,30 @@ function GameModal() {
 
     return () => unsubscribe();
   }, [selectedTable?._id]);
+
+  // Efeito para carregar loreSections do cenário da mesa
+  useEffect(() => {
+    async function loadScenarioLore() {
+      if (!selectedTable?.scenarioId) {
+        setScenarioLoreSections([]);
+        return;
+      }
+      
+      try {
+        const scenarioData = await ScenarioService.getScenarioById(selectedTable.scenarioId);
+        if (scenarioData?.loreSections) {
+          setScenarioLoreSections(scenarioData.loreSections);
+        } else {
+          setScenarioLoreSections([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar lore do cenário:", error);
+        setScenarioLoreSections([]);
+      }
+    }
+    
+    loadScenarioLore();
+  }, [selectedTable?.scenarioId]);
 
   // --- Lógica de Presença na Próxima Sessão ---
   const handleTogglePresence = async () => {
@@ -1592,7 +1618,7 @@ function GameModal() {
                   position: "relative",
                 }}
               >
-                <BookView twoPageMode={true} />
+                <BookView twoPageMode={true} loreSections={scenarioLoreSections} />
               </Box>
             </Box>
           ) : isBestiaryOpen ? (
