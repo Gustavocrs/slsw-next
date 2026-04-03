@@ -6,66 +6,67 @@
 
 "use client";
 
-import React, {useState, useEffect, useMemo, useCallback} from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
+  Add as AddIcon,
+  Close as CloseIcon,
+  Delete as DeleteIcon,
+  CloudDownload as DownloadIcon,
+  Edit as EditIcon,
+  Refresh as RefreshIcon,
+  Save as SaveIcon,
+  CloudUpload as UploadIcon,
+} from "@mui/icons-material";
+import {
+  Alert,
   Box,
-  Tabs,
-  Tab,
-  Typography,
   Button,
-  TextField,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Snackbar,
+  Stack,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
-  Stack,
-  CircularProgress,
-  Alert,
-  Snackbar,
+  Tabs,
+  TextField,
+  Typography,
 } from "@mui/material";
-import {
-  Close as CloseIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Save as SaveIcon,
-  CloudUpload as UploadIcon,
-  CloudDownload as DownloadIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
-import {getAvailableScenarios as getScenariosList} from "@/scenarios/index.js";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { manualSections } from "@/data/manualSections";
 import * as ScenarioService from "@/lib/scenarioService.js";
-import GenericItemForm from "./forms/GenericItemForm";
-import RulesTableEditor from "./forms/RulesTableEditor";
+import { getAvailableScenarios as getScenariosList } from "@/scenarios/index.js";
 import AwakeningTableEditor from "./forms/AwakeningTableEditor";
+import GenericItemForm from "./forms/GenericItemForm";
+import KeyValueEditorComp, { ExtraFieldsEditor } from "./forms/KeyValueEditor";
 import LoreTab from "./forms/LoreTab";
-import KeyValueEditorComp, {ExtraFieldsEditor as ExtraFieldsEditor} from "./forms/KeyValueEditor";
+import RulesTableEditor from "./forms/RulesTableEditor";
 
 const KeyValueEditor = KeyValueEditorComp;
 
-function TabPanel({children, value, index}) {
+function TabPanel({ children, value, index }) {
   return (
-    <div hidden={value !== index} style={{padding: "16px 0"}}>
+    <div hidden={value !== index} style={{ padding: "16px 0" }}>
       {value === index && <Box>{children}</Box>}
     </div>
   );
 }
 
-function ScenarioSelector({value, onChange, scenarios, loading}) {
+function ScenarioSelector({ value, onChange, scenarios, loading }) {
   return (
-    <FormControl size="small" sx={{minWidth: 200}} disabled={loading}>
+    <FormControl size="small" sx={{ minWidth: 200 }} disabled={loading}>
       <InputLabel>Cenário</InputLabel>
       <Select
         value={value}
@@ -82,7 +83,7 @@ function ScenarioSelector({value, onChange, scenarios, loading}) {
   );
 }
 
-function LoadingOverlay({loading}) {
+function LoadingOverlay({ loading }) {
   if (!loading) return null;
   return (
     <Box
@@ -104,7 +105,14 @@ function LoadingOverlay({loading}) {
   );
 }
 
-function EdgesTab({scenarioData, onUpdate, onAdd, onEdit, onDelete, loading}) {
+function EdgesTab({
+  scenarioData,
+  onUpdate,
+  onAdd,
+  onEdit,
+  onDelete,
+  loading,
+}) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [type, setType] = useState("edge");
@@ -137,18 +145,24 @@ function EdgesTab({scenarioData, onUpdate, onAdd, onEdit, onDelete, loading}) {
   const edges = scenarioData?.edges || [];
 
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
-      
-      <Box sx={{display: "flex", justifyContent: "space-between", mb: 2}}>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Vantagens ({edges.length})</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => openAdd("edge")}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => openAdd("edge")}
+        >
           Adicionar Vantagem
         </Button>
       </Box>
 
       {edges.length === 0 ? (
-        <Typography color="text.secondary">Nenhuma vantagem cadastrada</Typography>
+        <Typography color="text.secondary">
+          Nenhuma vantagem cadastrada
+        </Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table size="small">
@@ -164,13 +178,23 @@ function EdgesTab({scenarioData, onUpdate, onAdd, onEdit, onDelete, loading}) {
               {edges.map((edge, idx) => (
                 <TableRow key={edge.name || idx}>
                   <TableCell>{edge.name}</TableCell>
-                  <TableCell><Chip size="small" label={edge.rank} /></TableCell>
-                  <TableCell sx={{maxWidth: 300}}>
+                  <TableCell>
+                    <Chip size="small" label={edge.rank} />
+                  </TableCell>
+                  <TableCell sx={{ maxWidth: 300 }}>
                     <Typography noWrap>{edge.description}</Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => handleEdit(edge)}><EditIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => onDelete(edge)}><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => handleEdit(edge)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => onDelete(edge)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -181,7 +205,10 @@ function EdgesTab({scenarioData, onUpdate, onAdd, onEdit, onDelete, loading}) {
 
       <GenericItemForm
         open={formOpen}
-        onClose={() => {setFormOpen(false); setEditItem(null);}}
+        onClose={() => {
+          setFormOpen(false);
+          setEditItem(null);
+        }}
         onSave={handleSave}
         type={type}
         editItem={editItem}
@@ -190,13 +217,18 @@ function EdgesTab({scenarioData, onUpdate, onAdd, onEdit, onDelete, loading}) {
   );
 }
 
-function HindrancesTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
+function HindrancesTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
   const handleSave = (item) => {
     if (editItem) {
-      onUpdate("hindrances", scenarioData?.hindrances?.map(h => h.name === editItem.name ? item : h) || []);
+      onUpdate(
+        "hindrances",
+        scenarioData?.hindrances?.map((h) =>
+          h.name === editItem.name ? item : h,
+        ) || [],
+      );
     } else {
       onAdd(item);
     }
@@ -207,18 +239,27 @@ function HindrancesTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
   const hindrances = scenarioData?.hindrances || [];
 
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
-      
-      <Box sx={{display: "flex", justifyContent: "space-between", mb: 2}}>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Complicações ({hindrances.length})</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => {setEditItem(null); setFormOpen(true);}}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setEditItem(null);
+            setFormOpen(true);
+          }}
+        >
           Adicionar Complicação
         </Button>
       </Box>
 
       {hindrances.length === 0 ? (
-        <Typography color="text.secondary">Nenhuma complicação cadastrada</Typography>
+        <Typography color="text.secondary">
+          Nenhuma complicação cadastrada
+        </Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table size="small">
@@ -234,11 +275,33 @@ function HindrancesTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
               {hindrances.map((h, idx) => (
                 <TableRow key={h.name || idx}>
                   <TableCell>{h.name}</TableCell>
-                  <TableCell><Chip size="small" label={h.severity === "Maior" ? "Maior" : "Menor"} color={h.severity === "Maior" ? "error" : "info"} /></TableCell>
-                  <TableCell sx={{maxWidth: 300}}><Typography noWrap>{h.description}</Typography></TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={h.severity === "Maior" ? "Maior" : "Menor"}
+                      color={h.severity === "Maior" ? "error" : "info"}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ maxWidth: 300 }}>
+                    <Typography noWrap>{h.description}</Typography>
+                  </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => {setEditItem(h); setFormOpen(true);}}><EditIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => onDelete(h)}><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setEditItem(h);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => onDelete(h)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -249,7 +312,10 @@ function HindrancesTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
 
       <GenericItemForm
         open={formOpen}
-        onClose={() => {setFormOpen(false); setEditItem(null);}}
+        onClose={() => {
+          setFormOpen(false);
+          setEditItem(null);
+        }}
         onSave={handleSave}
         type="hindrance"
         editItem={editItem}
@@ -258,12 +324,12 @@ function HindrancesTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
   );
 }
 
-function PowersTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
+function PowersTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
   const handleSave = (item) => {
-    const powers = {...(scenarioData?.powers || {})};
+    const powers = { ...(scenarioData?.powers || {}) };
     powers[item.name] = item;
     onUpdate("powers", powers);
     setFormOpen(false);
@@ -271,15 +337,25 @@ function PowersTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
   };
 
   const powers = scenarioData?.powers || {};
-  const powersList = Object.entries(powers).map(([name, data]) => ({name, ...data}));
+  const powersList = Object.entries(powers).map(([name, data]) => ({
+    name,
+    ...data,
+  }));
 
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
-      
-      <Box sx={{display: "flex", justifyContent: "space-between", mb: 2}}>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Poderes ({powersList.length})</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => {setEditItem(null); setFormOpen(true);}}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setEditItem(null);
+            setFormOpen(true);
+          }}
+        >
           Adicionar Poder
         </Button>
       </Box>
@@ -306,10 +382,26 @@ function PowersTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
                   <TableCell>{p.pp}</TableCell>
                   <TableCell>{p.range}</TableCell>
                   <TableCell>{p.duration}</TableCell>
-                  <TableCell><Chip size="small" label={p.rank} /></TableCell>
+                  <TableCell>
+                    <Chip size="small" label={p.rank} />
+                  </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => {setEditItem(p); setFormOpen(true);}}><EditIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => onDelete(p)}><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setEditItem(p);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => onDelete(p)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -320,7 +412,10 @@ function PowersTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
 
       <GenericItemForm
         open={formOpen}
-        onClose={() => {setFormOpen(false); setEditItem(null);}}
+        onClose={() => {
+          setFormOpen(false);
+          setEditItem(null);
+        }}
         onSave={handleSave}
         type="power"
         editItem={editItem}
@@ -329,8 +424,10 @@ function PowersTab({scenarioData, onUpdate, onAdd, onDelete, loading}) {
   );
 }
 
-function RulesTab({scenarioData, onUpdate, loading}) {
-  const [awakeningRules, setAwakeningRules] = useState(scenarioData?.awakeningRules || []);
+function RulesTab({ scenarioData, onUpdate, loading }) {
+  const [awakeningRules, setAwakeningRules] = useState(
+    scenarioData?.awakeningRules || [],
+  );
 
   useEffect(() => {
     if (scenarioData?.awakeningRules) {
@@ -344,18 +441,18 @@ function RulesTab({scenarioData, onUpdate, loading}) {
   };
 
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
       <AwakeningTableEditor data={awakeningRules} onChange={handleChange} />
     </Box>
   );
 }
 
-function SheetTab({scenarioData, onUpdate, loading}) {
+function SheetTab({ scenarioData, onUpdate, loading }) {
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
-      
+
       <Stack spacing={3}>
         <ExtraFieldsEditor
           title="Campos Extras da Ficha"
@@ -385,7 +482,7 @@ function SheetTab({scenarioData, onUpdate, loading}) {
   );
 }
 
-function ConfigTab({scenarioData, onUpdate, loading}) {
+function ConfigTab({ scenarioData, onUpdate, loading }) {
   const [metadata, setMetadata] = useState(scenarioData?.metadata || {});
 
   useEffect(() => {
@@ -395,18 +492,20 @@ function ConfigTab({scenarioData, onUpdate, loading}) {
   }, [scenarioData]);
 
   const handleChange = (field) => (e) => {
-    const newMetadata = {...metadata, [field]: e.target.value};
+    const newMetadata = { ...metadata, [field]: e.target.value };
     setMetadata(newMetadata);
     onUpdate("metadata", newMetadata);
   };
 
   return (
-    <Box sx={{position: "relative"}}>
+    <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
-      
+
       <Stack spacing={3}>
-        <Paper sx={{p: 2}}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Metadata</Typography>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Metadata
+          </Typography>
           <Stack spacing={2}>
             <TextField
               label="ID"
@@ -443,13 +542,17 @@ function ConfigTab({scenarioData, onUpdate, loading}) {
   );
 }
 
-export default function ScenarioAdminModal({open, onClose}) {
+export default function ScenarioAdminModal({ open, onClose }) {
   const [selectedScenarioId, setSelectedScenarioId] = useState("solo-leveling");
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scenarioData, setScenarioData] = useState(null);
-  const [snackbar, setSnackbar] = useState({open: false, message: "", severity: "success"});
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const availableScenarios = useMemo(() => getScenariosList(), []);
 
@@ -458,9 +561,13 @@ export default function ScenarioAdminModal({open, onClose}) {
     try {
       const data = await ScenarioService.getScenarioById(selectedScenarioId);
       if (data) {
+        if (!data.loreSections || data.loreSections.length === 0) {
+          data.loreSections = manualSections;
+        }
         setScenarioData(data);
       } else {
-        const fallback = (await import("@/scenarios/solo-leveling/index.js")).default;
+        const fallback = (await import("@/scenarios/solo-leveling/index.js"))
+          .default;
         setScenarioData({
           id: selectedScenarioId,
           metadata: fallback.metadata,
@@ -472,11 +579,16 @@ export default function ScenarioAdminModal({open, onClose}) {
           extraFields: fallback.extraFields,
           skills: fallback.skills,
           calculateMaxMana: fallback.calculateMaxMana,
+          loreSections: manualSections,
         });
       }
     } catch (error) {
       console.error("Erro ao carregar cenário:", error);
-      setSnackbar({open: true, message: "Erro ao carregar cenário", severity: "error"});
+      setSnackbar({
+        open: true,
+        message: "Erro ao carregar cenário",
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -491,24 +603,32 @@ export default function ScenarioAdminModal({open, onClose}) {
   const handleUpdate = async (field, value) => {
     setSaving(true);
     try {
-      const updated = {...scenarioData, [field]: value};
-      
+      const updated = { ...scenarioData, [field]: value };
+
       const scenarioId = scenarioData?.id || scenarioData?.metadata?.id;
-      
+
       if (!scenarioId) {
         console.warn("Scenario ID não disponível para salvar:", scenarioData);
         setScenarioData(updated);
-        setSnackbar({open: true, message: "Alteração local aplicada (cenário não salvo)", severity: "info"});
+        setSnackbar({
+          open: true,
+          message: "Alteração local aplicada (cenário não salvo)",
+          severity: "info",
+        });
         setSaving(false);
         return;
       }
-      
+
       await ScenarioService.saveScenario(updated);
       setScenarioData(updated);
-      setSnackbar({open: true, message: "Salvo com sucesso!", severity: "success"});
+      setSnackbar({
+        open: true,
+        message: "Salvo com sucesso!",
+        severity: "success",
+      });
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      setSnackbar({open: true, message: "Erro ao salvar", severity: "error"});
+      setSnackbar({ open: true, message: "Erro ao salvar", severity: "error" });
     } finally {
       setSaving(false);
     }
@@ -516,20 +636,20 @@ export default function ScenarioAdminModal({open, onClose}) {
 
   const handleAdd = async (type, item) => {
     const current = scenarioData[type] || [];
-    const updated = [...current, {...item, source: selectedScenarioId}];
+    const updated = [...current, { ...item, source: selectedScenarioId }];
     await handleUpdate(type, updated);
   };
 
   const handleEdit = async (type, item) => {
     const current = scenarioData[type] || [];
-    const updated = current.map(h => h.name === item.name ? item : h);
+    const updated = current.map((h) => (h.name === item.name ? item : h));
     await handleUpdate(type, updated);
   };
 
   const handleDelete = async (type, item) => {
     if (!window.confirm(`Confirmar exclusão de "${item.name}"?`)) return;
     const current = scenarioData[type] || [];
-    const updated = current.filter(h => h.name !== item.name);
+    const updated = current.filter((h) => h.name !== item.name);
     await handleUpdate(type, updated);
   };
 
@@ -540,28 +660,37 @@ export default function ScenarioAdminModal({open, onClose}) {
   };
 
   const tabs = [
-    {label: "Vantagens", icon: <ShieldIcon />},
-    {label: "Complicações", icon: <CategoryIcon />},
-    {label: "Powers", icon: <MagicIcon />},
-    {label: "Regras", icon: <RuleIcon />},
-    {label: "Lore", icon: <BookIcon />},
-    {label: "Gerador", icon: <DungeonIcon />},
-    {label: "Ficha", icon: <PersonIcon />},
-    {label: "Config", icon: <ConfigIcon />},
+    { label: "Vantagens", icon: <ShieldIcon /> },
+    { label: "Complicações", icon: <CategoryIcon /> },
+    { label: "Powers", icon: <MagicIcon /> },
+    { label: "Regras", icon: <RuleIcon /> },
+    { label: "Lore", icon: <BookIcon /> },
+    { label: "Gerador", icon: <DungeonIcon /> },
+    { label: "Ficha", icon: <PersonIcon /> },
+    { label: "Config", icon: <ConfigIcon /> },
   ];
 
   const getIcon = (name) => {
-    const found = tabs.find(t => t.label === name);
+    const found = tabs.find((t) => t.label === name);
     return found?.icon || null;
   };
 
   return (
     <Dialog open={open} onClose={handleClose} fullScreen maxWidth="lg">
-      <DialogTitle sx={{display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: 1, borderColor: "divider", pr: 2}}>
-        <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: 1,
+          borderColor: "divider",
+          pr: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography variant="h6">⚙️ Admin de Cenários</Typography>
-          <ScenarioSelector 
-            value={selectedScenarioId} 
+          <ScenarioSelector
+            value={selectedScenarioId}
             onChange={setSelectedScenarioId}
             scenarios={availableScenarios}
             loading={loading}
@@ -574,18 +703,35 @@ export default function ScenarioAdminModal({open, onClose}) {
       </DialogTitle>
 
       <DialogContent>
-        <Box sx={{borderBottom: 1, borderColor: "divider"}}>
-          <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} variant="scrollable" scrollButtons="auto">
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={tabValue}
+            onChange={(e, v) => setTabValue(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
             {tabs.map((tab, idx) => (
-              <Tab key={idx} icon={tab.icon} iconPosition="start" label={tab.label} />
+              <Tab
+                key={idx}
+                icon={tab.icon}
+                iconPosition="start"
+                label={tab.label}
+              />
             ))}
           </Tabs>
         </Box>
 
-        <Box sx={{mt: 2, maxHeight: "calc(100vh - 200px)", overflow: "auto", position: "relative"}}>
+        <Box
+          sx={{
+            mt: 2,
+            maxHeight: "calc(100vh - 200px)",
+            overflow: "auto",
+            position: "relative",
+          }}
+        >
           <TabPanel value={tabValue} index={0}>
-            <EdgesTab 
-              scenarioData={scenarioData} 
+            <EdgesTab
+              scenarioData={scenarioData}
               onUpdate={handleUpdate}
               onAdd={(item) => handleAdd("edges", item)}
               onEdit={(item) => handleEdit("edges", item)}
@@ -594,7 +740,7 @@ export default function ScenarioAdminModal({open, onClose}) {
             />
           </TabPanel>
           <TabPanel value={tabValue} index={1}>
-            <HindrancesTab 
+            <HindrancesTab
               scenarioData={scenarioData}
               onUpdate={handleUpdate}
               onAdd={(item) => handleAdd("hindrances", item)}
@@ -603,12 +749,12 @@ export default function ScenarioAdminModal({open, onClose}) {
             />
           </TabPanel>
           <TabPanel value={tabValue} index={2}>
-            <PowersTab 
+            <PowersTab
               scenarioData={scenarioData}
               onUpdate={handleUpdate}
               onAdd={(item) => {}}
               onDelete={(item) => {
-                const powers = {...(scenarioData?.powers || {})};
+                const powers = { ...(scenarioData?.powers || {}) };
                 delete powers[item.name];
                 handleUpdate("powers", powers);
               }}
@@ -616,19 +762,38 @@ export default function ScenarioAdminModal({open, onClose}) {
             />
           </TabPanel>
           <TabPanel value={tabValue} index={3}>
-            <RulesTab scenarioData={scenarioData} onUpdate={handleUpdate} loading={loading} />
+            <RulesTab
+              scenarioData={scenarioData}
+              onUpdate={handleUpdate}
+              loading={loading}
+            />
           </TabPanel>
           <TabPanel value={tabValue} index={4}>
-            <LoreTab scenarioData={scenarioData} onUpdate={handleUpdate} loading={loading} />
+            <LoreTab
+              scenarioData={scenarioData}
+              onUpdate={handleUpdate}
+              loading={loading}
+            />
           </TabPanel>
           <TabPanel value={tabValue} index={5}>
-            <Typography>O Gerador de Aventuras é definido em código. Funcionalidade de edição em desenvolvimento.</Typography>
+            <Typography>
+              O Gerador de Aventuras é definido em código. Funcionalidade de
+              edição em desenvolvimento.
+            </Typography>
           </TabPanel>
           <TabPanel value={tabValue} index={6}>
-            <SheetTab scenarioData={scenarioData} onUpdate={handleUpdate} loading={loading} />
+            <SheetTab
+              scenarioData={scenarioData}
+              onUpdate={handleUpdate}
+              loading={loading}
+            />
           </TabPanel>
           <TabPanel value={tabValue} index={7}>
-            <ConfigTab scenarioData={scenarioData} onUpdate={handleUpdate} loading={loading} />
+            <ConfigTab
+              scenarioData={scenarioData}
+              onUpdate={handleUpdate}
+              loading={loading}
+            />
           </TabPanel>
         </Box>
       </DialogContent>
@@ -636,8 +801,8 @@ export default function ScenarioAdminModal({open, onClose}) {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({...snackbar, open: false})}
-        anchorOrigin={{vertical: "bottom", horizontal: "center"}}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert severity={snackbar.severity} variant="filled">
           {snackbar.message}
@@ -648,12 +813,12 @@ export default function ScenarioAdminModal({open, onClose}) {
 }
 
 import {
-  AutoAwesome as MagicIcon,
   MenuBook as BookIcon,
   Category as CategoryIcon,
-  Shield as ShieldIcon,
-  Gavel as RuleIcon,
-  Castle as DungeonIcon,
-  Person as PersonIcon,
   Settings as ConfigIcon,
+  Castle as DungeonIcon,
+  AutoAwesome as MagicIcon,
+  Person as PersonIcon,
+  Gavel as RuleIcon,
+  Shield as ShieldIcon,
 } from "@mui/icons-material";
