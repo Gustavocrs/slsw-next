@@ -461,7 +461,18 @@ export default function ScenarioAdminModal({open, onClose}) {
         setScenarioData(data);
       } else {
         const fallback = (await import("@/scenarios/solo-leveling/index.js")).default;
-        setScenarioData(fallback);
+        setScenarioData({
+          id: selectedScenarioId,
+          metadata: fallback.metadata,
+          edges: fallback.edges,
+          hindrances: fallback.hindrances,
+          powers: fallback.powers,
+          adventureGenerator: fallback.adventureGenerator,
+          promptStyles: fallback.promptStyles,
+          extraFields: fallback.extraFields,
+          skills: fallback.skills,
+          calculateMaxMana: fallback.calculateMaxMana,
+        });
       }
     } catch (error) {
       console.error("Erro ao carregar cenário:", error);
@@ -485,8 +496,9 @@ export default function ScenarioAdminModal({open, onClose}) {
       const scenarioId = scenarioData?.id || scenarioData?.metadata?.id;
       
       if (!scenarioId) {
+        console.warn("Scenario ID não disponível para salvar:", scenarioData);
         setScenarioData(updated);
-        setSnackbar({open: true, message: "Alteração local aplicada. Salve o cenário para persistir.", severity: "info"});
+        setSnackbar({open: true, message: "Alteração local aplicada (cenário não salvo)", severity: "info"});
         setSaving(false);
         return;
       }
