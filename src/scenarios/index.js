@@ -4,6 +4,7 @@
  * Suporta cenário por mesa (via scenarioId) ou global (via env var).
  */
 
+import * as ScenarioService from "@/lib/scenarioService.js";
 import soloLevelingScenario from "./solo-leveling/index.js";
 
 const scenarios = {
@@ -28,23 +29,40 @@ export function getScenario(id = null) {
   return scenarios[scenarioId];
 }
 
+export async function loadScenarioFromFirestore(id) {
+  try {
+    const scenarioData = await ScenarioService.getScenarioById(id);
+    if (scenarioData) {
+      currentScenarioId = id;
+      currentScenario = { ...scenarios[id], ...scenarioData };
+      return currentScenario;
+    }
+    return null;
+  } catch (error) {
+    console.error("Erro ao carregar cenário do Firestore:", error);
+    return null;
+  }
+}
+
 export function getActiveScenario(scenarioIdFromTable = null) {
   if (!currentScenario) {
     const envScenario = process.env.NEXT_PUBLIC_ACTIVE_SCENARIO;
     currentScenarioId = envScenario || DEFAULT_SCENARIO;
     currentScenario = getScenario(currentScenarioId);
   }
-  
+
   if (scenarioIdFromTable && scenarios[scenarioIdFromTable]) {
     return scenarios[scenarioIdFromTable];
   }
-  
+
   return currentScenario;
 }
 
 export function setActiveScenario(id) {
   if (!scenarios[id]) {
-    throw new Error(`Cenário "${id}" não existe. Cenários disponíveis: ${Object.keys(scenarios).join(", ")}`);
+    throw new Error(
+      `Cenário "${id}" não existe. Cenários disponíveis: ${Object.keys(scenarios).join(", ")}`,
+    );
   }
   currentScenarioId = id;
   currentScenario = scenarios[id];
@@ -88,5 +106,6 @@ export default {
   getScenarioPromptStyles,
   getScenarioExtraFields,
   getScenarioCalculateMaxMana,
+  loadScenarioFromFirestore,
   DEFAULT_SCENARIO,
 };

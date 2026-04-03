@@ -5,21 +5,21 @@
 
 "use client";
 
-import React, {useState, useEffect} from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
-  TextField,
-  Select,
-  MenuItem,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
+  MenuItem,
+  Select,
   Stack,
-  Chip,
+  TextField,
 } from "@mui/material";
+import React, { useEffect, useState } from "react";
 
 const RANKS = ["Novato", "Experiente", "Veterano", "Heroico", "Lendário"];
 const HINDRANCE_SEVERITY = ["Maior", "Menor"];
@@ -35,15 +35,20 @@ export default function GenericItemForm({
 
   useEffect(() => {
     if (editItem) {
-      setFormData({...editItem});
+      setFormData({ ...editItem });
     } else {
       setFormData({
         name: "",
         rank: "Novato",
         description: "",
         source: "SL",
-        ...(type === "hindrance" && {severity: "Menor"}),
-        ...(type === "power" && {pp: 1, range: "", duration: "", rank: "Novato"}),
+        ...(type === "hindrance" && { severity: "Menor" }),
+        ...(type === "power" && {
+          pp: 1,
+          range: "",
+          duration: "",
+          rank: "Novato",
+        }),
       });
     }
   }, [editItem, type]);
@@ -73,11 +78,11 @@ export default function GenericItemForm({
         {type === "edge"
           ? "Vantagem"
           : type === "hindrance"
-          ? "Complicação"
-          : "Poder"}
+            ? "Complicação"
+            : "Poder"}
       </DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{mt: 1}}>
+        <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Nome"
             value={formData.name || ""}
@@ -95,7 +100,7 @@ export default function GenericItemForm({
                 value={formData.pp || ""}
                 onChange={handleChange("pp")}
                 fullWidth
-                inputProps={{min: 0}}
+                inputProps={{ min: 0 }}
               />
               <TextField
                 label="Alcance"
@@ -178,12 +183,8 @@ export default function GenericItemForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={!isValid}
-        >
-          Salvar
+        <Button onClick={handleSave} variant="contained" disabled={!isValid}>
+          {editItem ? "Atualizar" : "Adicionar"}
         </Button>
       </DialogActions>
     </Dialog>

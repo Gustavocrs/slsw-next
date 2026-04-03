@@ -22,7 +22,7 @@ export const metadata = {
 
 export default function RootLayout({children}) {
   return (
-    <html lang="pt-BR">
+    <html suppressHydrationWarning lang="pt-BR">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

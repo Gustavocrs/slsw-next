@@ -5,45 +5,45 @@
 
 "use client";
 
-import {useState, useEffect, useRef} from "react";
-// CORREÇÃO: Importando do lugar certo (hooks)
-import {useAuth} from "@/hooks";
-import {useUIStore} from "@/stores/characterStore";
 import {
+  DeleteSweep as CleanIcon,
+  Close as CloseIcon,
+  Logout,
+  Message as MessageIcon,
+  AutoAwesome as ScenarioIcon,
+  Description as SheetIcon,
+  TableRestaurant,
+} from "@mui/icons-material";
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  ListItemIcon,
+  ListItemText,
   Menu,
   MenuItem,
-  Avatar,
-  ListItemText,
   Typography,
-  Badge,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
-  Box,
-  CircularProgress,
-  DialogContent,
   useMediaQuery,
   useTheme,
-  ListItemIcon,
 } from "@mui/material";
-import {
-  Logout,
-  TableRestaurant,
-  Description as SheetIcon,
-  Close as CloseIcon,
-  Message as MessageIcon,
-  DeleteSweep as CleanIcon,
-  AutoAwesome as ScenarioIcon,
-} from "@mui/icons-material";
-import APIService from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import ScenarioAdminList from "@/components/ScenarioAdmin/ScenarioAdminList";
 import SheetManager from "@/components/SheetView/SheetManager";
-import ScenarioAdminModal from "@/components/ScenarioAdmin/ScenarioAdminModal";
+// CORREÇÃO: Importando do lugar certo (hooks)
+import { useAuth } from "@/hooks";
+import APIService from "@/lib/api";
+import { useUIStore } from "@/stores/characterStore";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
-  const {user, logoutUser} = useAuth();
+  const { user, logoutUser } = useAuth();
   const {
     toggleTableListModal,
     tablesUpdated,
@@ -170,7 +170,7 @@ export default function UserMenu() {
         )}&background=random`;
 
   return (
-    <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       <IconButton
         size="small"
         aria-label="account of current user"
@@ -178,13 +178,13 @@ export default function UserMenu() {
         aria-haspopup="true"
         onClick={handleMenu}
         color="inherit"
-        sx={{p: 0}}
+        sx={{ p: 0 }}
       >
         <Badge
           badgeContent={pendingInvites + unreadCount}
           color="error"
           overlap="circular"
-          anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
           <Avatar
             src={avatarSrc}
@@ -193,7 +193,7 @@ export default function UserMenu() {
               onError: () => setImgError(true),
               referrerPolicy: "no-referrer",
             }}
-            sx={{width: 32, height: 32, border: "1px solid white"}}
+            sx={{ width: 32, height: 32, border: "1px solid white" }}
           />
         </Badge>
       </IconButton>
@@ -289,7 +289,7 @@ export default function UserMenu() {
         fullWidth
         maxWidth="sm"
         fullScreen
-        sx={{zIndex: 99999}} // Garante que a ficha sobreponha a mesa de jogo
+        sx={{ zIndex: 99999 }} // Garante que a ficha sobreponha a mesa de jogo
       >
         <DialogTitle
           sx={{
@@ -309,10 +309,16 @@ export default function UserMenu() {
       </Dialog>
 
       {/* Modal de Admin de Cenários */}
-      <ScenarioAdminModal
+      <Dialog
         open={scenarioAdminOpen}
         onClose={() => setScenarioAdminOpen(false)}
-      />
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogContent>
+          <ScenarioAdminList onClose={() => setScenarioAdminOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

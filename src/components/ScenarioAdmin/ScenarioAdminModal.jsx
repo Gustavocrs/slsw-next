@@ -10,11 +10,9 @@ import {
   Add as AddIcon,
   Close as CloseIcon,
   Delete as DeleteIcon,
-  CloudDownload as DownloadIcon,
   Edit as EditIcon,
-  Refresh as RefreshIcon,
+  Image as ImageIcon,
   Save as SaveIcon,
-  CloudUpload as UploadIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -25,12 +23,8 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Snackbar,
   Stack,
   Tab,
@@ -44,15 +38,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { manualSections } from "@/data/manualSections";
+import APIService from "@/lib/api";
 import * as ScenarioService from "@/lib/scenarioService.js";
-import { getAvailableScenarios as getScenariosList } from "@/scenarios/index.js";
 import AwakeningTableEditor from "./forms/AwakeningTableEditor";
 import GenericItemForm from "./forms/GenericItemForm";
 import KeyValueEditorComp, { ExtraFieldsEditor } from "./forms/KeyValueEditor";
 import LoreTab from "./forms/LoreTab";
-import RulesTableEditor from "./forms/RulesTableEditor";
 
 const KeyValueEditor = KeyValueEditorComp;
 
@@ -61,25 +54,6 @@ function TabPanel({ children, value, index }) {
     <div hidden={value !== index} style={{ padding: "16px 0" }}>
       {value === index && <Box>{children}</Box>}
     </div>
-  );
-}
-
-function ScenarioSelector({ value, onChange, scenarios, loading }) {
-  return (
-    <FormControl size="small" sx={{ minWidth: 200 }} disabled={loading}>
-      <InputLabel>Cenário</InputLabel>
-      <Select
-        value={value}
-        label="Cenário"
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {scenarios.map((s) => (
-          <MenuItem key={s.id} value={s.id}>
-            {s.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
   );
 }
 
@@ -105,19 +79,12 @@ function LoadingOverlay({ loading }) {
   );
 }
 
-function EdgesTab({
-  scenarioData,
-  onUpdate,
-  onAdd,
-  onEdit,
-  onDelete,
-  loading,
-}) {
+function EdgesTab({ scenarioData, onAdd, onEdit, onDelete, loading }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [type, setType] = useState("edge");
 
-  const handleAdd = (item) => {
+  const _handleAdd = (item) => {
     onAdd(item);
   };
 
@@ -324,7 +291,7 @@ function HindrancesTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
   );
 }
 
-function PowersTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
+function PowersTab({ scenarioData, onUpdate, onDelete, loading }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
@@ -484,6 +451,7 @@ function SheetTab({ scenarioData, onUpdate, loading }) {
 
 function ConfigTab({ scenarioData, onUpdate, loading }) {
   const [metadata, setMetadata] = useState(scenarioData?.metadata || {});
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (scenarioData?.metadata) {
@@ -497,11 +465,83 @@ function ConfigTab({ scenarioData, onUpdate, loading }) {
     onUpdate("metadata", newMetadata);
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const url = await APIService.uploadFile(file);
+      const newMetadata = { ...metadata, imageUrl: url };
+      setMetadata(newMetadata);
+      onUpdate("metadata", newMetadata);
+    } catch (error) {
+      console.error("Erro ao fazer upload:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Box sx={{ position: "relative" }}>
       <LoadingOverlay loading={loading} />
 
       <Stack spacing={3}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Imagem de Capa
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+            <Box
+              sx={{
+                width: 120,
+                height: 80,
+                borderRadius: 1,
+                overflow: "hidden",
+                bgcolor: "grey.200",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundImage: metadata.imageUrl
+                  ? `url(${metadata.imageUrl})`
+                  : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              {!metadata.imageUrl && (
+                <ImageIcon sx={{ color: "grey.400", fontSize: 32 }} />
+              )}
+            </Box>
+            <Box>
+              <Button variant="outlined" component="label" disabled={uploading}>
+                {uploading ? "Enviando..." : "Escolher Imagem"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleImageUpload}
+                />
+              </Button>
+              {metadata.imageUrl && (
+                <Button
+                  variant="text"
+                  color="error"
+                  size="small"
+                  sx={{ ml: 1 }}
+                  onClick={() => {
+                    const newMetadata = { ...metadata, imageUrl: "" };
+                    setMetadata(newMetadata);
+                    onUpdate("metadata", newMetadata);
+                  }}
+                >
+                  Remover
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </Paper>
+
         <Paper sx={{ p: 2 }}>
           <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
             Metadata
@@ -533,17 +573,19 @@ function ConfigTab({ scenarioData, onUpdate, loading }) {
             />
           </Stack>
         </Paper>
-
-        <Alert severity="info">
-          Os dados são salvos automaticamente no Firestore após cada alteração.
-        </Alert>
       </Stack>
     </Box>
   );
 }
 
-export default function ScenarioAdminModal({ open, onClose }) {
-  const [selectedScenarioId, setSelectedScenarioId] = useState("solo-leveling");
+export default function ScenarioAdminModal({
+  open,
+  onClose,
+  initialScenarioId,
+}) {
+  const [selectedScenarioId, setSelectedScenarioId] = useState(
+    initialScenarioId || "solo-leveling",
+  );
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -553,8 +595,7 @@ export default function ScenarioAdminModal({ open, onClose }) {
     message: "",
     severity: "success",
   });
-
-  const availableScenarios = useMemo(() => getScenariosList(), []);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const loadScenario = useCallback(async () => {
     setLoading(true);
@@ -595,32 +636,41 @@ export default function ScenarioAdminModal({ open, onClose }) {
   }, [selectedScenarioId]);
 
   useEffect(() => {
+    if (initialScenarioId) {
+      setSelectedScenarioId(initialScenarioId);
+    }
+  }, [initialScenarioId]);
+
+  useEffect(() => {
     if (open && selectedScenarioId) {
       loadScenario();
     }
   }, [open, selectedScenarioId, loadScenario]);
 
-  const handleUpdate = async (field, value) => {
+  const handleUpdate = (field, value) => {
+    const updated = { ...scenarioData, [field]: value };
+    setScenarioData(updated);
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
+    if (!scenarioData) return;
     setSaving(true);
     try {
-      const updated = { ...scenarioData, [field]: value };
-
       const scenarioId = scenarioData?.id || scenarioData?.metadata?.id;
-
       if (!scenarioId) {
-        console.warn("Scenario ID não disponível para salvar:", scenarioData);
-        setScenarioData(updated);
         setSnackbar({
           open: true,
-          message: "Alteração local aplicada (cenário não salvo)",
-          severity: "info",
+          message: "ID do cenário não disponível",
+          severity: "error",
         });
         setSaving(false);
         return;
       }
-
-      await ScenarioService.saveScenario(updated);
-      setScenarioData(updated);
+      const dataToSave = { ...scenarioData, id: scenarioId };
+      console.log("Salvando cenário:", scenarioId, dataToSave);
+      await ScenarioService.saveScenario(dataToSave);
+      setHasChanges(false);
       setSnackbar({
         open: true,
         message: "Salvo com sucesso!",
@@ -634,23 +684,23 @@ export default function ScenarioAdminModal({ open, onClose }) {
     }
   };
 
-  const handleAdd = async (type, item) => {
+  const handleAdd = (type, item) => {
     const current = scenarioData[type] || [];
     const updated = [...current, { ...item, source: selectedScenarioId }];
-    await handleUpdate(type, updated);
+    handleUpdate(type, updated);
   };
 
-  const handleEdit = async (type, item) => {
+  const handleEdit = (type, item) => {
     const current = scenarioData[type] || [];
     const updated = current.map((h) => (h.name === item.name ? item : h));
-    await handleUpdate(type, updated);
+    handleUpdate(type, updated);
   };
 
-  const handleDelete = async (type, item) => {
+  const handleDelete = (type, item) => {
     if (!window.confirm(`Confirmar exclusão de "${item.name}"?`)) return;
     const current = scenarioData[type] || [];
     const updated = current.filter((h) => h.name !== item.name);
-    await handleUpdate(type, updated);
+    handleUpdate(type, updated);
   };
 
   const handleClose = () => {
@@ -670,11 +720,6 @@ export default function ScenarioAdminModal({ open, onClose }) {
     { label: "Config", icon: <ConfigIcon /> },
   ];
 
-  const getIcon = (name) => {
-    const found = tabs.find((t) => t.label === name);
-    return found?.icon || null;
-  };
-
   return (
     <Dialog open={open} onClose={handleClose} fullScreen maxWidth="lg">
       <DialogTitle
@@ -688,14 +733,20 @@ export default function ScenarioAdminModal({ open, onClose }) {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography variant="h6">⚙️ Admin de Cenários</Typography>
-          <ScenarioSelector
-            value={selectedScenarioId}
-            onChange={setSelectedScenarioId}
-            scenarios={availableScenarios}
-            loading={loading}
-          />
+          <Typography variant="h6">⚙️ Configurar Cenário</Typography>
+          {hasChanges && (
+            <Chip label="Alterações pendentes" color="warning" size="small" />
+          )}
           {saving && <CircularProgress size={20} />}
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+          >
+            Salvar
+          </Button>
         </Box>
         <IconButton onClick={handleClose}>
           <CloseIcon />
@@ -706,13 +757,13 @@ export default function ScenarioAdminModal({ open, onClose }) {
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={tabValue}
-            onChange={(e, v) => setTabValue(v)}
+            onChange={(_e, v) => setTabValue(v)}
             variant="scrollable"
             scrollButtons="auto"
           >
-            {tabs.map((tab, idx) => (
+            {tabs.map((tab) => (
               <Tab
-                key={idx}
+                key={tab.label}
                 icon={tab.icon}
                 iconPosition="start"
                 label={tab.label}
@@ -752,7 +803,7 @@ export default function ScenarioAdminModal({ open, onClose }) {
             <PowersTab
               scenarioData={scenarioData}
               onUpdate={handleUpdate}
-              onAdd={(item) => {}}
+              onAdd={(_item) => {}}
               onDelete={(item) => {
                 const powers = { ...(scenarioData?.powers || {}) };
                 delete powers[item.name];

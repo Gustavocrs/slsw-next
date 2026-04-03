@@ -9,45 +9,45 @@ import {
   Add as AddIcon,
   AutoAwesome as AiIcon,
   AutoFixHigh as AwakeningIcon,
+  Backpack as BackpackIcon,
   VolunteerActivism as BlessingIcon,
+  LocalFireDepartment as BurnIcon,
   Person as CharacterIcon,
   CheckCircle,
   CloudUpload,
+  ColorLens as ColorIcon,
   ContentCopy as CopyIcon,
-  LocalFireDepartment as BurnIcon,
+  DashboardCustomize as DashboardCustomizeIcon,
   Security as DefenseIcon,
   Error as ErrorIcon,
-  AcUnit as FrozenIcon,
+  ExpandMore as ExpandMoreIcon,
   BatteryAlert as FatigueIcon,
+  FormatColorText as FontIcon,
+  Web as FooterIcon,
+  AcUnit as FrozenIcon,
   BadgeOutlined as IdentityIcon,
   Inventory2 as InventoryIcon,
   Notes as NotesIcon,
   Help as OtherStatusIcon,
+  Palette as PaletteIcon,
   PanTool as ParalyzedIcon,
-  ExpandMore as ExpandMoreIcon,
   Science as PoisonIcon,
   EmojiEvents as RankIcon,
   Refresh as RefreshIcon,
   Remove as RemoveIcon,
+  RestartAlt as ResetIcon,
   Settings as SettingsIcon,
   FlashOn as ShockIcon,
   Psychology as SkillIcon,
   MenuBook as SpellbookIcon,
   Science as StatusIcon,
+  Brush as StyleIcon,
   Stars as TraitIcon,
   VisibilityOutlined as ViewIcon,
   AccountBalanceWallet as WalletIcon,
   Gavel as WeaponIcon,
-  FormatColorText as FontIcon,
-  Palette as PaletteIcon,
-  ColorLens as ColorIcon,
-  Brush as StyleIcon,
   Widgets as WidgetsIcon,
-  Web as FooterIcon,
   LocalHospital as WoundIcon,
-  RestartAlt as ResetIcon,
-  DashboardCustomize as DashboardCustomizeIcon,
-  Backpack as BackpackIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -71,6 +71,7 @@ import {
   Paper,
   Popover,
   Select,
+  Slider,
   Stack,
   Switch,
   Tab,
@@ -78,48 +79,47 @@ import {
   TextField,
   Tooltip,
   Typography,
-  Slider,
 } from "@mui/material";
-import {alpha, styled} from "@mui/material/styles";
-import {doc, onSnapshot} from "firebase/firestore";
-import React, {useMemo, useState} from "react";
-import {useAuth} from "@/hooks";
+import { alpha, styled } from "@mui/material/styles";
+import { doc, onSnapshot } from "firebase/firestore";
+import React, { useMemo, useState } from "react";
+import { useAuth } from "@/hooks";
 import APIService from "@/lib/api";
 import {
   getCharacterStatusEffects,
   toggleCharacterStatusEffect,
 } from "@/lib/characterStatus";
-import {db} from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import {
   calculateMaxMana,
   calculateTotalEdgePoints,
   calculateTotalHindrancePoints,
   calculateTotalSkillPoints,
   DICE,
-  getEdges,
   filterEdgesByRank,
   filterPowersByRank,
-  getSkillAttribute,
+  getEdges,
   getHindrances,
   getPowers,
+  getSkillAttribute,
   RANKS,
   SKILLS,
 } from "@/lib/rpgEngine";
-import {getTableGameSession} from "@/lib/sheetLocks";
-import {useCharacterStore, useUIStore} from "@/stores/characterStore";
+import { getTableGameSession } from "@/lib/sheetLocks";
+import { useCharacterStore, useUIStore } from "@/stores/characterStore";
 import ArmorList from "./ArmorList";
 import AwakeningSection from "./AwakeningSection";
-import {CombatList} from "./CombatList";
+import { CombatList } from "./CombatList";
 import ComplicacoesList from "./ComplicacoesList";
 import EspoliosList from "./EspoliosList";
 import ItemsList from "./ItemsList";
 import MagiasList from "./MagiasList";
+import PaperDoll from "./PaperDoll";
 import SkillsList from "./SkillsList";
 import VantagesList from "./VantagesList";
 import WeaponsList from "./WeaponsList";
-import PaperDoll from "./PaperDoll";
 
-const TabsPaper = styled(Paper)(({theme}) => ({
+const TabsPaper = styled(Paper)(({ theme }) => ({
   marginBottom: "12px",
   borderRadius: "10px",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
@@ -128,7 +128,7 @@ const TabsPaper = styled(Paper)(({theme}) => ({
   },
 }));
 
-const TabStyled = styled(Tab)(({theme}) => ({
+const TabStyled = styled(Tab)(({ theme }) => ({
   textTransform: "none",
   fontWeight: 600,
   fontSize: "0.95rem",
@@ -148,7 +148,7 @@ const TabStyled = styled(Tab)(({theme}) => ({
   },
 }));
 
-const StyledTextField = styled(TextField)(({theme}) => ({
+const StyledTextField = styled(TextField)(({ theme }) => ({
   "& .MuiOutlinedInput-root": {
     borderRadius: "8px",
     fontSize: "0.95rem",
@@ -158,12 +158,12 @@ const StyledTextField = styled(TextField)(({theme}) => ({
   },
 }));
 
-const StyledSelect = styled(Select)(({theme}) => ({
+const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   fontSize: "0.95rem",
 }));
 
-const PointsBadge = styled("span")(({theme}) => ({
+const PointsBadge = styled("span")(({ theme }) => ({
   display: "inline-block",
   padding: "4px 10px",
   borderRadius: "10px",
@@ -239,7 +239,7 @@ const hexToRgba = (hex, alpha = 1) => {
   return hex;
 };
 
-const ConfigCard = ({title, icon, children}) => (
+const ConfigCard = ({ title, icon, children }) => (
   <Paper
     elevation={0}
     sx={{
@@ -262,18 +262,22 @@ const ConfigCard = ({title, icon, children}) => (
         gap: 1.5,
       }}
     >
-      {icon && React.cloneElement(icon, {sx: {fontSize: 20, color: "#64748b"}})}
-      <Typography variant="subtitle2" sx={{fontWeight: 700, color: "#334155"}}>
+      {icon &&
+        React.cloneElement(icon, { sx: { fontSize: 20, color: "#64748b" } })}
+      <Typography
+        variant="subtitle2"
+        sx={{ fontWeight: 700, color: "#334155" }}
+      >
         {title}
       </Typography>
     </Box>
-    <Box sx={{p: 2, flex: 1}}>{children}</Box>
+    <Box sx={{ p: 2, flex: 1 }}>{children}</Box>
   </Paper>
 );
 
-const ColorPickerItem = ({label, colorKey, value, onChange, onReset}) => (
-  <Box sx={{display: "flex", alignItems: "center", gap: 1.5, mb: 1.5}}>
-    <Box sx={{position: "relative", width: 32, height: 32, flexShrink: 0}}>
+const ColorPickerItem = ({ label, colorKey, value, onChange, onReset }) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+    <Box sx={{ position: "relative", width: 32, height: 32, flexShrink: 0 }}>
       <input
         type="color"
         value={value || "#000000"}
@@ -301,10 +305,10 @@ const ColorPickerItem = ({label, colorKey, value, onChange, onReset}) => (
         }}
       />
     </Box>
-    <Box sx={{minWidth: 0, flex: 1}}>
+    <Box sx={{ minWidth: 0, flex: 1 }}>
       <Typography
         variant="body2"
-        sx={{fontWeight: 600, color: "#334155", lineHeight: 1.2}}
+        sx={{ fontWeight: 600, color: "#334155", lineHeight: 1.2 }}
       >
         {label}
       </Typography>
@@ -314,7 +318,7 @@ const ColorPickerItem = ({label, colorKey, value, onChange, onReset}) => (
           sx={{
             cursor: "pointer",
             color: "#94a3b8",
-            "&:hover": {color: "#ef4444"},
+            "&:hover": { color: "#ef4444" },
           }}
           onClick={onReset}
         >
@@ -345,7 +349,9 @@ const CONFIG_LABELS = {
 const EDGE_DESCRIPTION_MAP = (() => {
   try {
     const edges = getEdges();
-    return Object.fromEntries(edges.map((edge) => [edge.name, edge.description]));
+    return Object.fromEntries(
+      edges.map((edge) => [edge.name, edge.description]),
+    );
   } catch {
     return {};
   }
@@ -377,7 +383,7 @@ const OverviewPanel = ({
 }) => (
   <Box
     sx={{
-      p: compact ? 0.75 : {xs: 1.25, md: 1.5},
+      p: compact ? 0.75 : { xs: 1.25, md: 1.5 },
       borderRadius: "8px",
       border: `1px solid ${alpha(accent, 0.18)}`,
       background: `linear-gradient(180deg, ${alpha(accent, 0.12)} 0%, rgba(255,255,255,${cardOpacity}) 100%)`,
@@ -447,7 +453,7 @@ const OverviewPanel = ({
             {icon}
           </Box>
         )}
-        <Box sx={{minWidth: 0}}>
+        <Box sx={{ minWidth: 0 }}>
           <Typography
             variant="subtitle1"
             sx={{
@@ -479,7 +485,7 @@ const OverviewPanel = ({
   </Box>
 );
 
-const SectionRow = ({label, value, helper, labelColor, valueColor}) => (
+const SectionRow = ({ label, value, helper, labelColor, valueColor }) => (
   <Box
     sx={{
       py: 0.95,
@@ -494,7 +500,7 @@ const SectionRow = ({label, value, helper, labelColor, valueColor}) => (
       },
     }}
   >
-    <Box sx={{minWidth: 0}}>
+    <Box sx={{ minWidth: 0 }}>
       <Typography
         variant="caption"
         sx={{
@@ -510,7 +516,7 @@ const SectionRow = ({label, value, helper, labelColor, valueColor}) => (
       {helper && (
         <Typography
           variant="caption"
-          sx={{display: "block", color: "#94a3b8", mt: 0.3}}
+          sx={{ display: "block", color: "#94a3b8", mt: 0.3 }}
         >
           {helper}
         </Typography>
@@ -529,16 +535,16 @@ const SectionRow = ({label, value, helper, labelColor, valueColor}) => (
   </Box>
 );
 
-const EmptyState = ({children}) => (
-  <Typography variant="body2" sx={{color: "#64748b"}}>
+const EmptyState = ({ children }) => (
+  <Typography variant="body2" sx={{ color: "#64748b" }}>
     {children}
   </Typography>
 );
 
-const TabLabel = ({icon, label}) => (
-  <Box sx={{display: "inline-flex", alignItems: "center", gap: 0.9}}>
-    {React.cloneElement(icon, {sx: {fontSize: 18}})}
-    <Box component="span" sx={{display: {xs: "none", sm: "inline"}}}>
+const TabLabel = ({ icon, label }) => (
+  <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.9 }}>
+    {React.cloneElement(icon, { sx: { fontSize: 18 } })}
+    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
       {label}
     </Box>
   </Box>
@@ -589,7 +595,7 @@ const MetricCard = ({
         gap: compact ? 0.5 : 1.5,
       }}
     >
-      <Box sx={{minWidth: 0}}>
+      <Box sx={{ minWidth: 0 }}>
         <Typography
           variant="caption"
           sx={{
@@ -608,7 +614,7 @@ const MetricCard = ({
             fontWeight: 900,
             color: customTextColor || "#0f172a",
             mt: compact ? 0 : 0.35,
-            fontSize: compact ? "1rem" : {xs: "1.24rem", md: "1.35rem"},
+            fontSize: compact ? "1rem" : { xs: "1.24rem", md: "1.35rem" },
             lineHeight: 1.2,
           }}
         >
@@ -617,7 +623,11 @@ const MetricCard = ({
         {helper && !compact && (
           <Typography
             variant="caption"
-            sx={{color: customAuxColor || "#475569", display: "block", mt: 0.5}}
+            sx={{
+              color: customAuxColor || "#475569",
+              display: "block",
+              mt: 0.5,
+            }}
           >
             {helper}
           </Typography>
@@ -706,7 +716,8 @@ function SheetView({
   character: propCharacter,
   actions: propActions,
 }) {
-  const {sheetTab, setSheetTab, selectedTable, showNotification} = useUIStore();
+  const { sheetTab, setSheetTab, selectedTable, showNotification } =
+    useUIStore();
 
   // Se estiver inspecionando (propCharacter), usa estado local para não afetar a navegação principal
   const [localTab, setLocalTab] = React.useState(0);
@@ -781,10 +792,10 @@ function SheetView({
     const newHidden = currentHidden.includes(key)
       ? currentHidden.filter((k) => k !== key)
       : [...currentHidden, key];
-    updateAttribute("sheetPreferences", {...prefs, hiddenCards: newHidden});
+    updateAttribute("sheetPreferences", { ...prefs, hiddenCards: newHidden });
   };
 
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   const gameSession = useMemo(
     () => getTableGameSession(selectedTable),
@@ -803,7 +814,7 @@ function SheetView({
 
   // Compact Mode
   const isCompactMode = !!character.sheetPreferences?.compactMode;
-  const panelSx = isCompactMode ? {p: 0.5} : {};
+  const panelSx = isCompactMode ? { p: 0.5 } : {};
 
   // Background Logic for Tab 0
   const customBackground = character.sheetColors?.background;
@@ -872,36 +883,6 @@ function SheetView({
   );
 
   const isRemoteUpdate = React.useRef(false);
-  const [autoSaveStatus, setAutoSaveStatus] = React.useState("idle"); // idle, saving, saved, error
-
-  // Lógica de Auto-Save
-  React.useEffect(() => {
-    // Não salva se estiver inspecionando (propCharacter existe) ou se não tiver ID/User
-    if (propCharacter || !character._id || !user) return;
-
-    // Se a atualização veio do banco (GM/Listener), não salva de volta para evitar loop/reversão
-    if (isRemoteUpdate.current) {
-      isRemoteUpdate.current = false;
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        setAutoSaveStatus("saving");
-        // Usa APIService direto para não atualizar o store e evitar loops
-        await APIService.saveCharacter(user.uid, character);
-        setAutoSaveStatus("saved");
-
-        // Volta para idle após 2 segundos
-        setTimeout(() => setAutoSaveStatus("idle"), 2000);
-      } catch (error) {
-        console.error("Erro no auto-save:", error);
-        setAutoSaveStatus("error");
-      }
-    }, 3000); // Espera 3 segundos após a última alteração
-
-    return () => clearTimeout(timeoutId);
-  }, [character, propCharacter, user]);
 
   // Listener para sincronização em tempo real (ex: GM altera mana/vida)
   React.useEffect(() => {
@@ -917,8 +898,8 @@ function SheetView({
 
           // Comparação simples para evitar updates desnecessários e loops
           // Removemos updatedAt da comparação pois ele muda a cada save
-          const {updatedAt: rUp, ...rRest} = remoteData;
-          const {updatedAt: cUp, ...cRest} = currentCharacter;
+          const { updatedAt: rUp, ...rRest } = remoteData;
+          const { updatedAt: cUp, ...cRest } = currentCharacter;
 
           if (JSON.stringify(rRest) !== JSON.stringify(cRest)) {
             isRemoteUpdate.current = true; // Marca como atualização remota
@@ -1005,7 +986,7 @@ function SheetView({
   };
 
   const handlePromptDataChange = (field, value) => {
-    setPromptData((prev) => ({...prev, [field]: value}));
+    setPromptData((prev) => ({ ...prev, [field]: value }));
   };
 
   const copyToClipboard = () => {
@@ -1039,7 +1020,7 @@ Negative Prompt: ${promptData.negativePrompt}.
     if (statusEffects.length === 0) return "Sem efeitos";
 
     return (
-      <Box sx={{display: "flex", gap: 0.5, flexWrap: "wrap"}}>
+      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
         {statusEffects.map((effect) => {
           let Icon = OtherStatusIcon;
           let color = "#a16207";
@@ -1060,7 +1041,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
           return (
             <Tooltip key={effect} title={effect} arrow>
-              <Icon sx={{color, fontSize: 24}} />
+              <Icon sx={{ color, fontSize: 24 }} />
             </Tooltip>
           );
         })}
@@ -1189,7 +1170,7 @@ Negative Prompt: ${promptData.negativePrompt}.
   const handleChipDoubleClick = (event, listName, index, item) => {
     if (isFieldLocked(listName)) return;
     setUseItemAnchor(event.currentTarget);
-    setChipItemToUse({listName, index, item});
+    setChipItemToUse({ listName, index, item });
   };
 
   const handleConfirmChipUse = () => {
@@ -1257,7 +1238,7 @@ Negative Prompt: ${promptData.negativePrompt}.
   );
 
   const attributePointsSpent = useMemo(() => {
-    const costs = {d4: 0, d6: 1, d8: 2, d10: 3, d12: 4};
+    const costs = { d4: 0, d6: 1, d8: 2, d10: 3, d12: 4 };
     return (
       (costs[character.agilidade || "d4"] || 0) +
       (costs[character.intelecto || "d4"] || 0) +
@@ -1290,41 +1271,41 @@ Negative Prompt: ${promptData.negativePrompt}.
       name: "name",
       label: "Perícia",
       type: "select",
-      options: Object.keys(SKILLS).map((k) => ({value: k, label: k})),
+      options: Object.keys(SKILLS).map((k) => ({ value: k, label: k })),
     },
     {
       name: "die",
       label: "Dado",
       type: "select",
-      options: DICE.map((d) => ({value: d, label: d})),
+      options: DICE.map((d) => ({ value: d, label: d })),
     },
   ];
 
   const weaponFields = [
-    {name: "name", label: "Arma"},
-    {name: "damage", label: "Dano"},
-    {name: "range", label: "Alcance"},
+    { name: "name", label: "Arma" },
+    { name: "damage", label: "Dano" },
+    { name: "range", label: "Alcance" },
   ];
 
   const armorFields = [
-    {name: "name", label: "Armadura"},
-    {name: "defense", label: "Defesa"},
-    {name: "parry", label: "Aparar"},
+    { name: "name", label: "Armadura" },
+    { name: "defense", label: "Defesa" },
+    { name: "parry", label: "Aparar" },
   ];
 
   const resources_fields = [
-    {name: "name", label: "Nome", flex: 1},
-    {name: "pp", label: "Custo", flex: 0.5, width: "80px"},
+    { name: "name", label: "Nome", flex: 1 },
+    { name: "pp", label: "Custo", flex: 0.5, width: "80px" },
     {
       name: "nivel",
       label: "Nível",
       type: "select",
-      options: [1, 2, 3, 4, 5].map((n) => ({value: n, label: `${n}`})),
+      options: [1, 2, 3, 4, 5].map((n) => ({ value: n, label: `${n}` })),
       flex: 0.5,
       width: "80px",
     },
-    {name: "descricao", label: "Descrição"},
-    {name: "limitacao", label: "Limitação"},
+    { name: "descricao", label: "Descrição" },
+    { name: "limitacao", label: "Limitação" },
   ];
 
   // Cálculos de Combate
@@ -1362,21 +1343,21 @@ Negative Prompt: ${promptData.negativePrompt}.
   const autoSaveMeta =
     autoSaveStatus === "saving"
       ? {
-          icon: <CloudUpload sx={{fontSize: 16}} />,
+          icon: <CloudUpload sx={{ fontSize: 16 }} />,
           text: "Salvando",
           color: "#475569",
           bg: alpha("#cbd5e1", 0.42),
         }
       : autoSaveStatus === "saved"
         ? {
-            icon: <CheckCircle sx={{fontSize: 16}} />,
+            icon: <CheckCircle sx={{ fontSize: 16 }} />,
             text: "Salvo",
             color: "#166534",
             bg: alpha("#86efac", 0.25),
           }
         : autoSaveStatus === "error"
           ? {
-              icon: <ErrorIcon sx={{fontSize: 16}} />,
+              icon: <ErrorIcon sx={{ fontSize: 16 }} />,
               text: "Erro ao salvar",
               color: "#b91c1c",
               bg: alpha("#fca5a5", 0.25),
@@ -1397,12 +1378,12 @@ Negative Prompt: ${promptData.negativePrompt}.
               height: 3,
             },
             "& .MuiTabs-scroller": {
-              display: {xs: "flex", sm: "block"},
+              display: { xs: "flex", sm: "block" },
               width: "100%",
             },
             "& .MuiTabs-flexContainer": {
-              display: {xs: "flex", sm: "flex"},
-              justifyContent: {xs: "space-between", sm: "flex-start"},
+              display: { xs: "flex", sm: "flex" },
+              justifyContent: { xs: "space-between", sm: "flex-start" },
               gap: 2,
               width: "100%",
             },
@@ -1442,7 +1423,7 @@ Negative Prompt: ${promptData.negativePrompt}.
       </TabsPaper>
 
       {hasLockedFieldsNotice && (
-        <Alert severity="warning" sx={{mb: 2}}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
           Jogo em andamento. O GM bloqueou parte da ficha durante esta sessão.
         </Alert>
       )}
@@ -1451,8 +1432,8 @@ Negative Prompt: ${promptData.negativePrompt}.
       {tabValue === 0 && (
         <Box
           sx={{
-            p: {xs: 1, md: 1.5},
-            pb: {xs: 12, md: 14},
+            p: { xs: 1, md: 1.5 },
+            pb: { xs: 12, md: 14 },
             borderRadius: "8px",
             border: "1px solid rgba(148, 163, 184, 0.18)",
             background: customBackground || defaultBackground,
@@ -1470,7 +1451,7 @@ Negative Prompt: ${promptData.negativePrompt}.
         >
           <Grid container spacing={1.5}>
             {isCardVisible("portrait") && (
-              <Grid item xs={12} md={3} sx={{display: "flex"}}>
+              <Grid item xs={12} md={3} sx={{ display: "flex" }}>
                 <OverviewPanel
                   title="Retrato"
                   icon={<CharacterIcon />}
@@ -1490,8 +1471,8 @@ Negative Prompt: ${promptData.negativePrompt}.
                   <Box
                     sx={{
                       position: "relative",
-                      minHeight: {xs: 200, md: 248},
-                      maxHeight: {xs: 320, md: 380},
+                      minHeight: { xs: 200, md: 248 },
+                      maxHeight: { xs: 320, md: 380 },
                       borderRadius: "8px",
                       overflow: "hidden",
                       border: "1px solid rgba(148, 163, 184, 0.22)",
@@ -1509,7 +1490,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                           borderRadius: "25%",
                           width: "100%",
                           height: "100%",
-                          maxHeight: {xs: 320, md: 380},
+                          maxHeight: { xs: 320, md: 380 },
                           objectFit: "contain",
                           objectPosition: "top center",
                           display: "block",
@@ -1526,11 +1507,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                           color: alpha("#0f172a", 0.4),
                         }}
                       >
-                        <Box sx={{textAlign: "center"}}>
-                          <CharacterIcon sx={{fontSize: 56, mb: 1}} />
+                        <Box sx={{ textAlign: "center" }}>
+                          <CharacterIcon sx={{ fontSize: 56, mb: 1 }} />
                           <Typography
                             variant="body2"
-                            sx={{fontWeight: 700, letterSpacing: 0.4}}
+                            sx={{ fontWeight: 700, letterSpacing: 0.4 }}
                           >
                             Sem retrato
                           </Typography>
@@ -1546,7 +1527,7 @@ Negative Prompt: ${promptData.negativePrompt}.
               item
               xs={12}
               md={isCardVisible("portrait") ? 9 : 12}
-              sx={{display: "flex"}}
+              sx={{ display: "flex" }}
             >
               <OverviewPanel
                 title={null} // Título removido conforme solicitado
@@ -1569,14 +1550,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                 <Grid container spacing={2} alignItems="center">
                   {/* Coluna 1: Nome e Identidade */}
                   <Grid item xs={12} md={6}>
-                    <Box sx={{minWidth: 0}}>
+                    <Box sx={{ minWidth: 0 }}>
                       <Typography
                         variant="h4"
                         sx={{
                           fontWeight: 900,
                           color: getColor("fontName"),
                           letterSpacing: -0.5,
-                          fontSize: {xs: "1.7rem", md: "2rem"},
+                          fontSize: { xs: "1.7rem", md: "2rem" },
                         }}
                       >
                         {character.nome || "Sem Nome"}
@@ -1595,21 +1576,6 @@ Negative Prompt: ${promptData.negativePrompt}.
                           : "Sem afiliação definida"}
                       </Typography>
                     </Box>
-                    {!propCharacter && autoSaveMeta && (
-                      <Box sx={{mt: 1}}>
-                        <Chip
-                          size="small"
-                          icon={autoSaveMeta.icon}
-                          label={autoSaveMeta.text}
-                          sx={{
-                            bgcolor: autoSaveMeta.bg,
-                            color: autoSaveMeta.color,
-                            fontWeight: 700,
-                            border: "1px solid rgba(15, 23, 42, 0.06)",
-                          }}
-                        />
-                      </Box>
-                    )}
                   </Grid>
 
                   {/* Coluna 2: XP, Riqueza, Bênçãos */}
@@ -1686,7 +1652,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   </Grid>
                 </Grid>
 
-                <Divider sx={{my: 0.5}} />
+                <Divider sx={{ my: 0.5 }} />
 
                 {/* Linha Inferior: Atributos e Combate integrados */}
                 <Grid container spacing={1.5}>
@@ -1699,7 +1665,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       titleColor={getColor("fontTitle")}
                       subtitleColor={getColor("fontText")}
                       iconStyle={getIconStyle()}
-                      sx={{height: "100%"}}
+                      sx={{ height: "100%" }}
                       compact={isCompactMode}
                       cardOpacity={getCardOpacity()}
                     >
@@ -1711,11 +1677,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                         }}
                       >
                         {[
-                          {label: "AGI", value: character.agilidade || "d4"},
-                          {label: "INT", value: character.intelecto || "d4"},
-                          {label: "ESP", value: character.espirito || "d4"},
-                          {label: "FOR", value: character.forca || "d4"},
-                          {label: "VIG", value: character.vigor || "d4"},
+                          { label: "AGI", value: character.agilidade || "d4" },
+                          { label: "INT", value: character.intelecto || "d4" },
+                          { label: "ESP", value: character.espirito || "d4" },
+                          { label: "FOR", value: character.forca || "d4" },
+                          { label: "VIG", value: character.vigor || "d4" },
                         ].map((attribute) => (
                           <Box
                             key={attribute.label}
@@ -1770,7 +1736,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       titleColor={getColor("fontTitle")}
                       subtitleColor={getColor("fontText")}
                       iconStyle={getIconStyle()}
-                      sx={{height: "100%"}}
+                      sx={{ height: "100%" }}
                       compact={isCompactMode}
                       cardOpacity={getCardOpacity()}
                     >
@@ -1848,7 +1814,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   </Grid>
                 </Grid>
 
-                <Divider sx={{my: 0.5}} />
+                <Divider sx={{ my: 0.5 }} />
 
                 {/* Linha Inferior 2: Widgets de Status */}
                 <Box
@@ -1927,7 +1893,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     value={`${currentMana}/${maxMana}`}
                     helper="Reserva arcana"
                     icon={
-                      <span style={{fontSize: "1.35rem", lineHeight: 1}}>
+                      <span style={{ fontSize: "1.35rem", lineHeight: 1 }}>
                         🌀
                       </span>
                     }
@@ -1966,7 +1932,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             </Grid>
           </Grid>
 
-          <Box sx={{mt: 1.5}}>
+          <Box sx={{ mt: 1.5 }}>
             <Grid container spacing={1.25} alignItems="flex-start">
               {/* COLUNA ESQUERDA: Perícias, Recursos, Magias, Notas */}
               {visibleLeft && (
@@ -2024,7 +1990,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                   </Typography>
                                   <Typography
                                     variant="caption"
-                                    sx={{color: "#64748b", fontWeight: 700}}
+                                    sx={{ color: "#64748b", fontWeight: 700 }}
                                   >
                                     (
                                     {(getSkillAttribute(skill.name) || "")
@@ -2035,7 +2001,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                 </Box>
                                 <Typography
                                   variant="body2"
-                                  sx={{fontWeight: 800, color: "#0f766e"}}
+                                  sx={{ fontWeight: 800, color: "#0f766e" }}
                                 >
                                   {skill.die || "d4"}
                                 </Typography>
@@ -2060,7 +2026,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "grid", gap: 0.85}}>
+                        <Box sx={{ display: "grid", gap: 0.85 }}>
                           {(character.recursos_despertar || []).length > 0 ? (
                             character.recursos_despertar.map(
                               (resource, index) => (
@@ -2082,7 +2048,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                       gap: 1,
                                     }}
                                   >
-                                    <Box sx={{minWidth: 0}}>
+                                    <Box sx={{ minWidth: 0 }}>
                                       <Typography
                                         variant="body2"
                                         sx={{
@@ -2107,7 +2073,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                       {resource.descricao && (
                                         <Typography
                                           variant="body2"
-                                          sx={{mt: 0.5, color: "#475569"}}
+                                          sx={{ mt: 0.5, color: "#475569" }}
                                         >
                                           {resource.descricao}
                                         </Typography>
@@ -2181,7 +2147,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "grid", gap: 0.85}}>
+                        <Box sx={{ display: "grid", gap: 0.85 }}>
                           {(character.magias || []).length > 0 ? (
                             character.magias.map((spell, index) => (
                               <Box
@@ -2201,7 +2167,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                     gap: 1,
                                   }}
                                 >
-                                  <Box sx={{minWidth: 0}}>
+                                  <Box sx={{ minWidth: 0 }}>
                                     <Typography
                                       variant="body2"
                                       sx={{
@@ -2314,7 +2280,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "grid", gap: 0.85}}>
+                        <Box sx={{ display: "grid", gap: 0.85 }}>
                           {(character.armas || []).length > 0 ? (
                             character.armas.map((weapon, index) => (
                               <Box
@@ -2386,7 +2352,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "grid", gap: 0.85}}>
+                        <Box sx={{ display: "grid", gap: 0.85 }}>
                           {(character.armaduras || []).length > 0 ? (
                             character.armaduras.map((armor, index) => (
                               <Box
@@ -2415,7 +2381,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                                   >
                                     {armor.name}
                                   </Typography>
-                                  <Box sx={{textAlign: "right"}}>
+                                  <Box sx={{ textAlign: "right" }}>
                                     {(parseInt(
                                       armor.defense || armor.def,
                                       10,
@@ -2467,7 +2433,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.7 }}
+                        >
                           {(character.vantagens || []).length > 0 ? (
                             character.vantagens.map((item, index) => (
                               <Tooltip
@@ -2508,7 +2476,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.7 }}
+                        >
                           {(character.complicacoes || []).length > 0 ? (
                             character.complicacoes.map((item, index) => (
                               <Tooltip
@@ -2549,7 +2519,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.7 }}
+                        >
                           {(character.itens || []).length > 0 ? (
                             character.itens.map((item, index) => (
                               <Chip
@@ -2603,7 +2575,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                         compact={isCompactMode}
                         cardOpacity={getCardOpacity()}
                       >
-                        <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.7}}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.7 }}
+                        >
                           {(character.espolios || []).length > 0 ? (
                             character.espolios.map((item, index) => (
                               <Chip
@@ -2669,11 +2643,11 @@ Negative Prompt: ${promptData.negativePrompt}.
               horizontal: "center",
             }}
           >
-            <Box sx={{p: 2}}>
-              <Typography sx={{mb: 2, fontWeight: 600}}>
+            <Box sx={{ p: 2 }}>
+              <Typography sx={{ mb: 2, fontWeight: 600 }}>
                 Usar {chipItemToUse?.item?.name}?
               </Typography>
-              <Box sx={{display: "flex", gap: 1, justifyContent: "flex-end"}}>
+              <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
                 <Button size="small" onClick={() => setUseItemAnchor(null)}>
                   Não
                 </Button>
@@ -2692,7 +2666,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 1: IDENTIFICAÇÃO */}
       {tabValue === 1 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+        <Box sx={{ background: "#fff", borderRadius: 2, p: 2, pb: 10 }}>
           <Stack spacing={3}>
             {/* Seção 1: Dados Principais */}
             <Box>
@@ -2700,7 +2674,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 variant="h6"
                 color="primary"
                 gutterBottom
-                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+                sx={{ borderBottom: "1px solid #eee", pb: 1, mb: 2 }}
               >
                 Dados Principais
               </Typography>
@@ -2843,7 +2817,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 variant="h6"
                 color="primary"
                 gutterBottom
-                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+                sx={{ borderBottom: "1px solid #eee", pb: 1, mb: 2 }}
               >
                 Aparência Física
               </Typography>
@@ -2951,7 +2925,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                 variant="h6"
                 color="primary"
                 gutterBottom
-                sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2}}
+                sx={{ borderBottom: "1px solid #eee", pb: 1, mb: 2 }}
               >
                 Atributos Base
               </Typography>
@@ -2971,7 +2945,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     mb: 1,
                   }}
                 >
-                  <h4 style={{margin: "0", fontSize: "0.95rem"}}>Atributos</h4>
+                  <h4 style={{ margin: "0", fontSize: "0.95rem" }}>
+                    Atributos
+                  </h4>
                   <Tooltip title="Cada d6 custa 1 ponto, d8 custa 2, d10 custa 3, d12 custa 4. Total: 5 pontos">
                     <PointsBadge
                       style={{
@@ -2985,11 +2961,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                 </Box>
                 <Grid container spacing={1}>
                   {[
-                    {key: "agilidade", label: "Agi"},
-                    {key: "intelecto", label: "Int"},
-                    {key: "espirito", label: "Esp"},
-                    {key: "forca", label: "For"},
-                    {key: "vigor", label: "Vig"},
+                    { key: "agilidade", label: "Agi" },
+                    { key: "intelecto", label: "Int" },
+                    { key: "espirito", label: "Esp" },
+                    { key: "forca", label: "For" },
+                    { key: "vigor", label: "Vig" },
                   ].map((attr) => (
                     <Grid item xs={6} sm={4} md={2.4} key={attr.key}>
                       <FormControl fullWidth size="small">
@@ -3017,14 +2993,14 @@ Negative Prompt: ${promptData.negativePrompt}.
             <Box
               sx={{
                 display: "flex",
-                flexDirection: {xs: "column", md: "row"},
+                flexDirection: { xs: "column", md: "row" },
                 gap: 4,
                 width: "100%",
                 alignItems: "flex-start",
               }}
             >
               {/* Descrição */}
-              <Box sx={{flex: 2, width: "100%"}}>
+              <Box sx={{ flex: 2, width: "100%" }}>
                 <Typography
                   variant="h6"
                   color="primary"
@@ -3055,12 +3031,12 @@ Negative Prompt: ${promptData.negativePrompt}.
                 </Grid>
               </Box>
               {/* Imagem */}
-              <Box sx={{flex: 1, width: "100%"}}>
+              <Box sx={{ flex: 1, width: "100%" }}>
                 <Typography
                   variant="h6"
                   color="primary"
                   gutterBottom
-                  sx={{borderBottom: "1px solid #eee", pb: 1, mb: 2, gap: 2}}
+                  sx={{ borderBottom: "1px solid #eee", pb: 1, mb: 2, gap: 2 }}
                 >
                   Retrato do Personagem
                 </Typography>
@@ -3072,14 +3048,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                     textAlign: "center",
                     bgcolor: "#f9f9f9",
                     display: "flex",
-                    flexDirection: {xs: "column", sm: "row"},
+                    flexDirection: { xs: "column", sm: "row" },
                     alignItems: "center",
                     gap: 2,
                   }}
                 >
                   {character.imagem_url && (
                     <Box
-                      sx={{mb: 2, display: "flex", justifyContent: "center"}}
+                      sx={{ mb: 2, display: "flex", justifyContent: "center" }}
                     >
                       <img
                         src={character.imagem_url}
@@ -3094,7 +3070,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     </Box>
                   )}
 
-                  <FormControl fullWidth size="small" sx={{mb: 2}}>
+                  <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                     <InputLabel>Estilo de Arte</InputLabel>
                     <Select
                       value={selectedArtStyle}
@@ -3190,7 +3166,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 4: HABILIDADES (PERÍCIAS + VANTAGENS + COMPLICAÇÕES) */}
       {tabValue === 4 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+        <Box sx={{ background: "#fff", borderRadius: 2, p: 2, pb: 10 }}>
           <Grid container spacing={2}>
             {/* COLUNA 1: PERÍCIAS */}
             <Grid item xs={12} md={4}>
@@ -3209,7 +3185,9 @@ Negative Prompt: ${promptData.negativePrompt}.
                     mb: 2,
                   }}
                 >
-                  <h3 style={{margin: "0", fontSize: "1.1rem"}}>🎯 Perícias</h3>
+                  <h3 style={{ margin: "0", fontSize: "1.1rem" }}>
+                    🎯 Perícias
+                  </h3>
                   <Tooltip title="Custo: 1 ponto por dado até o atributo chave. 2 pontos por dado acima.">
                     <PointsBadge>{skillPointsSpent}/12 pts</PointsBadge>
                   </Tooltip>
@@ -3217,7 +3195,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
                 <Alert
                   severity="info"
-                  sx={{mb: 2, py: 0, px: 2, fontSize: "0.8rem"}}
+                  sx={{ mb: 2, py: 0, px: 2, fontSize: "0.8rem" }}
                 >
                   Acima do atributo custa 2 pts.
                 </Alert>
@@ -3233,7 +3211,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     return {
                       ...p,
                       style: isHigher
-                        ? {backgroundColor: "#fff3e0"}
+                        ? { backgroundColor: "#fff3e0" }
                         : undefined,
                       dieColor: isHigher ? "#d32f2f" : "#667eea",
                       attributeShort: attrKey
@@ -3276,7 +3254,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     mb: 2,
                   }}
                 >
-                  <h3 style={{margin: "0", fontSize: "1.1rem"}}>
+                  <h3 style={{ margin: "0", fontSize: "1.1rem" }}>
                     ✨ Vantagens
                   </h3>
                   <Tooltip title="Cada vantagem custa 2 pontos.">
@@ -3289,7 +3267,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   items={(character.vantagens || []).map((v) => {
                     const edges = getEdges();
                     const edge = edges.find((e) => e.name === v.name);
-                    return edge ? {...edge, ...v} : v;
+                    return edge ? { ...edge, ...v } : v;
                   })}
                   availableOptions={availableEdges}
                   onAdd={(item) =>
@@ -3322,7 +3300,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                     mb: 2,
                   }}
                 >
-                  <h3 style={{margin: "0", fontSize: "1.1rem"}}>
+                  <h3 style={{ margin: "0", fontSize: "1.1rem" }}>
                     ⚠️ Complicações
                   </h3>
                   <Tooltip title="Maior: -2 pts. Menor: -1 ponto.">
@@ -3344,7 +3322,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   items={(character.complicacoes || []).map((c) => {
                     const hindrances = getHindrances();
                     const hind = hindrances.find((h) => h.name === c.name);
-                    return hind ? {...hind, ...c} : c;
+                    return hind ? { ...hind, ...c } : c;
                   })}
                   onAdd={(item) =>
                     addItemToListIfAllowed("complicacoes", "complicacoes", item)
@@ -3373,11 +3351,11 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 6: EQUIPAMENTOS (2x2 Grid) */}
       {tabValue === 5 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+        <Box sx={{ background: "#fff", borderRadius: 2, p: 2, pb: 10 }}>
           <Grid container spacing={2}>
             {/* ARMAS - Superior esquerdo */}
             <Grid item xs={12} md={6}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>
                 ⚔️ Armas
               </h3>
               <WeaponsList
@@ -3395,7 +3373,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
             {/* ITENS - Superior direito */}
             <Grid item xs={12} md={6}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>
                 🎒 Itens
               </h3>
               <ItemsList
@@ -3441,7 +3419,7 @@ Negative Prompt: ${promptData.negativePrompt}.
 
             {/* ESPÓLIOS - Inferior direito */}
             <Grid item xs={12} md={6}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>
                 💎 Espólios
               </h3>
               <EspoliosList
@@ -3485,11 +3463,11 @@ Negative Prompt: ${promptData.negativePrompt}.
 
       {/* TAB 7: PODERES (Magias) */}
       {tabValue === 7 && (
-        <Box sx={{background: "#fff", borderRadius: 2, p: 2, pb: 10}}>
+        <Box sx={{ background: "#fff", borderRadius: 2, p: 2, pb: 10 }}>
           <Grid container spacing={2}>
             {/* MAGIAS - Coluna esquerda */}
             <Grid item xs={12}>
-              <h3 style={{margin: "0 0 16px 0", fontSize: "1.1rem"}}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>
                 🔮 Magias
               </h3>
               <MagiasList
@@ -3518,7 +3496,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             borderRadius: "12px",
           }}
         >
-          <h3 style={{margin: "0 0 12px 0"}}>📝 Notas</h3>
+          <h3 style={{ margin: "0 0 12px 0" }}>📝 Notas</h3>
           <textarea
             disabled={isFieldLocked("notas")}
             style={{
@@ -3614,19 +3592,19 @@ Negative Prompt: ${promptData.negativePrompt}.
                     >
                       Exibir/Ocultar Cards
                     </Typography>
-                    <FormGroup row sx={{gap: 1}}>
+                    <FormGroup row sx={{ gap: 1 }}>
                       {[
-                        {key: "portrait", label: "Retrato"},
-                        {key: "skills", label: "Perícias"},
-                        {key: "resources", label: "Recursos"},
-                        {key: "spells", label: "Magias"},
-                        {key: "weapons", label: "Armas"},
-                        {key: "armor", label: "Armaduras"},
-                        {key: "edges", label: "Vantagens"},
-                        {key: "hindrances", label: "Complicações"},
-                        {key: "items", label: "Itens"},
-                        {key: "loot", label: "Espólios"},
-                        {key: "notes", label: "Notas"},
+                        { key: "portrait", label: "Retrato" },
+                        { key: "skills", label: "Perícias" },
+                        { key: "resources", label: "Recursos" },
+                        { key: "spells", label: "Magias" },
+                        { key: "weapons", label: "Armas" },
+                        { key: "armor", label: "Armaduras" },
+                        { key: "edges", label: "Vantagens" },
+                        { key: "hindrances", label: "Complicações" },
+                        { key: "items", label: "Itens" },
+                        { key: "loot", label: "Espólios" },
+                        { key: "notes", label: "Notas" },
                       ].map((item) => (
                         <FormControlLabel
                           key={item.key}
@@ -3642,14 +3620,14 @@ Negative Prompt: ${promptData.negativePrompt}.
                               {item.label}
                             </Typography>
                           }
-                          sx={{width: "48%", mr: 0, ml: 0}}
+                          sx={{ width: "48%", mr: 0, ml: 0 }}
                         />
                       ))}
                     </FormGroup>
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Divider sx={{my: 1}} />
+                    <Divider sx={{ my: 1 }} />
                   </Grid>
 
                   {/* Outras Configurações Úteis */}
@@ -3685,7 +3663,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Divider sx={{my: 1}} />
+                    <Divider sx={{ my: 1 }} />
                   </Grid>
 
                   <Grid item xs={12}>
@@ -3729,7 +3707,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                       label="Definir todos os cards"
                       value=""
                       onChange={(color) => {
-                        const newColors = {...(character.sheetColors || {})};
+                        const newColors = { ...(character.sheetColors || {}) };
                         Object.keys(DEFAULT_COLORS).forEach((key) => {
                           if (
                             ![
@@ -3750,7 +3728,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         updateAttribute("sheetColors", newColors);
                       }}
                     />
-                    <Divider sx={{mb: 2}} />
+                    <Divider sx={{ mb: 2 }} />
                   </Grid>
 
                   {/* Fontes Específicas */}
@@ -3793,7 +3771,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   <Grid item xs={12}>
                     <Typography
                       variant="caption"
-                      sx={{fontWeight: 600, display: "block", mb: 0.5}}
+                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
                     >
                       Opacidade dos Cards
                     </Typography>
@@ -3810,11 +3788,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                         })
                       }
                       valueLabelDisplay="auto"
-                      sx={{width: "95%", mx: 1}}
+                      sx={{ width: "95%", mx: 1 }}
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <Divider sx={{my: 1, borderStyle: "dashed"}}>
+                    <Divider sx={{ my: 1, borderStyle: "dashed" }}>
                       <Typography variant="caption">Temas dos Cards</Typography>
                     </Divider>
                   </Grid>
@@ -3863,11 +3841,11 @@ Negative Prompt: ${promptData.negativePrompt}.
               >
                 <Grid container spacing={1}>
                   {[
-                    {key: "widgetBackground", label: "Fundo"},
-                    {key: "widgetTitle", label: "Título"},
-                    {key: "widgetText", label: "Texto"},
-                    {key: "widgetAux", label: "Texto Auxiliar"},
-                    {key: "widgetIcon", label: "Ícone"},
+                    { key: "widgetBackground", label: "Fundo" },
+                    { key: "widgetTitle", label: "Título" },
+                    { key: "widgetText", label: "Texto" },
+                    { key: "widgetAux", label: "Texto Auxiliar" },
+                    { key: "widgetIcon", label: "Ícone" },
                   ].map((item) => (
                     <Grid item xs={12} sm={6} key={item.key}>
                       <ColorPickerItem
@@ -3884,10 +3862,10 @@ Negative Prompt: ${promptData.negativePrompt}.
                   ))}
 
                   <Grid item xs={12}>
-                    <Divider sx={{my: 1.5}} />
+                    <Divider sx={{ my: 1.5 }} />
                     <Typography
                       variant="subtitle2"
-                      sx={{mb: 1, fontWeight: 700, color: "#334155"}}
+                      sx={{ mb: 1, fontWeight: 700, color: "#334155" }}
                     >
                       Transparência
                     </Typography>
@@ -3895,7 +3873,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                   <Grid item xs={12}>
                     <Typography
                       variant="caption"
-                      sx={{fontWeight: 600, display: "block", mb: 0.5}}
+                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
                     >
                       Opacidade dos Widgets
                     </Typography>
@@ -3912,7 +3890,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                         })
                       }
                       valueLabelDisplay="auto"
-                      sx={{width: "95%", mx: 1}}
+                      sx={{ width: "95%", mx: 1 }}
                     />
                   </Grid>
                 </Grid>
@@ -3997,11 +3975,11 @@ Negative Prompt: ${promptData.negativePrompt}.
                     <Typography
                       variant="caption"
                       fontWeight="600"
-                      sx={{mb: 1, display: "block"}}
+                      sx={{ mb: 1, display: "block" }}
                     >
                       Tamanho (Escala)
                     </Typography>
-                    <Box sx={{px: 1}}>
+                    <Box sx={{ px: 1 }}>
                       <Slider
                         size="small"
                         min={0.8}
@@ -4022,9 +4000,9 @@ Negative Prompt: ${promptData.negativePrompt}.
 
                   {/* Cores Específicas */}
                   {[
-                    {key: "iconColor", label: "Cor do Ícone"},
-                    {key: "iconBorder", label: "Cor da Borda"},
-                    {key: "iconFill", label: "Preenchimento"},
+                    { key: "iconColor", label: "Cor do Ícone" },
+                    { key: "iconBorder", label: "Cor da Borda" },
+                    { key: "iconFill", label: "Preenchimento" },
                   ].map((item) => (
                     <Grid item xs={12} sm={6} key={item.key}>
                       <ColorPickerItem
@@ -4037,7 +4015,7 @@ Negative Prompt: ${promptData.negativePrompt}.
                           })
                         }
                         onReset={() => {
-                          const newColors = {...character.sheetColors};
+                          const newColors = { ...character.sheetColors };
                           delete newColors[item.key];
                           updateAttribute("sheetColors", newColors);
                         }}
@@ -4065,7 +4043,7 @@ Negative Prompt: ${promptData.negativePrompt}.
             Depois, copie o prompt final.
           </Typography>
           {promptData && (
-            <Stack spacing={2} sx={{mt: 2}}>
+            <Stack spacing={2} sx={{ mt: 2 }}>
               <TextField
                 label="Estilo de Arte & Formato"
                 value={promptData.artStyle}
