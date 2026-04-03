@@ -199,10 +199,12 @@ const safeHighlightHtml = (html, term) => {
     .join("");
 };
 
-function BookView({onOpenSidebar, twoPageMode = false}) {
+function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showBackToTop, setShowBackToTop] = React.useState(false);
   const scrollContainerRef = React.useRef(null);
+
+  const sections = loreSections.length > 0 ? loreSections : manualSections;
 
   const handleScroll = (e) => {
     const scrollTop = e.target?.scrollTop ?? window.scrollY;
@@ -280,7 +282,7 @@ function BookView({onOpenSidebar, twoPageMode = false}) {
                 Sumário
               </Typography>
             </ListItem>
-            {manualSections.map((section) => (
+            {sections.map((section) => (
               <React.Fragment key={section.id}>
                 <ListItem
                   button
@@ -353,8 +355,8 @@ function BookView({onOpenSidebar, twoPageMode = false}) {
           />
         </Box>
 
-        {/* SEÇÕES DO LIVRO - Carregadas do manualSections */}
-        {manualSections.map((section) => {
+        {/* SEÇÕES DO LIVRO - Carregadas do loreSections ou manualSections */}
+        {sections.map((section) => {
           const lowerTerm = searchTerm.toLowerCase();
 
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela

@@ -1,6 +1,7 @@
 /**
  * Scenarios Registry - Gerenciador de Cenários
  * Fornece acesso ao cenário ativo configurado no sistema.
+ * Suporta cenário por mesa (via scenarioId) ou global (via env var).
  */
 
 import soloLevelingScenario from "./solo-leveling/index.js";
@@ -27,12 +28,17 @@ export function getScenario(id = null) {
   return scenarios[scenarioId];
 }
 
-export function getActiveScenario() {
+export function getActiveScenario(scenarioIdFromTable = null) {
   if (!currentScenario) {
     const envScenario = process.env.NEXT_PUBLIC_ACTIVE_SCENARIO;
     currentScenarioId = envScenario || DEFAULT_SCENARIO;
     currentScenario = getScenario(currentScenarioId);
   }
+  
+  if (scenarioIdFromTable && scenarios[scenarioIdFromTable]) {
+    return scenarios[scenarioIdFromTable];
+  }
+  
   return currentScenario;
 }
 
@@ -53,23 +59,23 @@ export function getAvailableScenarios() {
   }));
 }
 
-export function getScenarioSkills() {
-  const scenario = getActiveScenario();
+export function getScenarioSkills(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
   return scenario.skills || {};
 }
 
-export function getScenarioPromptStyles() {
-  const scenario = getActiveScenario();
+export function getScenarioPromptStyles(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
   return scenario.promptStyles || {};
 }
 
-export function getScenarioExtraFields() {
-  const scenario = getActiveScenario();
+export function getScenarioExtraFields(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
   return scenario.extraFields || {};
 }
 
-export function getScenarioCalculateMaxMana() {
-  const scenario = getActiveScenario();
+export function getScenarioCalculateMaxMana(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
   return scenario.calculateMaxMana || null;
 }
 

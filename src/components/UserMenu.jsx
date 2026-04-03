@@ -35,9 +35,11 @@ import {
   Close as CloseIcon,
   Message as MessageIcon,
   DeleteSweep as CleanIcon,
+  AutoAwesome as ScenarioIcon,
 } from "@mui/icons-material";
 import APIService from "@/lib/api";
 import SheetManager from "@/components/SheetView/SheetManager";
+import ScenarioAdminModal from "@/components/ScenarioAdmin/ScenarioAdminModal";
 
 export default function UserMenu() {
   // CORREÇÃO: Usando os nomes corretos retornados pelo hook useAuth
@@ -56,6 +58,7 @@ export default function UserMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [pendingInvites, setPendingInvites] = useState(0);
   const [sheetManagerOpen, setSheetManagerOpen] = useState(false);
+  const [scenarioAdminOpen, setScenarioAdminOpen] = useState(false);
 
   const isGM = selectedTable && selectedTable.gmId === user?.uid;
 
@@ -260,6 +263,17 @@ export default function UserMenu() {
           </ListItemIcon>
           <ListItemText>Limpar Servidor</ListItemText>
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            setScenarioAdminOpen(true);
+          }}
+        >
+          <ListItemIcon>
+            <ScenarioIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Cenários</ListItemText>
+        </MenuItem>
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <Logout fontSize="small" />
@@ -293,6 +307,12 @@ export default function UserMenu() {
           <SheetManager onClose={() => setSheetManagerOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Admin de Cenários */}
+      <ScenarioAdminModal
+        open={scenarioAdminOpen}
+        onClose={() => setScenarioAdminOpen(false)}
+      />
     </Box>
   );
 }

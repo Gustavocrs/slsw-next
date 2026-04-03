@@ -34,6 +34,7 @@ import {
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
+import ScenarioSelector from "@/components/ScenarioSelector";
 
 function CreateTableModal() {
   const {
@@ -50,7 +51,7 @@ function CreateTableModal() {
   const [tableName, setTableName] = useState("");
   const [description, setDescription] = useState("");
   const [nextSession, setNextSession] = useState("");
-  const [externalLink, setExternalLink] = useState("");
+  const [scenarioId, setScenarioId] = useState("solo-leveling");
   const [isPrivate, setIsPrivate] = useState(true);
 
   // Invite System
@@ -81,7 +82,7 @@ function CreateTableModal() {
         name: tableName,
         description,
         nextSession,
-        externalLink,
+        scenarioId,
         isPrivate,
         invites,
         gmId: user.uid,
@@ -175,6 +176,11 @@ function CreateTableModal() {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              sx={{mb: 2}}
+            />
+            <ScenarioSelector
+              value={scenarioId}
+              onChange={setScenarioId}
             />
           </Box>
 

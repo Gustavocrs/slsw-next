@@ -2,6 +2,10 @@
  * Engine auxiliar para regras e conversões do sistema SWADE.
  */
 
+import {EDGES_SWADE as _EDGES_SWADE} from "@/data/edgesSwade";
+import {HINDRANCES_SWADE as _HINDRANCES_SWADE} from "@/data/hindrancesSwade";
+import {POWERS_SWADE as _POWERS_SWADE} from "@/data/powersSwade";
+
 // ============================================================================
 // CONSTANTES CORE DO SISTEMA SWADE
 // ============================================================================
@@ -46,6 +50,11 @@ export const SKILLS_SWADE = {
   Roubar: "agilidade",
   Sobrevivência: "intelecto",
 };
+
+// Dados do sistema SWADE (para combinação com cenários)
+export const EDGES_SWADE = _EDGES_SWADE;
+export const HINDRANCES_SWADE = _HINDRANCES_SWADE;
+export const POWERS_SWADE = _POWERS_SWADE;
 
 // ============================================================================
 // FUNÇÕES DE CÁLCULO E VALIDAÇÃO DA FICHA

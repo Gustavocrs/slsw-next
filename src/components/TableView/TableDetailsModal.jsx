@@ -54,6 +54,7 @@ import {useUIStore, useCharacterStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
 import {ConfirmDialog} from "@/components/ConfirmDialog";
+import ScenarioSelector from "@/components/ScenarioSelector";
 
 function TableDetailsModal() {
   const {
@@ -75,7 +76,7 @@ function TableDetailsModal() {
   const [tableName, setTableName] = useState("");
   const [description, setDescription] = useState("");
   const [nextSession, setNextSession] = useState("");
-  const [externalLink, setExternalLink] = useState("");
+  const [scenarioId, setScenarioId] = useState("solo-leveling");
   const [isPrivate, setIsPrivate] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [invites, setInvites] = useState([]);
@@ -100,12 +101,12 @@ function TableDetailsModal() {
       setTableName(selectedTable.name || "");
       setDescription(selectedTable.description || "");
       setNextSession(selectedTable.nextSession || "");
-      setExternalLink(selectedTable.externalLink || "");
+      setScenarioId(selectedTable.scenarioId || "solo-leveling");
       setIsPrivate(selectedTable.isPrivate ?? true);
       setInvites(selectedTable.invites || []);
-      setIsEditing(false); // Reset edit mode on open
+      setIsEditing(false);
     }
-  }, [selectedTable, tableDetailsModalOpen]);
+  }, [selectedTable]);
 
   // Buscar personagens do usuário se ele for jogador na mesa
   useEffect(() => {
@@ -159,7 +160,7 @@ function TableDetailsModal() {
         name: tableName,
         description,
         nextSession,
-        externalLink,
+        scenarioId,
         isPrivate,
         invites,
         gmPhotoURL: user.photoURL,
@@ -434,6 +435,12 @@ function TableDetailsModal() {
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={!isGM}
                   variant={isGM ? "outlined" : "filled"}
+                  sx={{mb: 2}}
+                />
+                <ScenarioSelector
+                  value={scenarioId}
+                  onChange={setScenarioId}
+                  disabled={!isGM}
                 />
               </Box>
 
