@@ -3,7 +3,43 @@
  * Funções de acesso ao banco de dados para cenários
  */
 
-import APIService from "./api";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "./firebase";
+
+const SCENARIO_COLLECTION = "scenarios";
+
+export async function saveScenarioToFirestore(scenarioData) {
+  const { id } = scenarioData;
+  if (!id) {
+    throw new Error(
+      "scenarioData must contain an 'id' field for direct Firestore save.",
+    );
+  }
+
+  const scenarioRef = doc(db, SCENARIO_COLLECTION, id);
+
+  try {
+    await setDoc(scenarioRef, scenarioData, { merge: true });
+    return { id: id, status: "saved" };
+  } catch (error) {
+    console.error(`Error saving scenario ${id} directly to Firestore:`, error);
+    throw error;
+  }
+}
+
+export async function getScenarioFromFirestore(id) {
+  const scenarioRef = doc(db, SCENARIO_COLLECTION, id);
+  const docSnap = await getDoc(scenarioRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    return null;
+  }
+}
+
+// Mantenho as funções baseadas em API
+// import APIService from "./api"; // Removido para não importar o que não será usado nas novas funções
 
 const API_BASE = "/api/scenarios";
 
