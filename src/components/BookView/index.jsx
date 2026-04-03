@@ -5,16 +5,18 @@
 
 "use client";
 
-import { Menu as MenuIcon } from "@mui/icons-material";
+import { Menu as MenuIcon, Search as SearchIcon } from "@mui/icons-material";
 import {
   Box,
   Divider,
   Fab,
   IconButton,
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   Paper,
+  TextField,
   Typography,
 } from "@mui/material";
 import React from "react";
@@ -24,8 +26,7 @@ import { getEdges, RANKS } from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
-    padding: ${(props) => (props.$twoPage ? "20px" : "40px")};
-    padding-bottom: ${(props) => (props.$twoPage ? "20px" : "100px")};
+    padding: 0;
     max-width: ${(props) => (props.$twoPage ? "100%" : "900px")};
     margin: 0 auto;
     background: white;
@@ -194,7 +195,7 @@ const safeHighlightHtml = (html, term) => {
 };
 
 function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
-  const [searchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState("");
   const scrollContainerRef = React.useRef(null);
 
   const sections = loreSections.length > 0 ? loreSections : manualSections;
@@ -252,6 +253,7 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
         >
           <List component="nav" dense disablePadding>
             <ListItem
+              id="sumario-header"
               sx={{
                 py: 2,
                 bgcolor: "#fff",
@@ -259,6 +261,7 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
+                height: 60,
               }}
             >
               <Typography variant="subtitle1" fontWeight="bold" color="primary">
@@ -287,45 +290,88 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
         </Box>
       )}
       <BookContainer
+        id="livro-container"
         $twoPage={twoPageMode}
         ref={twoPageMode ? scrollContainerRef : null}
         onScroll={twoPageMode ? handleScroll : undefined}
-        sx={{ flex: 1, position: "relative" }}
+        sx={{
+          flex: 1,
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        {/* SEÇÕES DO LIVRO - Carregadas do loreSections ou manualSections */}
-        {sections.map((section) => {
-          const lowerTerm = searchTerm.toLowerCase();
+        <Box
+          id="livro-header"
+          sx={{
+            flexShrink: 0,
+            py: 1,
+            px: 2,
+            bgcolor: "#fff",
+            borderBottom: "1px solid #e0e0e0",
+            height: 60,
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Pesquisar no manual..."
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "6px",
+                bgcolor: "#f9f9f9",
+              },
+            }}
+          />
+        </Box>
+        <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
+          {/* SEÇÕES DO LIVRO - Carregadas do loreSections ou manualSections */}
+          {sections.map((section) => {
+            const lowerTerm = searchTerm.toLowerCase();
 
-          // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
-          if (section.id === "vantagens-avancadas") {
-            const allEdges = getEdges();
-            const initialEdges = allEdges
-              .filter((e) => e.source === "SL")
-              .sort((a, b) => {
-                const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
-                if (rankDiff !== 0) return rankDiff;
-                return a.name.localeCompare(b.name);
-              });
-            let slEdges = initialEdges;
+            // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
+            if (section.id === "vantagens-avancadas") {
+              const allEdges = getEdges();
+              const initialEdges = allEdges
+                .filter((e) => e.source === "SL")
+                .sort((a, b) => {
+                  const rankDiff =
+                    RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
+                  if (rankDiff !== 0) return rankDiff;
+                  return a.name.localeCompare(b.name);
+                });
+              let slEdges = initialEdges;
 
-            // Filtro dinâmico para as vantagens
-            if (searchTerm) {
-              slEdges = initialEdges.filter(
-                (e) =>
-                  e.name?.toLowerCase().includes(lowerTerm) ||
-                  e.description?.toLowerCase().includes(lowerTerm) ||
-                  e.rank?.toLowerCase().includes(lowerTerm),
-              );
+              // Filtro dinâmico para as vantagens
+              if (searchTerm) {
+                slEdges = initialEdges.filter(
+                  (e) =>
+                    e.name?.toLowerCase().includes(lowerTerm) ||
+                    e.description?.toLowerCase().includes(lowerTerm) ||
+                    e.rank?.toLowerCase().includes(lowerTerm),
+                );
 
-              if (
-                slEdges.length === 0 &&
-                !section.title?.toLowerCase().includes(lowerTerm)
-              ) {
-                return null;
+                if (
+                  slEdges.length === 0 &&
+                  !section.title?.toLowerCase().includes(lowerTerm)
+                ) {
+                  return null;
+                }
               }
-            }
 
-            const edgesHtml = `
+              const edgesHtml = `
               ${safeHighlightHtml(section.content, searchTerm)}
               
               <div style="overflow-x: auto;">
@@ -358,44 +404,49 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
               </div>
             `;
 
+              return (
+                <section key={section.id} id={section.id}>
+                  <SectionTitle
+                    dangerouslySetInnerHTML={{
+                      __html: highlight(section.title, searchTerm),
+                    }}
+                  />
+                  <SectionContent
+                    dangerouslySetInnerHTML={{ __html: edgesHtml }}
+                  />
+                </section>
+              );
+            }
+
+            // Filtro padrão para seções de texto
+            if (searchTerm) {
+              const titleMatch = section.title
+                ?.toLowerCase()
+                .includes(lowerTerm);
+              const contentMatch = section.content
+                ?.toLowerCase()
+                .includes(lowerTerm);
+
+              if (!titleMatch && !contentMatch) {
+                return null;
+              }
+            }
+
+            const finalTitle = highlight(section.title, searchTerm);
+            const finalContent = safeHighlightHtml(section.content, searchTerm);
+
             return (
               <section key={section.id} id={section.id}>
                 <SectionTitle
-                  dangerouslySetInnerHTML={{
-                    __html: highlight(section.title, searchTerm),
-                  }}
+                  dangerouslySetInnerHTML={{ __html: finalTitle }}
                 />
                 <SectionContent
-                  dangerouslySetInnerHTML={{ __html: edgesHtml }}
+                  dangerouslySetInnerHTML={{ __html: finalContent }}
                 />
               </section>
             );
-          }
-
-          // Filtro padrão para seções de texto
-          if (searchTerm) {
-            const titleMatch = section.title?.toLowerCase().includes(lowerTerm);
-            const contentMatch = section.content
-              ?.toLowerCase()
-              .includes(lowerTerm);
-
-            if (!titleMatch && !contentMatch) {
-              return null;
-            }
-          }
-
-          const finalTitle = highlight(section.title, searchTerm);
-          const finalContent = safeHighlightHtml(section.content, searchTerm);
-
-          return (
-            <section key={section.id} id={section.id}>
-              <SectionTitle dangerouslySetInnerHTML={{ __html: finalTitle }} />
-              <SectionContent
-                dangerouslySetInnerHTML={{ __html: finalContent }}
-              />
-            </section>
-          );
-        })}
+          })}
+        </Box>
       </BookContainer>
     </Box>
   );
