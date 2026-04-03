@@ -5,28 +5,22 @@
 
 "use client";
 
-import React from "react";
-import styled from "styled-components";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import {
-  Paper,
-  IconButton,
-  TextField,
-  InputAdornment,
   Box,
+  Divider,
   Fab,
+  IconButton,
   List,
   ListItem,
   ListItemText,
-  Divider,
+  Paper,
   Typography,
 } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  Search as SearchIcon,
-  KeyboardArrowUp as KeyboardArrowUpIcon,
-} from "@mui/icons-material";
+import React from "react";
+import styled from "styled-components";
 import manualSections from "@/data/manualSections";
-import {getEdges, RANKS} from "@/lib/rpgEngine";
+import { getEdges, RANKS } from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
   && {
@@ -171,7 +165,7 @@ const highlight = (text, term) => {
   if (!term || !term.trim() || !text) {
     return text;
   }
-  const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const escapedTerm = term.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
   const regex = new RegExp(`(${escapedTerm})`, "gi");
   return text.replace(
     regex,
@@ -183,7 +177,7 @@ const safeHighlightHtml = (html, term) => {
   if (!term || !term.trim() || !html) {
     return html;
   }
-  const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const escapedTerm = term.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
   const regex = new RegExp(`(${escapedTerm})`, "gi");
   const parts = html.split(/(<[^>]*>)/g);
 
@@ -199,16 +193,14 @@ const safeHighlightHtml = (html, term) => {
     .join("");
 };
 
-function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [showBackToTop, setShowBackToTop] = React.useState(false);
+function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
+  const [searchTerm] = React.useState("");
   const scrollContainerRef = React.useRef(null);
 
   const sections = loreSections.length > 0 ? loreSections : manualSections;
 
   const handleScroll = (e) => {
-    const scrollTop = e.target?.scrollTop ?? window.scrollY;
-    setShowBackToTop(scrollTop > 300);
+    const _scrollTop = e.target?.scrollTop ?? window.scrollY;
   };
 
   React.useEffect(() => {
@@ -218,18 +210,10 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
     }
   }, [twoPageMode]);
 
-  const scrollToTop = () => {
-    if (twoPageMode && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({top: 0, behavior: "smooth"});
-    } else {
-      window.scrollTo({top: 0, behavior: "smooth"});
-    }
-  };
-
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({behavior: "smooth", block: "start"});
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -247,7 +231,6 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
           <MenuIcon />
         </MenuButton>
       )}
-
       {/* Sumário / Sidebar lateral (Apenas na View do Painel de Jogo) */}
       {twoPageMode && (
         <Box
@@ -257,10 +240,10 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
             borderRight: "1px solid #e0e0e0",
             bgcolor: "#fafafa",
             overflowY: "auto",
-            display: {xs: "none", md: "block"},
+            display: { xs: "none", md: "block" },
             height: "100%",
-            "&::-webkit-scrollbar": {width: "6px"},
-            "&::-webkit-scrollbar-track": {background: "transparent"},
+            "&::-webkit-scrollbar": { width: "6px" },
+            "&::-webkit-scrollbar-track": { background: "transparent" },
             "&::-webkit-scrollbar-thumb": {
               background: "#bdbdbd",
               borderRadius: "3px",
@@ -287,7 +270,7 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
                 <ListItem
                   button
                   onClick={() => scrollToSection(section.id)}
-                  sx={{"&:hover": {bgcolor: "#e3f2fd"}, py: 1}}
+                  sx={{ "&:hover": { bgcolor: "#e3f2fd" }, py: 1 }}
                 >
                   <ListItemText
                     primary={section.title.replace(/<\/?[^>]+(>|$)/g, "")}
@@ -303,58 +286,12 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
           </List>
         </Box>
       )}
-
       <BookContainer
         $twoPage={twoPageMode}
         ref={twoPageMode ? scrollContainerRef : null}
         onScroll={twoPageMode ? handleScroll : undefined}
-        sx={{flex: 1, position: "relative"}}
+        sx={{ flex: 1, position: "relative" }}
       >
-        <Box
-          sx={{
-            position: "sticky",
-            top: twoPageMode ? "-20px" : 0,
-            zIndex: 10,
-            backgroundColor: "#fff",
-            pt: twoPageMode ? "20px" : 0,
-            pb: "15px",
-            mb: "20px",
-            borderBottom: "1px solid #e0e0e0",
-            mx: twoPageMode ? "-20px" : 0,
-            px: twoPageMode ? "20px" : 0,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            "@media (max-width: 900px)": {
-              top: twoPageMode ? "-20px" : 0,
-              pt: twoPageMode ? "20px" : 0,
-              mx: twoPageMode ? "-20px" : 0,
-              px: twoPageMode ? "20px" : 0,
-            },
-          }}
-        >
-          <TextField
-            fullWidth
-            placeholder="Pesquisar no manual (regras, vantagens, itens)..."
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              backgroundColor: "#f9f9f9",
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-              },
-            }}
-          />
-        </Box>
-
         {/* SEÇÕES DO LIVRO - Carregadas do loreSections ou manualSections */}
         {sections.map((section) => {
           const lowerTerm = searchTerm.toLowerCase();
@@ -362,13 +299,13 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
           // Sobrescreve a seção de Vantagens Avançadas para usar dados dinâmicos do rpgEngine em Tabela
           if (section.id === "vantagens-avancadas") {
             const allEdges = getEdges();
-            const initialEdges = allEdges.filter((e) => e.source === "SL").sort(
-              (a, b) => {
+            const initialEdges = allEdges
+              .filter((e) => e.source === "SL")
+              .sort((a, b) => {
                 const rankDiff = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
                 if (rankDiff !== 0) return rankDiff;
                 return a.name.localeCompare(b.name);
-              },
-            );
+              });
             let slEdges = initialEdges;
 
             // Filtro dinâmico para as vantagens
@@ -428,7 +365,9 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
                     __html: highlight(section.title, searchTerm),
                   }}
                 />
-                <SectionContent dangerouslySetInnerHTML={{__html: edgesHtml}} />
+                <SectionContent
+                  dangerouslySetInnerHTML={{ __html: edgesHtml }}
+                />
               </section>
             );
           }
@@ -450,30 +389,14 @@ function BookView({onOpenSidebar, twoPageMode = false, loreSections = []}) {
 
           return (
             <section key={section.id} id={section.id}>
-              <SectionTitle dangerouslySetInnerHTML={{__html: finalTitle}} />
+              <SectionTitle dangerouslySetInnerHTML={{ __html: finalTitle }} />
               <SectionContent
-                dangerouslySetInnerHTML={{__html: finalContent}}
+                dangerouslySetInnerHTML={{ __html: finalContent }}
               />
             </section>
           );
         })}
       </BookContainer>
-
-      {showBackToTop && (
-        <Fab
-          color="primary"
-          size="small"
-          onClick={scrollToTop}
-          sx={{
-            position: twoPageMode ? "absolute" : "fixed",
-            bottom: 30,
-            right: 30,
-            zIndex: 100,
-          }}
-        >
-          <KeyboardArrowUpIcon />
-        </Fab>
-      )}
     </Box>
   );
 }

@@ -1,5 +1,5 @@
-import {create} from "zustand";
-import {persist} from "zustand/middleware";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 const initialCharacter = {
   nome: "",
@@ -51,12 +51,12 @@ export const useCharacterStore = create((set) => ({
 
   loadCharacter: (data) =>
     set(() => ({
-      character: {...initialCharacter, ...data},
+      character: { ...initialCharacter, ...data },
     })),
 
   updateCharacter: (data) =>
     set(() => ({
-      character: {...initialCharacter, ...data},
+      character: { ...initialCharacter, ...data },
     })),
 
   resetCharacter: () =>
@@ -66,7 +66,7 @@ export const useCharacterStore = create((set) => ({
 
   updateAttribute: (key, value) =>
     set((state) => ({
-      character: {...state.character, [key]: value},
+      character: { ...state.character, [key]: value },
     })),
 
   // FIX DEFINITIVO: Usa spread operator (...) para não apagar itens antigos
@@ -96,25 +96,25 @@ export const useCharacterStore = create((set) => ({
       character: {
         ...state.character,
         [listName]: state.character[listName].map((item, i) =>
-          i === index ? {...item, ...updatedItem} : item,
+          i === index ? { ...item, ...updatedItem } : item,
         ),
       },
     })),
 
   // UI Stores Helpers
   setCardOrder: (order) =>
-    set((state) => ({character: {...state.character, cardOrder: order}})),
+    set((state) => ({ character: { ...state.character, cardOrder: order } })),
 
   inspectedCharacter: null,
-  setInspectedCharacter: (char) => set({inspectedCharacter: char}),
+  setInspectedCharacter: (char) => set({ inspectedCharacter: char }),
 }));
 
 export const useAuthStore = create((set) => ({
   user: null,
   loading: true,
-  setUser: (user) => set({user, loading: false}),
-  setLoading: (loading) => set({loading}),
-  logout: () => set({user: null}),
+  setUser: (user) => set({ user, loading: false }),
+  setLoading: (loading) => set({ loading }),
+  logout: () => set({ user: null }),
 }));
 
 export const useUIStore = create(
@@ -133,53 +133,63 @@ export const useUIStore = create(
       messagesDashboardOpen: false, // O novo dashboard de mensagens
       notifications: [], // Lista de notificações não lidas
 
+      // Cenário ativo
+      activeScenarioId: null,
+      setActiveScenarioId: (id) => set({ activeScenarioId: id }),
+
       toggleView: () =>
         set((state) => ({
           viewMode: state.viewMode === "book" ? "sheet" : "book",
         })),
-      setViewMode: (mode) => set({viewMode: mode}),
-      setSheetTab: (tab) => set({sheetTab: tab}),
+      setViewMode: (mode) => set({ viewMode: mode }),
+      setSheetTab: (tab) => set({ sheetTab: tab }),
 
       toggleTableCreateModal: () =>
-        set((state) => ({tableCreateModalOpen: !state.tableCreateModalOpen})),
+        set((state) => ({ tableCreateModalOpen: !state.tableCreateModalOpen })),
       toggleTableListModal: () =>
-        set((state) => ({tableListModalOpen: !state.tableListModalOpen})),
+        set((state) => ({ tableListModalOpen: !state.tableListModalOpen })),
       toggleTableDetailsModal: () =>
-        set((state) => ({tableDetailsModalOpen: !state.tableDetailsModalOpen})),
+        set((state) => ({
+          tableDetailsModalOpen: !state.tableDetailsModalOpen,
+        })),
       toggleGameModal: () =>
-        set((state) => ({gameModalOpen: !state.gameModalOpen})),
+        set((state) => ({ gameModalOpen: !state.gameModalOpen })),
       toggleInspectModal: () =>
-        set((state) => ({inspectModalOpen: !state.inspectModalOpen})),
+        set((state) => ({ inspectModalOpen: !state.inspectModalOpen })),
       toggleMessagesDashboard: () =>
-        set((state) => ({messagesDashboardOpen: !state.messagesDashboardOpen})),
+        set((state) => ({
+          messagesDashboardOpen: !state.messagesDashboardOpen,
+        })),
       toggleQuestGenerator: () =>
-        set((state) => ({questGeneratorOpen: !state.questGeneratorOpen})),
+        set((state) => ({ questGeneratorOpen: !state.questGeneratorOpen })),
 
       // Sistema de Chat
       chatOpen: false,
       chatRecipient: null, // null = Global, objeto = Privado
-      toggleChat: () => set((state) => ({chatOpen: !state.chatOpen})),
+      toggleChat: () => set((state) => ({ chatOpen: !state.chatOpen })),
       openChatWith: (recipient) =>
-        set({chatOpen: true, chatRecipient: recipient}),
+        set({ chatOpen: true, chatRecipient: recipient }),
 
-      setNotifications: (notifications) => set({notifications}),
-      setSelectedTable: (table) => set({selectedTable: table}),
-      notifyTablesUpdated: () => set({tablesUpdated: Date.now()}),
+      setNotifications: (notifications) => set({ notifications }),
+      setSelectedTable: (table) => set({ selectedTable: table }),
+      notifyTablesUpdated: () => set({ tablesUpdated: Date.now() }),
 
       // Sistema de Notificações Global
-      notification: {open: false, message: "", severity: "info"},
+      notification: { open: false, message: "", severity: "info" },
       showNotification: (message, severity = "info") =>
-        set({notification: {open: true, message, severity}}),
+        set({ notification: { open: true, message, severity } }),
       hideNotification: () =>
-        set((state) => ({notification: {...state.notification, open: false}})),
+        set((state) => ({
+          notification: { ...state.notification, open: false },
+        })),
     }),
     {
       name: "slsw-ui-store",
-      partialize: (state) => ({selectedTable: state.selectedTable}),
+      partialize: (state) => ({ selectedTable: state.selectedTable }),
       version: 1,
       migrate: (persistedState, version) => {
         if (version !== 1) {
-          return {selectedTable: null};
+          return { selectedTable: null };
         }
         return persistedState;
       },

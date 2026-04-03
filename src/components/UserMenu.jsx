@@ -53,6 +53,7 @@ export default function UserMenu() {
     toggleMessagesDashboard,
     notifications,
     showNotification,
+    setActiveScenarioId,
   } = useUIStore();
   const [imgError, setImgError] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -97,6 +98,18 @@ export default function UserMenu() {
   const handleOpenChat = () => {
     handleClose();
     toggleMessagesDashboard();
+  };
+
+  const handleLoadScenario = async (scenarioId) => {
+    try {
+      const { loadScenarioFromFirestore } = await import(
+        "@/scenarios/index.js"
+      );
+      await loadScenarioFromFirestore(scenarioId);
+      setActiveScenarioId(scenarioId);
+    } catch (error) {
+      console.error("Erro ao carregar cenário:", error);
+    }
   };
 
   // Permite que outros componentes abram o gerenciador de fichas
@@ -316,7 +329,10 @@ export default function UserMenu() {
         fullWidth
       >
         <DialogContent>
-          <ScenarioAdminList onClose={() => setScenarioAdminOpen(false)} />
+          <ScenarioAdminList
+            onClose={() => setScenarioAdminOpen(false)}
+            onLoadScenario={handleLoadScenario}
+          />
         </DialogContent>
       </Dialog>
     </Box>

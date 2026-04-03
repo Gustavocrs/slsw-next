@@ -3,17 +3,17 @@
  * CRUD completo para cenários no Firestore
  */
 
-import {NextResponse} from "next/server";
-import {db} from "@/lib/firebase";
 import {
   collection,
+  deleteDoc,
   doc,
-  getDocs,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
 
 export const dynamic = "force-dynamic";
 
@@ -31,20 +31,21 @@ function sanitizeScenarioData(data) {
     "promptStyles",
     "skills",
     "adventureGenerator",
+    "loreSections",
   ];
-  
+
   allowedFields.forEach((field) => {
     if (data[field] !== undefined) {
       sanitized[field] = data[field];
     }
   });
-  
+
   return sanitized;
 }
 
 export async function GET(request) {
   try {
-    const {searchParams} = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const scenarioId = searchParams.get("id");
 
     if (scenarioId) {
@@ -53,8 +54,8 @@ export async function GET(request) {
 
       if (!docSnap.exists()) {
         return NextResponse.json(
-          {error: "Cenário não encontrado"},
-          {status: 404},
+          { error: "Cenário não encontrado" },
+          { status: 404 },
         );
       }
 
@@ -78,8 +79,8 @@ export async function GET(request) {
   } catch (error) {
     console.error("Erro ao buscar cenários:", error);
     return NextResponse.json(
-      {error: "Erro ao buscar cenários", details: error.message},
-      {status: 500},
+      { error: "Erro ao buscar cenários", details: error.message },
+      { status: 500 },
     );
   }
 }
@@ -87,12 +88,12 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const {id, ...data} = body;
+    const { id, ...data } = body;
 
     if (!id) {
       return NextResponse.json(
-        {error: "ID do cenário é obrigatório"},
-        {status: 400},
+        { error: "ID do cenário é obrigatório" },
+        { status: 400 },
       );
     }
 
@@ -112,21 +113,21 @@ export async function POST(request) {
   } catch (error) {
     console.error("Erro ao criar cenário:", error);
     return NextResponse.json(
-      {error: "Erro ao criar cenário", details: error.message},
-      {status: 500},
+      { error: "Erro ao criar cenário", details: error.message },
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(request) {
   try {
-    const {searchParams} = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const scenarioId = searchParams.get("id");
 
     if (!scenarioId) {
       return NextResponse.json(
-        {error: "ID do cenário é obrigatório"},
-        {status: 400},
+        { error: "ID do cenário é obrigatório" },
+        { status: 400 },
       );
     }
 
@@ -138,8 +139,8 @@ export async function PUT(request) {
 
     if (!docSnap.exists()) {
       return NextResponse.json(
-        {error: "Cenário não encontrado"},
-        {status: 404},
+        { error: "Cenário não encontrado" },
+        { status: 404 },
       );
     }
 
@@ -155,21 +156,21 @@ export async function PUT(request) {
   } catch (error) {
     console.error("Erro ao atualizar cenário:", error);
     return NextResponse.json(
-      {error: "Erro ao atualizar cenário", details: error.message},
-      {status: 500},
+      { error: "Erro ao atualizar cenário", details: error.message },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(request) {
   try {
-    const {searchParams} = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const scenarioId = searchParams.get("id");
 
     if (!scenarioId) {
       return NextResponse.json(
-        {error: "ID do cenário é obrigatório"},
-        {status: 400},
+        { error: "ID do cenário é obrigatório" },
+        { status: 400 },
       );
     }
 
@@ -178,8 +179,8 @@ export async function DELETE(request) {
 
     if (!docSnap.exists()) {
       return NextResponse.json(
-        {error: "Cenário não encontrado"},
-        {status: 404},
+        { error: "Cenário não encontrado" },
+        { status: 404 },
       );
     }
 
@@ -192,8 +193,8 @@ export async function DELETE(request) {
   } catch (error) {
     console.error("Erro ao excluir cenário:", error);
     return NextResponse.json(
-      {error: "Erro ao excluir cenário", details: error.message},
-      {status: 500},
+      { error: "Erro ao excluir cenário", details: error.message },
+      { status: 500 },
     );
   }
 }

@@ -10,6 +10,7 @@ import {
   AutoAwesome,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  PlayArrow as LoadIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -29,7 +30,7 @@ import { useEffect, useState } from "react";
 import * as ScenarioService from "@/lib/scenarioService.js";
 import ScenarioAdminModal from "./ScenarioAdminModal";
 
-export default function ScenarioAdminList({ onClose }) {
+export default function ScenarioAdminList({ onClose, onLoadScenario }) {
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
@@ -57,6 +58,13 @@ export default function ScenarioAdminList({ onClose }) {
   const handleSelectScenario = (id) => {
     setSelectedScenarioId(id);
     setModalOpen(true);
+  };
+
+  const handleLoadScenario = async (id) => {
+    if (onLoadScenario) {
+      await onLoadScenario(id);
+      if (onClose) onClose();
+    }
   };
 
   const handleCloseModal = async () => {
@@ -220,17 +228,36 @@ export default function ScenarioAdminList({ onClose }) {
                     <Typography variant="h6" fontWeight="bold">
                       {scenario.metadata?.name || scenario.id}
                     </Typography>
-                    <Box onClick={(e) => e.stopPropagation()}>
+                    <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                      {onLoadScenario && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<LoadIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLoadScenario(scenario.id);
+                          }}
+                        >
+                          Carregar
+                        </Button>
+                      )}
                       <IconButton
                         size="small"
-                        onClick={() => handleSelectScenario(scenario.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectScenario(scenario.id);
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => handleDeleteScenario(scenario.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteScenario(scenario.id);
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>

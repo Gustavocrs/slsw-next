@@ -5,124 +5,124 @@
 
 "use client";
 
-import {useState, useEffect} from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Typography,
-  Box,
+  PersonAdd as AddNpcIcon,
+  Medication as AntidoteIcon,
+  Pets as BestiaryIcon,
+  LocalFireDepartment as BurnIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  ChevronRight as ChevronRightIcon,
+  Close as CloseIcon,
+  Dangerous as CorruptionIcon,
+  LocalHospital as DamageIcon,
+  ExpandMore as ExpandMoreIcon,
+  BatteryAlert as FatigueIcon,
+  AttachFile as FileIcon,
+  AcUnit as FrozenIcon,
+  Security as GmIcon,
+  Group as GroupIcon,
+  Healing as HealIcon,
+  LocalPharmacy as HealthPotionIcon,
+  HelpOutline as HelpOutlineIcon,
+  Info as InfoIcon,
+  LocalDrink as ManaPotionIcon,
+  MenuBook as MenuBookIcon,
+  Message as MessageIcon,
+  Help as OtherStatusIcon,
+  PanTool as ParalyzedIcon,
+  PersonRemove as PersonRemoveIcon,
+  PlayArrow as PlayIcon,
+  Science as PoisonIcon,
+  Spa as PurifyIcon,
+  EmojiEvents as QuestIcon,
+  AutoFixHigh as RecalculateIcon,
+  Bed as RestIcon,
+  Send as SendIcon,
+  Settings as SettingsIcon,
+  Description as SheetIcon,
+  Hotel as SleepIcon,
+  Star as StarIcon,
+  Stop as StopIcon,
+  FlashOn as StunIcon,
+  SwapHoriz as SwitchTableIcon,
+} from "@mui/icons-material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Grid,
-  Paper,
-  Divider,
-  Chip,
   Badge,
-  useMediaQuery,
-  useTheme,
+  Box,
   Button,
+  Card,
+  CardContent,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControlLabel,
+  Grid,
+  IconButton,
   List,
   ListItem,
   ListItemAvatar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Tabs,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
   Tab,
-  Checkbox,
-  FormControlLabel,
+  Tabs,
   TextField,
-  CircularProgress,
-  Card,
-  CardContent,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
-  Close as CloseIcon,
-  Description as SheetIcon,
-  Message as MessageIcon,
-  AttachFile as FileIcon,
-  Security as GmIcon,
-  PersonRemove as PersonRemoveIcon,
-  Settings as SettingsIcon,
-  PersonAdd as AddNpcIcon,
-  SwapHoriz as SwitchTableIcon,
-  Info as InfoIcon,
-  Group as GroupIcon,
-  Bed as RestIcon,
-  Hotel as SleepIcon,
-  FlashOn as StunIcon,
-  LocalHospital as DamageIcon,
-  BatteryAlert as FatigueIcon,
-  Dangerous as CorruptionIcon,
-  Spa as PurifyIcon,
-  LocalPharmacy as HealthPotionIcon,
-  LocalDrink as ManaPotionIcon,
-  Medication as AntidoteIcon,
-  Healing as HealIcon,
-  Science as PoisonIcon,
-  Send as SendIcon,
-  ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
-  AcUnit as FrozenIcon,
-  PanTool as ParalyzedIcon,
-  Help as OtherStatusIcon,
-  LocalFireDepartment as BurnIcon,
-  AutoFixHigh as RecalculateIcon,
-  PlayArrow as PlayIcon,
-  Stop as StopIcon,
-  EmojiEvents as QuestIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  HelpOutline as HelpOutlineIcon,
-  MenuBook as MenuBookIcon,
-  Star as StarIcon,
-  Pets as BestiaryIcon,
-} from "@mui/icons-material";
-import {useUIStore, useCharacterStore} from "@/stores/characterStore";
-import {useAuth} from "@/hooks";
-import APIService from "@/lib/api";
-import {
-  doc,
-  onSnapshot,
   collection,
-  query,
-  where,
-  limit,
+  doc,
   getDoc,
   getDocFromServer,
+  limit,
+  onSnapshot,
+  query,
+  where,
 } from "firebase/firestore";
-import {db} from "@/lib/firebase";
-import GameFileManager from "@/components/GameFileManager";
-import ChatModal from "../Messages/ChatModal";
-import BookView from "@/components/BookView";
-import UserMenu from "@/components/UserMenu";
-import InspectSheetModal from "./InspectSheetModal";
-import QuestBoard from "./QuestBoard";
-import MonsterCard from "@/components/BestiaryView/MonsterCard";
+import { useEffect, useState } from "react";
 import BestiaryView from "@/components/BestiaryView";
-import {calculateMaxMana} from "@/lib/rpgEngine";
+import MonsterCard from "@/components/BestiaryView/MonsterCard";
+import BookView from "@/components/BookView";
+import GameFileManager from "@/components/GameFileManager";
+import UserMenu from "@/components/UserMenu";
+import { useAuth } from "@/hooks";
+import APIService from "@/lib/api";
+import {
+  getCharacterStatusEffects,
+  toggleCharacterStatusEffect,
+} from "@/lib/characterStatus";
+import { db } from "@/lib/firebase";
+import { calculateMaxMana } from "@/lib/rpgEngine";
 import * as ScenarioService from "@/lib/scenarioService.js";
 import {
   getTableGameSession,
   SHEET_LOCK_GROUPS,
   SHEET_LOCK_KEYS,
 } from "@/lib/sheetLocks";
-import {
-  getCharacterStatusEffects,
-  toggleCharacterStatusEffect,
-} from "@/lib/characterStatus";
+import { useCharacterStore, useUIStore } from "@/stores/characterStore";
+import ChatModal from "../Messages/ChatModal";
+import InspectSheetModal from "./InspectSheetModal";
+import QuestBoard from "./QuestBoard";
 
 const TRACKED_STATUSES = [
-  {label: "Envenenado", icon: PoisonIcon, color: "#4caf50"},
-  {label: "Paralisado", icon: ParalyzedIcon, color: "#ffb74d"},
-  {label: "Congelado", icon: FrozenIcon, color: "#29b6f6"},
-  {label: "Queimado", icon: BurnIcon, color: "#d32f2f"},
+  { label: "Envenenado", icon: PoisonIcon, color: "#4caf50" },
+  { label: "Paralisado", icon: ParalyzedIcon, color: "#ffb74d" },
+  { label: "Congelado", icon: FrozenIcon, color: "#29b6f6" },
+  { label: "Queimado", icon: BurnIcon, color: "#d32f2f" },
 ];
 
 // Helper para determinar o ícone de presença no Avatar
@@ -157,7 +157,7 @@ const getPresenceBadgeIcon = (status) => {
 };
 
 // Sub-componente para item da lista de jogadores com listener em tempo real
-const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
+const PlayerListItem = ({ player, isGMView, presenceStatus, onClick }) => {
   const [charData, setCharData] = useState(null);
 
   useEffect(() => {
@@ -240,18 +240,18 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
         border: "1px solid #e0e0e0",
       }}
       onClick={(e) =>
-        onClick(e, player, {isShaken, wounds, fatigue, corruption})
+        onClick(e, player, { isShaken, wounds, fatigue, corruption })
       }
     >
       <Badge
         overlap="circular"
-        anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         badgeContent={getPresenceBadgeIcon(presenceStatus)}
-        sx={{"& .MuiBadge-badge": {p: 0, minWidth: "auto", height: "auto"}}}
+        sx={{ "& .MuiBadge-badge": { p: 0, minWidth: "auto", height: "auto" } }}
       >
         <Badge
           overlap="circular"
-          anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           badgeContent={
             player.isGM ? (
               <GmIcon
@@ -269,8 +269,8 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
           <Avatar
             src={avatarSrc}
             alt={player.name}
-            sx={{width: 40, height: 40}}
-            imgProps={{referrerPolicy: "no-referrer"}}
+            sx={{ width: 40, height: 40 }}
+            imgProps={{ referrerPolicy: "no-referrer" }}
           />
         </Badge>
       </Badge>
@@ -288,7 +288,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
           <Grid
             item
             xs={9}
-            sx={{textAlign: "right", fontSize: "0.7rem", lineHeight: 1.3}}
+            sx={{ textAlign: "right", fontSize: "0.7rem", lineHeight: 1.3 }}
           >
             {isDead ? (
               <Typography
@@ -323,7 +323,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                     color: isShaken ? "#d97706" : "#e0e0e0",
                   }}
                 >
-                  <StunIcon sx={{fontSize: 30}} />
+                  <StunIcon sx={{ fontSize: 30 }} />
                 </Box>
 
                 {/* Ferimentos */}
@@ -337,7 +337,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                     fontWeight: "700",
                   }}
                 >
-                  {wounds} <DamageIcon sx={{fontSize: 30}} />
+                  {wounds} <DamageIcon sx={{ fontSize: 30 }} />
                 </Box>
 
                 {/* Fadiga */}
@@ -351,7 +351,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                     fontWeight: "700",
                   }}
                 >
-                  {fatigue} <FatigueIcon sx={{fontSize: 30}} />
+                  {fatigue} <FatigueIcon sx={{ fontSize: 30 }} />
                 </Box>
 
                 {/* Corrupção */}
@@ -365,7 +365,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                     fontWeight: "700",
                   }}
                 >
-                  {corruption} <CorruptionIcon sx={{fontSize: 30}} />
+                  {corruption} <CorruptionIcon sx={{ fontSize: 30 }} />
                 </Box>
 
                 {/* Mana */}
@@ -380,18 +380,18 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                   }}
                 >
                   {currentMana}/{maxMana}{" "}
-                  <span style={{fontSize: "1.5em", lineHeight: 1}}>🌀</span>
+                  <span style={{ fontSize: "1.5em", lineHeight: 1 }}>🌀</span>
                 </Box>
 
                 {/* Divisor */}
                 <Divider
                   orientation="vertical"
                   flexItem
-                  sx={{mx: 0.5, bgcolor: "rgba(0,0,0,0.12)", height: "auto"}}
+                  sx={{ mx: 0.5, bgcolor: "rgba(0,0,0,0.12)", height: "auto" }}
                 />
 
                 {/* Status Fixos (Cinza se inativo, Colorido se ativo) */}
-                {TRACKED_STATUSES.map(({label, icon: Icon, color}) => {
+                {TRACKED_STATUSES.map(({ label, icon: Icon, color }) => {
                   const isActive = statusEffects.includes(label);
                   return (
                     <Box
@@ -403,7 +403,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                         color: isActive ? color : "#e0e0e0",
                       }}
                     >
-                      <Icon sx={{fontSize: 30}} />
+                      <Icon sx={{ fontSize: 30 }} />
                     </Box>
                   );
                 })}
@@ -423,7 +423,7 @@ const PlayerListItem = ({player, isGMView, presenceStatus, onClick}) => {
                         color: "#9c27b0",
                       }}
                     >
-                      <OtherStatusIcon sx={{fontSize: 30}} />
+                      <OtherStatusIcon sx={{ fontSize: 30 }} />
                     </Box>
                   ))}
               </Box>
@@ -446,9 +446,10 @@ function GameModal() {
     chatOpen,
     toggleChat,
     openChatWith,
+    activeScenarioId,
   } = useUIStore();
-  const {setInspectedCharacter} = useCharacterStore();
-  const {user} = useAuth();
+  const { setInspectedCharacter } = useCharacterStore();
+  const { user } = useAuth();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -492,7 +493,7 @@ function GameModal() {
   );
   const gameSession = selectedTable
     ? getTableGameSession(selectedTable)
-    : {isActive: false, lockedFields: []};
+    : { isActive: false, lockedFields: [] };
   const lockedFieldsCount = gameSession.lockedFields?.length || 0;
 
   // Efeito para exclusividade: Livro
@@ -562,7 +563,7 @@ function GameModal() {
           return;
         }
 
-        const data = {_id: docSnap.id, ...docSnap.data()};
+        const data = { _id: docSnap.id, ...docSnap.data() };
 
         // VERIFICAÇÃO: O usuário ainda tem permissão para ver a mesa?
         const isUserGM = data.gmId === user.uid;
@@ -618,13 +619,26 @@ function GameModal() {
   // Efeito para carregar loreSections do cenário da mesa
   useEffect(() => {
     async function loadScenarioLore() {
-      if (!selectedTable?.scenarioId) {
+      const scenarioId = selectedTable?.scenarioId || activeScenarioId;
+      console.log(
+        "Carregando lore para scenarioId:",
+        scenarioId,
+        "activeScenarioId:",
+        activeScenarioId,
+      );
+
+      if (!scenarioId) {
         setScenarioLoreSections([]);
         return;
       }
-      
+
       try {
-        const scenarioData = await ScenarioService.getScenarioById(selectedTable.scenarioId);
+        const scenarioData = await ScenarioService.getScenarioById(scenarioId);
+        console.log(
+          "Scenario data carregado:",
+          scenarioData?.id,
+          scenarioData?.loreSections?.length,
+        );
         if (scenarioData?.loreSections) {
           setScenarioLoreSections(scenarioData.loreSections);
         } else {
@@ -635,9 +649,9 @@ function GameModal() {
         setScenarioLoreSections([]);
       }
     }
-    
+
     loadScenarioLore();
-  }, [selectedTable?.scenarioId]);
+  }, [selectedTable?.scenarioId, activeScenarioId]);
 
   // --- Lógica de Presença na Próxima Sessão ---
   const handleTogglePresence = async () => {
@@ -663,7 +677,7 @@ function GameModal() {
         });
       } else {
         const updatedPlayers = (selectedTable.players || []).map((p) =>
-          p.uid === user.uid ? {...p, presence: nextPresence} : p,
+          p.uid === user.uid ? { ...p, presence: nextPresence } : p,
         );
         await APIService.updateTable(selectedTable._id, {
           players: updatedPlayers,
@@ -752,7 +766,7 @@ function GameModal() {
     try {
       const docSnap = await getDocFromServer(doc(db, "monsters", monsterId));
       if (docSnap.exists()) {
-        setSelectedMonsterData({id: docSnap.id, ...docSnap.data()});
+        setSelectedMonsterData({ id: docSnap.id, ...docSnap.data() });
       } else {
         showNotification("Monstro não encontrado no bestiário.", "error");
         setMonsterModalOpen(false);
@@ -857,8 +871,10 @@ function GameModal() {
         return;
       }
       try {
-        await APIService.updateTable(selectedTable._id, {gmCharacterId: null});
-        setSelectedTable({...selectedTable, gmCharacterId: null});
+        await APIService.updateTable(selectedTable._id, {
+          gmCharacterId: null,
+        });
+        setSelectedTable({ ...selectedTable, gmCharacterId: null });
         showNotification("Personagem do mestre removido.", "info");
       } catch (error) {
         showNotification("Erro ao remover personagem.", "error");
@@ -881,7 +897,7 @@ function GameModal() {
       const updatedPlayers = selectedTable.players.filter(
         (p) => p.uid !== selectedPlayer.uid,
       );
-      setSelectedTable({...selectedTable, players: updatedPlayers});
+      setSelectedTable({ ...selectedTable, players: updatedPlayers });
       showNotification(`${selectedPlayer.name} removido da mesa.`, "info");
     } catch (error) {
       console.error(error);
@@ -1194,7 +1210,7 @@ function GameModal() {
           );
           break;
         }
-        case "give_xp":
+        case "give_xp": {
           const currentXp = parseInt(charData.xp || 0, 10);
           updates.xp = currentXp + (payload.amount || 0);
           showNotification(
@@ -1202,6 +1218,7 @@ function GameModal() {
             "success",
           );
           break;
+        }
       }
 
       await APIService.saveCharacter(charData.userId, {
@@ -1223,7 +1240,7 @@ function GameModal() {
 
   const handleConfirmCustomEffect = () => {
     if (customEffectText.trim()) {
-      handleGMAction("custom_effect", {effectLabel: customEffectText});
+      handleGMAction("custom_effect", { effectLabel: customEffectText });
       setCustomEffectText("");
       setCustomEffectModalOpen(false);
     } else {
@@ -1404,7 +1421,7 @@ function GameModal() {
             py: 1.5,
           }}
         >
-          <Box sx={{display: "flex", alignItems: "center", gap: 1, flex: 1}}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
             {selectedTable ? (
               isGM ? (
                 <>
@@ -1413,7 +1430,7 @@ function GameModal() {
                     variant="h6"
                     color="secondary"
                     fontWeight="bold"
-                    sx={{display: {xs: "none", sm: "block"}}}
+                    sx={{ display: { xs: "none", sm: "block" } }}
                   >
                     Área do Mestre
                   </Typography>
@@ -1425,7 +1442,7 @@ function GameModal() {
                     variant="h6"
                     color="primary"
                     fontWeight="bold"
-                    sx={{display: {xs: "none", sm: "block"}}}
+                    sx={{ display: { xs: "none", sm: "block" } }}
                   >
                     Mesa de Jogo
                   </Typography>
@@ -1436,7 +1453,7 @@ function GameModal() {
                 variant="h6"
                 color="text.secondary"
                 fontWeight="bold"
-                sx={{display: {xs: "none", sm: "block"}}}
+                sx={{ display: { xs: "none", sm: "block" } }}
               >
                 Hub do Caçador
               </Typography>
@@ -1446,7 +1463,7 @@ function GameModal() {
                 <Typography
                   variant="h6"
                   color="text.secondary"
-                  sx={{display: {xs: "none", sm: "block"}}}
+                  sx={{ display: { xs: "none", sm: "block" } }}
                 >
                   |
                 </Typography>
@@ -1466,7 +1483,7 @@ function GameModal() {
           {selectedTable && (
             <Box
               sx={{
-                display: {xs: "none", md: "flex"},
+                display: { xs: "none", md: "flex" },
                 flexDirection: "column",
                 alignItems: "center",
                 flex: 1,
@@ -1479,7 +1496,7 @@ function GameModal() {
               >
                 Próxima Sessão
               </Typography>
-              <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography variant="body2" fontWeight="bold">
                   {selectedTable.nextSession
                     ? new Date(selectedTable.nextSession).toLocaleString(
@@ -1489,7 +1506,7 @@ function GameModal() {
                 </Typography>
                 <IconButton
                   size="small"
-                  sx={{p: 0}}
+                  sx={{ p: 0 }}
                   onClick={handleTogglePresence}
                   title={
                     myPresence === "confirmed"
@@ -1553,7 +1570,7 @@ function GameModal() {
             <IconButton
               onClick={() => setIsBestiaryOpen(!isBestiaryOpen)}
               title="Bestiário"
-              sx={{color: isBestiaryOpen ? "primary.main" : "action.active"}}
+              sx={{ color: isBestiaryOpen ? "primary.main" : "action.active" }}
             >
               <BestiaryIcon />
             </IconButton>
@@ -1561,7 +1578,7 @@ function GameModal() {
             <IconButton
               onClick={() => setIsBookOpen(!isBookOpen)}
               title="Manual do Jogo"
-              sx={{color: isBookOpen ? "primary.main" : "action.active"}}
+              sx={{ color: isBookOpen ? "primary.main" : "action.active" }}
             >
               <MenuBookIcon />
             </IconButton>
@@ -1569,9 +1586,7 @@ function GameModal() {
               onClick={handleOpenTablesMenu}
               title="Trocar de Mesa"
               sx={{
-                color: Boolean(tablesMenuAnchor)
-                  ? "primary.main"
-                  : "action.active",
+                color: tablesMenuAnchor ? "primary.main" : "action.active",
               }}
             >
               <SwitchTableIcon />
@@ -1580,7 +1595,7 @@ function GameModal() {
               <IconButton
                 onClick={toggleChat}
                 title="Abrir Chat"
-                sx={{color: chatOpen ? "primary.main" : "action.active"}}
+                sx={{ color: chatOpen ? "primary.main" : "action.active" }}
               >
                 <MessageIcon />
               </IconButton>
@@ -1618,7 +1633,10 @@ function GameModal() {
                   position: "relative",
                 }}
               >
-                <BookView twoPageMode={true} loreSections={scenarioLoreSections} />
+                <BookView
+                  twoPageMode={true}
+                  loreSections={scenarioLoreSections}
+                />
               </Box>
             </Box>
           ) : isBestiaryOpen ? (
@@ -1663,7 +1681,7 @@ function GameModal() {
               <Typography
                 variant="body1"
                 color="text.secondary"
-                sx={{maxWidth: 500}}
+                sx={{ maxWidth: 500 }}
               >
                 Você está na área de Mesas de Jogo, mas ainda não selecionou
                 nenhuma. Escolha uma mesa, crie uma nova campanha ou retorne à
@@ -1705,14 +1723,14 @@ function GameModal() {
                   value={mobileTab}
                   onChange={(e, v) => setMobileTab(v)}
                   variant="fullWidth"
-                  sx={{bgcolor: "white", borderBottom: "1px solid #e0e0e0"}}
+                  sx={{ bgcolor: "white", borderBottom: "1px solid #e0e0e0" }}
                 >
                   <Tab label={isGM ? "Mestre" : "Mesa"} />
                   <Tab label="Jogadores" />
                 </Tabs>
               )}
 
-              <Grid container sx={{flexGrow: 1, overflow: "hidden"}}>
+              <Grid container sx={{ flexGrow: 1, overflow: "hidden" }}>
                 {/* Coluna Esquerda: Área do Mestre / Informações */}
                 <Grid
                   item
@@ -1721,7 +1739,7 @@ function GameModal() {
                   sx={{
                     height: "100%",
                     overflowY: "auto",
-                    p: {xs: 2, md: 3},
+                    p: { xs: 2, md: 3 },
                     display: {
                       xs: mobileTab === 0 ? "block" : "none",
                       md: "block",
@@ -1730,7 +1748,7 @@ function GameModal() {
                       ? {
                           bgcolor: "#faf5ff",
                           borderRight: "2px solid #e1bee7",
-                          "&::-webkit-scrollbar": {width: "8px"},
+                          "&::-webkit-scrollbar": { width: "8px" },
                           "&::-webkit-scrollbar-track": {
                             background: "transparent",
                           },
@@ -1745,7 +1763,7 @@ function GameModal() {
                       : {
                           bgcolor: "#e3f2fd",
                           borderRight: "2px solid #bbdefb",
-                          "&::-webkit-scrollbar": {width: "8px"},
+                          "&::-webkit-scrollbar": { width: "8px" },
                           "&::-webkit-scrollbar-track": {
                             background: "transparent",
                           },
@@ -1798,7 +1816,7 @@ function GameModal() {
                           borderRadius: "8px",
                           border: "1px solid #e0e0e0",
                           boxShadow: "none",
-                          "&:before": {display: "none"},
+                          "&:before": { display: "none" },
                         }}
                       >
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -1832,7 +1850,7 @@ function GameModal() {
                           </Box>
                           <Typography
                             variant="body2"
-                            sx={{whiteSpace: "pre-wrap"}}
+                            sx={{ whiteSpace: "pre-wrap" }}
                           >
                             {selectedTable?.description ||
                               "Sem descrição disponível."}
@@ -1849,7 +1867,7 @@ function GameModal() {
                             border: "1px solid #00e5ff",
                             bgcolor: "rgba(0, 229, 255, 0.05)",
                             boxShadow: "none",
-                            "&:before": {display: "none"},
+                            "&:before": { display: "none" },
                           }}
                         >
                           <AccordionSummary
@@ -1884,7 +1902,7 @@ function GameModal() {
                                 <Typography
                                   variant="subtitle1"
                                   fontWeight="bold"
-                                  sx={{textTransform: "uppercase"}}
+                                  sx={{ textTransform: "uppercase" }}
                                 >
                                   {quest.title}
                                 </Typography>
@@ -1893,7 +1911,7 @@ function GameModal() {
                                 <Typography
                                   variant="caption"
                                   color="text.secondary"
-                                  sx={{mt: 0.5}}
+                                  sx={{ mt: 0.5 }}
                                 >
                                   Rank da Fenda: {quest.hunterRank} | Rank
                                   SWADE: {quest.swadeRank} | Caçadores:{" "}
@@ -1902,7 +1920,7 @@ function GameModal() {
                               )}
                             </Box>
                           </AccordionSummary>
-                          <AccordionDetails sx={{pt: 0}}>
+                          <AccordionDetails sx={{ pt: 0 }}>
                             <Divider
                               sx={{
                                 mb: 1.5,
@@ -2023,7 +2041,7 @@ function GameModal() {
                                         variant="caption"
                                         color="info.main"
                                         display="block"
-                                        sx={{mt: 1}}
+                                        sx={{ mt: 1 }}
                                       >
                                         <strong>Armadilhas:</strong>
                                       </Typography>
@@ -2039,7 +2057,7 @@ function GameModal() {
                                       ))}
                                     </>
                                   )}
-                                  <Box sx={{mt: 1}}>
+                                  <Box sx={{ mt: 1 }}>
                                     <Typography
                                       variant="caption"
                                       color="primary.main"
@@ -2047,7 +2065,7 @@ function GameModal() {
                                     >
                                       <strong>Encontros Esperados:</strong>
                                     </Typography>
-                                    <Box sx={{ml: 1, mt: 0.5}}>
+                                    <Box sx={{ ml: 1, mt: 0.5 }}>
                                       <Typography
                                         variant="caption"
                                         color="error.main"
@@ -2055,7 +2073,7 @@ function GameModal() {
                                       >
                                         <strong>◆ Boss:</strong>
                                       </Typography>
-                                      <Box sx={{ml: 1, mb: 1}}>
+                                      <Box sx={{ ml: 1, mb: 1 }}>
                                         {typeof quest.antagonist ===
                                         "string" ? (
                                           <Typography
@@ -2193,7 +2211,7 @@ function GameModal() {
                                     variant="caption"
                                     color="success.main"
                                     display="block"
-                                    sx={{mt: 1}}
+                                    sx={{ mt: 1 }}
                                   >
                                     <strong>Loot do Boss:</strong>{" "}
                                     {quest.bossLoot?.join(", ")}
@@ -2216,11 +2234,11 @@ function GameModal() {
 
                   {/* Mestre: Materiais Secretos */}
                   {isGM && panelTab === 1 && (
-                    <Box id="section-materiais-secretos" sx={{mb: 4}}>
+                    <Box id="section-materiais-secretos" sx={{ mb: 4 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{display: "block", mb: 2}}
+                        sx={{ display: "block", mb: 2 }}
                       >
                         Visível apenas para o Mestre. (Arquivos de missões
                         ocultas não aparecem aqui).
@@ -2238,11 +2256,11 @@ function GameModal() {
 
                   {/* Materiais Públicos */}
                   {panelTab === (isGM ? 2 : 1) && (
-                    <Box id="section-materiais-publicos" sx={{mb: 4}}>
+                    <Box id="section-materiais-publicos" sx={{ mb: 4 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{display: "block", mb: 2}}
+                        sx={{ display: "block", mb: 2 }}
                       >
                         Visível para todos os jogadores.
                       </Typography>
@@ -2258,7 +2276,7 @@ function GameModal() {
 
                   {/* Banco de Missões */}
                   {isGM && panelTab === 3 && (
-                    <Box id="section-banco-missoes" sx={{mb: 4}}>
+                    <Box id="section-banco-missoes" sx={{ mb: 4 }}>
                       <QuestBoard tableId={selectedTable?._id} isGM={isGM} />
                     </Box>
                   )}
@@ -2272,15 +2290,15 @@ function GameModal() {
                   sx={{
                     height: "100%",
                     bgcolor: "#fff",
-                    borderLeft: {md: "1px solid #e0e0e0"},
+                    borderLeft: { md: "1px solid #e0e0e0" },
                     p: 2,
                     overflowY: "auto",
                     display: {
                       xs: mobileTab === 1 ? "block" : "none",
                       md: "block",
                     },
-                    "&::-webkit-scrollbar": {width: "8px"},
-                    "&::-webkit-scrollbar-track": {background: "transparent"},
+                    "&::-webkit-scrollbar": { width: "8px" },
+                    "&::-webkit-scrollbar-track": { background: "transparent" },
                     "&::-webkit-scrollbar-thumb": {
                       background: "rgba(144, 202, 249, 0.5)",
                       borderRadius: "4px",
@@ -2293,7 +2311,7 @@ function GameModal() {
                   {/* Seção do Game Master */}
                   <Divider
                     textAlign="left"
-                    sx={{mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)"}}
+                    sx={{ mb: 2, mt: 1, borderColor: "rgba(0,0,0,0.08)" }}
                   >
                     <Chip label="Game Master" size="small" color="secondary" />
                   </Divider>
@@ -2306,7 +2324,7 @@ function GameModal() {
                       alignItems: "center",
                     }}
                   >
-                    <Box sx={{flex: 1, minWidth: 0}}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                       <PlayerListItem
                         player={gmData}
                         isGMView={isGM}
@@ -2371,11 +2389,11 @@ function GameModal() {
                   </Box>
 
                   {gmCharacterData && (
-                    <Box sx={{mb: 3, pl: 2, borderLeft: "4px solid #9c27b0"}}>
+                    <Box sx={{ mb: 3, pl: 2, borderLeft: "4px solid #9c27b0" }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{mb: 0.5, display: "block"}}
+                        sx={{ mb: 0.5, display: "block" }}
                       >
                         Personagem do Mestre
                       </Typography>
@@ -2393,7 +2411,7 @@ function GameModal() {
                     <>
                       <Divider
                         textAlign="left"
-                        sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                        sx={{ mb: 2, borderColor: "rgba(0,0,0,0.08)" }}
                       >
                         <Chip
                           label="NPCs & Invocados"
@@ -2429,11 +2447,13 @@ function GameModal() {
                   {/* Seção dos Jogadores */}
                   <Divider
                     textAlign="left"
-                    sx={{mb: 2, borderColor: "rgba(0,0,0,0.08)"}}
+                    sx={{ mb: 2, borderColor: "rgba(0,0,0,0.08)" }}
                   >
                     <Chip label="Jogadores" size="small" />
                   </Divider>
-                  <Box sx={{display: "flex", flexDirection: "column", gap: 2}}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
                     {realPlayerList.map((player) => {
                       return (
                         <PlayerListItem
@@ -2458,7 +2478,7 @@ function GameModal() {
             onClose={handleCloseMenu}
             PaperProps={{
               elevation: 3,
-              sx: {minWidth: 240},
+              sx: { minWidth: 240 },
             }}
           >
             {/* Opções para o próprio usuário (Self) */}
@@ -2527,9 +2547,9 @@ function GameModal() {
                   onClick={(e) => handleOpenSubmenu("xp", e)}
                 >
                   <ListItemIcon>
-                    <StarIcon fontSize="small" sx={{color: "#d97706"}} />
+                    <StarIcon fontSize="small" sx={{ color: "#d97706" }} />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "#d97706"}}>Dar XP</ListItemText>
+                  <ListItemText sx={{ color: "#d97706" }}>Dar XP</ListItemText>
                   <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
 
@@ -2566,7 +2586,7 @@ function GameModal() {
                   <ListItemIcon>
                     <DamageIcon fontSize="small" color="error" />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "error.main"}}>Dano</ListItemText>
+                  <ListItemText sx={{ color: "error.main" }}>Dano</ListItemText>
                   <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
 
@@ -2590,9 +2610,14 @@ function GameModal() {
                   onClick={(e) => handleOpenSubmenu("corruption", e)}
                 >
                   <ListItemIcon>
-                    <CorruptionIcon fontSize="small" sx={{color: "#7b1fa2"}} />
+                    <CorruptionIcon
+                      fontSize="small"
+                      sx={{ color: "#7b1fa2" }}
+                    />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "#7b1fa2"}}>Corrupção</ListItemText>
+                  <ListItemText sx={{ color: "#7b1fa2" }}>
+                    Corrupção
+                  </ListItemText>
                   <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
 
@@ -2614,9 +2639,9 @@ function GameModal() {
                   onClick={(event) => handleOpenSubmenu("effects", event)}
                 >
                   <ListItemIcon>
-                    <PoisonIcon fontSize="small" sx={{color: "#9c27b0"}} />
+                    <PoisonIcon fontSize="small" sx={{ color: "#9c27b0" }} />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "#9c27b0"}}>Efeitos</ListItemText>
+                  <ListItemText sx={{ color: "#9c27b0" }}>Efeitos</ListItemText>
                   <ChevronRightIcon fontSize="small" />
                 </MenuItem>,
 
@@ -2625,7 +2650,7 @@ function GameModal() {
                   <ListItemIcon>
                     <PersonRemoveIcon fontSize="small" color="error" />
                   </ListItemIcon>
-                  <ListItemText sx={{color: "error.main"}}>
+                  <ListItemText sx={{ color: "error.main" }}>
                     Remover Jogador
                   </ListItemText>
                 </MenuItem>,
@@ -2656,9 +2681,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "actions"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={handleSendMessage}>
               <ListItemIcon>
@@ -2679,20 +2704,20 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "xp"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
-            <MenuItem onClick={() => handleGMAction("give_xp", {amount: 1})}>
+            <MenuItem onClick={() => handleGMAction("give_xp", { amount: 1 })}>
               <ListItemText>+1 XP (Avanço Menor)</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleGMAction("give_xp", {amount: 2})}>
+            <MenuItem onClick={() => handleGMAction("give_xp", { amount: 2 })}>
               <ListItemText>+2 XP</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleGMAction("give_xp", {amount: 3})}>
+            <MenuItem onClick={() => handleGMAction("give_xp", { amount: 3 })}>
               <ListItemText>+3 XP (Avanço Padrão)</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleGMAction("give_xp", {amount: 5})}>
+            <MenuItem onClick={() => handleGMAction("give_xp", { amount: 5 })}>
               <ListItemText>+5 XP</ListItemText>
             </MenuItem>
           </Menu>
@@ -2702,9 +2727,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "damage"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("damage")}>
               <ListItemIcon>
@@ -2725,9 +2750,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "rest"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("short_rest")}>
               <ListItemIcon>
@@ -2748,9 +2773,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "corruption"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("corruption_add")}>
               <ListItemIcon>
@@ -2771,9 +2796,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "potions"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={(e) => handleOpenSubmenu("heal-potion", e)}>
               <ListItemIcon>
@@ -2802,9 +2827,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "actions"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={handleSendMessage}>
               <ListItemIcon>
@@ -2825,9 +2850,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "damage"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("damage")}>
               <ListItemIcon>
@@ -2848,9 +2873,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "rest"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("short_rest")}>
               <ListItemIcon>
@@ -2871,9 +2896,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "corruption"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={() => handleGMAction("corruption_add")}>
               <ListItemIcon>
@@ -2894,9 +2919,9 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "potions"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem onClick={(e) => handleOpenTertiary("heal-potion", e)}>
               <ListItemIcon>
@@ -2925,22 +2950,22 @@ function GameModal() {
             anchorEl={tertiaryAnchorEl}
             open={tertiaryType === "heal-potion"}
             onClose={handleCloseTertiary}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 5})}
+              onClick={() => handleGMAction("potion_heal", { amount: 5 })}
             >
               <ListItemText>+1 Ferimento</ListItemText>
             </MenuItem>
             <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 10})}
+              onClick={() => handleGMAction("potion_heal", { amount: 10 })}
             >
               <ListItemText>+2 Ferimentos</ListItemText>
             </MenuItem>
             <MenuItem
-              onClick={() => handleGMAction("potion_heal", {amount: 15})}
+              onClick={() => handleGMAction("potion_heal", { amount: 15 })}
             >
               <ListItemText>+3 Ferimentos</ListItemText>
             </MenuItem>
@@ -2951,27 +2976,27 @@ function GameModal() {
             anchorEl={tertiaryAnchorEl}
             open={tertiaryType === "mana-potion"}
             onClose={handleCloseTertiary}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3 }}
           >
             <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 3})}
+              onClick={() => handleGMAction("potion_mana", { amount: 3 })}
             >
               <ListItemText>+3 Mana</ListItemText>
             </MenuItem>
             <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 5})}
+              onClick={() => handleGMAction("potion_mana", { amount: 5 })}
             >
               <ListItemText>+5 Mana</ListItemText>
             </MenuItem>
             <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: 10})}
+              onClick={() => handleGMAction("potion_mana", { amount: 10 })}
             >
               <ListItemText>+10 Mana</ListItemText>
             </MenuItem>
             <MenuItem
-              onClick={() => handleGMAction("potion_mana", {amount: "total"})}
+              onClick={() => handleGMAction("potion_mana", { amount: "total" })}
             >
               <ListItemText>Total</ListItemText>
             </MenuItem>
@@ -2982,34 +3007,34 @@ function GameModal() {
             anchorEl={submenuAnchorEl}
             open={submenuType === "effects"}
             onClose={handleCloseSubmenu}
-            anchorOrigin={{vertical: "top", horizontal: "right"}}
-            transformOrigin={{vertical: "top", horizontal: "left"}}
-            PaperProps={{elevation: 3, sx: {minWidth: 220}}}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{ elevation: 3, sx: { minWidth: 220 } }}
           >
             <MenuItem
               onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Envenenado"})
+                handleGMAction("toggle_effect", { effectLabel: "Envenenado" })
               }
             >
               <ListItemText>Envenenar</ListItemText>
             </MenuItem>
             <MenuItem
               onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Paralisado"})
+                handleGMAction("toggle_effect", { effectLabel: "Paralisado" })
               }
             >
               <ListItemText>Paralisar</ListItemText>
             </MenuItem>
             <MenuItem
               onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Congelado"})
+                handleGMAction("toggle_effect", { effectLabel: "Congelado" })
               }
             >
               <ListItemText>Congelar</ListItemText>
             </MenuItem>
             <MenuItem
               onClick={() =>
-                handleGMAction("toggle_effect", {effectLabel: "Queimado"})
+                handleGMAction("toggle_effect", { effectLabel: "Queimado" })
               }
             >
               <ListItemText>Queimar</ListItemText>
@@ -3069,7 +3094,7 @@ function GameModal() {
               border: "1px solid #e0e0e0",
             }}
           >
-            <Typography variant="body2" sx={{mb: 1}}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
               Selecione os pontos da ficha que ficarão bloqueados enquanto o
               jogo estiver em andamento.
             </Typography>
@@ -3077,7 +3102,7 @@ function GameModal() {
               A lista abaixo cobre todos os pontos editáveis da Ficha de
               Personagem.
             </Typography>
-            <Box sx={{display: "flex", gap: 1, mt: 2, flexWrap: "wrap"}}>
+            <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
               <Button
                 size="small"
                 variant="outlined"
@@ -3105,17 +3130,17 @@ function GameModal() {
               <Grid item xs={12} md={6} key={group.id}>
                 <Paper
                   variant="outlined"
-                  sx={{p: 2, height: "100%", bgcolor: "#fff"}}
+                  sx={{ p: 2, height: "100%", bgcolor: "#fff" }}
                 >
                   <Typography
                     variant="subtitle2"
                     fontWeight="bold"
                     color="primary"
-                    sx={{mb: 1.5}}
+                    sx={{ mb: 1.5 }}
                   >
                     {group.title}
                   </Typography>
-                  <Box sx={{display: "flex", flexDirection: "column"}}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
                     {group.items.map((item) => (
                       <FormControlLabel
                         key={item.key}
@@ -3149,7 +3174,7 @@ function GameModal() {
           >
             Fechar
           </Button>
-          <Box sx={{display: "flex", gap: 1, flexWrap: "wrap"}}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             {gameSession.isActive && (
               <Button
                 color="error"
@@ -3183,12 +3208,12 @@ function GameModal() {
         <DialogTitle>Convocar NPC para o Grupo</DialogTitle>
         <DialogContent>
           {loadingNpcs ? (
-            <Typography sx={{p: 2, textAlign: "center"}}>
+            <Typography sx={{ p: 2, textAlign: "center" }}>
               Carregando seus personagens...
             </Typography>
           ) : myCharacters.length === 0 ? (
             <Typography
-              sx={{p: 2, textAlign: "center", color: "text.secondary"}}
+              sx={{ p: 2, textAlign: "center", color: "text.secondary" }}
             >
               Você não tem personagens disponíveis ou todos já estão nesta mesa.
             </Typography>
@@ -3238,7 +3263,7 @@ function GameModal() {
       >
         <DialogTitle>Status Personalizado</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{mb: 2, color: "text.secondary"}}>
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
             Digite o nome do status. Se ele já existir na ficha, será removido.
           </Typography>
           <TextField
@@ -3288,9 +3313,12 @@ function GameModal() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{bgcolor: "#f8fafc", p: {xs: 2, md: 4}}}>
+        <DialogContent
+          dividers
+          sx={{ bgcolor: "#f8fafc", p: { xs: 2, md: 4 } }}
+        >
           {loadingFriend ? (
-            <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
           ) : friendData ? (
@@ -3357,7 +3385,7 @@ function GameModal() {
                     <Typography
                       variant="h6"
                       fontWeight="bold"
-                      sx={{letterSpacing: 2, textTransform: "uppercase"}}
+                      sx={{ letterSpacing: 2, textTransform: "uppercase" }}
                     >
                       RANK {friendData.rank || "Novato"}
                     </Typography>
@@ -3375,12 +3403,12 @@ function GameModal() {
                     gap: 3,
                   }}
                 >
-                  <Box sx={{borderBottom: "2px solid #cbd5e1", pb: 2}}>
+                  <Box sx={{ borderBottom: "2px solid #cbd5e1", pb: 2 }}>
                     <Typography
                       variant="h4"
                       fontWeight="900"
                       color="#0f172a"
-                      sx={{textTransform: "uppercase", lineHeight: 1.1}}
+                      sx={{ textTransform: "uppercase", lineHeight: 1.1 }}
                     >
                       {friendData.nome || "Caçador Sem Nome"}
                     </Typography>
@@ -3388,7 +3416,7 @@ function GameModal() {
                       variant="subtitle1"
                       color="primary"
                       fontWeight="bold"
-                      sx={{mt: 0.5}}
+                      sx={{ mt: 0.5 }}
                     >
                       {friendData.arquetipo || "Arquétipo Desconhecido"}{" "}
                       {friendData.conceito ? `• ${friendData.conceito}` : ""}
@@ -3463,7 +3491,7 @@ function GameModal() {
                   </Grid>
 
                   <Box
-                    sx={{mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1"}}
+                    sx={{ mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1" }}
                   >
                     <Typography
                       variant="subtitle2"
@@ -3474,7 +3502,7 @@ function GameModal() {
                       EQUIPAMENTO REGISTRADO
                     </Typography>
                     <Box
-                      sx={{display: "flex", flexDirection: "column", gap: 1}}
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
                       {friendData.armas?.length > 0
                         ? friendData.armas.slice(0, 3).map((w, i) => (
@@ -3562,7 +3590,10 @@ function GameModal() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{p: 0, height: "70vh", bgcolor: "#f1f5f9"}}>
+        <DialogContent
+          dividers
+          sx={{ p: 0, height: "70vh", bgcolor: "#f1f5f9" }}
+        >
           {loadingMonster ? (
             <Box
               sx={{
@@ -3575,11 +3606,13 @@ function GameModal() {
               <CircularProgress />
             </Box>
           ) : selectedMonsterData ? (
-            <Box sx={{p: {xs: 2, md: 4}, height: "100%"}}>
+            <Box sx={{ p: { xs: 2, md: 4 }, height: "100%" }}>
               <MonsterCard monster={selectedMonsterData} />
             </Box>
           ) : (
-            <Box sx={{p: 3, textAlign: "center"}}>Monstro não encontrado.</Box>
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              Monstro não encontrado.
+            </Box>
           )}
         </DialogContent>
       </Dialog>
