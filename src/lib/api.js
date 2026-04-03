@@ -2,25 +2,26 @@
  * src/lib/api.js
  * Versão SERVERLESS (Firebase Firestore direto)
  */
-import {db} from "./firebase";
-import {DEFAULT_GAME_SESSION} from "@/lib/sheetLocks";
+
 import {
-  collection,
-  query,
-  where,
-  getDocs,
   addDoc,
-  updateDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
   deleteDoc,
   doc,
-  serverTimestamp,
   getDoc,
+  getDocs,
   or,
-  arrayUnion,
-  arrayRemove,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
   writeBatch,
 } from "firebase/firestore";
-import {useUIStore} from "@/stores/characterStore";
+import { DEFAULT_GAME_SESSION } from "@/lib/sheetLocks";
+import { useUIStore } from "@/stores/characterStore";
+import { db } from "./firebase";
 
 class APIService {
   // Helper para limpar dados undefined (Firestore não aceita)
@@ -30,14 +31,14 @@ class APIService {
 
     if (Array.isArray(data)) {
       return data
-        .map((item) => this._cleanData(item))
+        .map((item) => APIService._cleanData(item))
         .filter((item) => item !== undefined);
     }
 
     if (typeof data === "object" && data.constructor === Object) {
       const clean = {};
       Object.keys(data).forEach((key) => {
-        const value = this._cleanData(data[key]);
+        const value = APIService._cleanData(data[key]);
         if (value !== undefined) {
           clean[key] = value;
         }
@@ -62,7 +63,7 @@ class APIService {
 
       // Retorna o primeiro que encontrar + ID do documento
       const docData = snapshot.docs[0];
-      return {_id: docData.id, ...docData.data()};
+      return { _id: docData.id, ...docData.data() };
     } catch (error) {
       console.error("Firebase: Erro ao buscar:", error);
       throw error;
@@ -75,7 +76,7 @@ class APIService {
       const docRef = doc(db, "characters", characterId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        return {_id: docSnap.id, ...docSnap.data()};
+        return { _id: docSnap.id, ...docSnap.data() };
       }
       return null;
     } catch (error) {
@@ -93,7 +94,7 @@ class APIService {
         where("userId", "==", userId),
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+      return snapshot.docs.map((doc) => ({ _id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error("Erro ao buscar fichas:", error);
       throw error;
@@ -105,7 +106,7 @@ class APIService {
     if (!userId) throw new Error("Usuário não logado");
 
     try {
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...characterData,
         userId,
         updatedAt: serverTimestamp(), // Marca a hora do update
@@ -122,12 +123,12 @@ class APIService {
         if (oldSnap.exists()) {
           const oldData = oldSnap.data();
           if (oldData.imagem_url && oldData.imagem_url !== payload.imagem_url) {
-            await this.deleteFile(oldData.imagem_url);
+            await APIService.deleteFile(oldData.imagem_url);
           }
         }
 
         await updateDoc(docRef, payload);
-        return {_id: docId, ...payload};
+        return { _id: docId, ...payload };
       }
 
       // Se não tem _id, cria um novo
@@ -137,7 +138,7 @@ class APIService {
         payload.nome = payload.nome || "Novo Caçador";
 
         const docRef = await addDoc(collection(db, "characters"), payload);
-        return {_id: docRef.id, ...payload};
+        return { _id: docRef.id, ...payload };
       }
     } catch (error) {
       console.error("Firebase: Erro ao salvar:", error);
@@ -153,11 +154,11 @@ class APIService {
       // Deletar a imagem associada, se existir
       const oldSnap = await getDoc(docRef);
       if (oldSnap.exists() && oldSnap.data().imagem_url) {
-        await this.deleteFile(oldSnap.data().imagem_url);
+        await APIService.deleteFile(oldSnap.data().imagem_url);
       }
 
       await deleteDoc(docRef);
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Firebase: Erro ao deletar:", error);
       throw error;
@@ -192,7 +193,7 @@ class APIService {
       };
 
       const newDocRef = await addDoc(collection(db, "characters"), newData);
-      return {_id: newDocRef.id, ...newData};
+      return { _id: newDocRef.id, ...newData };
     } catch (error) {
       console.error("Erro ao duplicar:", error);
       throw error;
@@ -206,7 +207,7 @@ class APIService {
   // 5. CRIAR MESA
   static async createTable(tableData) {
     try {
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...tableData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -216,7 +217,7 @@ class APIService {
       });
 
       const docRef = await addDoc(collection(db, "tables"), payload);
-      return {_id: docRef.id, ...payload};
+      return { _id: docRef.id, ...payload };
     } catch (error) {
       console.error("Erro ao criar mesa:", error);
       throw error;
@@ -270,7 +271,7 @@ class APIService {
         if (result.status === "fulfilled") {
           result.value.docs.forEach((doc) => {
             if (!tablesMap.has(doc.id)) {
-              tablesMap.set(doc.id, {_id: doc.id, ...doc.data()});
+              tablesMap.set(doc.id, { _id: doc.id, ...doc.data() });
             }
           });
         } else {
@@ -289,12 +290,12 @@ class APIService {
   static async updateTable(tableId, data) {
     try {
       const docRef = doc(db, "tables", tableId);
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...data,
         updatedAt: serverTimestamp(),
       });
       await updateDoc(docRef, payload);
-      return {_id: tableId, ...payload};
+      return { _id: tableId, ...payload };
     } catch (error) {
       console.error("Erro ao atualizar mesa:", error);
       throw error;
@@ -312,13 +313,13 @@ class APIService {
         const data = tableSnap.data();
         if (data.files && Array.isArray(data.files)) {
           for (const f of data.files) {
-            if (f.url) await this.deleteFile(f.url);
+            if (f.url) await APIService.deleteFile(f.url);
           }
         }
       }
 
       await deleteDoc(tableRef);
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Erro ao deletar mesa:", error);
       throw error;
@@ -417,7 +418,7 @@ class APIService {
   static async acceptInvite(tableId, user) {
     try {
       // Buscar ficha do usuário para vincular
-      const character = await this.getCharacter(user.uid);
+      const character = await APIService.getCharacter(user.uid);
 
       const tableRef = doc(db, "tables", tableId);
       await updateDoc(tableRef, {
@@ -464,7 +465,7 @@ class APIService {
 
       const npcPlayer = {
         uid: npcId,
-        email: "npc@slsw.system", // Email fictício para identificação
+        email: "npc@rpg-manager.system", // Email fictício para identificação
         name: character.nome || "NPC",
         photoURL: character.imagem_url || null,
         joinedAt: new Date().toISOString(),
@@ -540,7 +541,7 @@ class APIService {
       });
       // Deletar o arquivo físico do servidor
       if (attachmentData.url) {
-        await this.deleteFile(attachmentData.url);
+        await APIService.deleteFile(attachmentData.url);
       }
     } catch (error) {
       console.error("Erro ao remover anexo:", error);
@@ -569,7 +570,7 @@ class APIService {
       // 1. Obter todos os arquivos no servidor
       const res = await fetch("/api/upload");
       if (!res.ok) throw new Error("Erro ao listar arquivos do servidor");
-      const {files} = await res.json();
+      const { files } = await res.json();
 
       if (!files || files.length === 0) return 0;
 
@@ -600,7 +601,7 @@ class APIService {
       let deletedCount = 0;
       for (const file of files) {
         if (!usedFiles.has(file)) {
-          await this.deleteFile(file);
+          await APIService.deleteFile(file);
           deletedCount++;
         }
       }
@@ -657,7 +658,7 @@ class APIService {
         updatedAt: serverTimestamp(),
       });
 
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Erro ao remover jogador:", error);
       throw error;
@@ -670,7 +671,7 @@ class APIService {
 
   // 15. ENVIAR MENSAGEM
   static async sendMessage(tableId, messageData) {
-    const {senderId, recipientId} = messageData;
+    const { senderId, recipientId } = messageData;
 
     // Define o ID da conversa: 'global' ou um ID combinado para chat privado
     let conversationId;
@@ -681,7 +682,7 @@ class APIService {
     }
 
     try {
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...messageData,
         timestamp: serverTimestamp(),
       });
@@ -735,7 +736,7 @@ class APIService {
         }
       }
 
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       throw error;
@@ -793,13 +794,13 @@ class APIService {
   static async addQuestToTable(tableId, questData) {
     try {
       const questsRef = collection(db, "tables", tableId, "quests");
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...questData,
         isActive: false, // Inicia inativa (invisível aos jogadores)
         createdAt: serverTimestamp(),
       });
       const docRef = await addDoc(questsRef, payload);
-      return {_id: docRef.id, ...payload};
+      return { _id: docRef.id, ...payload };
     } catch (error) {
       console.error("Erro ao salvar quest:", error);
       throw error;
@@ -810,8 +811,8 @@ class APIService {
   static async updateQuestStatus(tableId, questId, isActive) {
     try {
       const questRef = doc(db, "tables", tableId, "quests", questId);
-      await updateDoc(questRef, {isActive, updatedAt: serverTimestamp()});
-      return {success: true};
+      await updateDoc(questRef, { isActive, updatedAt: serverTimestamp() });
+      return { success: true };
     } catch (error) {
       console.error("Erro ao atualizar status da quest:", error);
       throw error;
@@ -822,8 +823,8 @@ class APIService {
   static async updateQuest(tableId, questId, data) {
     try {
       const questRef = doc(db, "tables", tableId, "quests", questId);
-      await updateDoc(questRef, {...data, updatedAt: serverTimestamp()});
-      return {success: true};
+      await updateDoc(questRef, { ...data, updatedAt: serverTimestamp() });
+      return { success: true };
     } catch (error) {
       console.error("Erro ao atualizar quest:", error);
       throw error;
@@ -835,7 +836,7 @@ class APIService {
     try {
       const q = query(collection(db, "tables", tableId, "quests"));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({_id: doc.id, ...doc.data()}));
+      return snapshot.docs.map((doc) => ({ _id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error("Erro ao buscar quests:", error);
       return [];
@@ -856,18 +857,18 @@ class APIService {
           );
           if (questFiles.length > 0) {
             for (const f of questFiles) {
-              if (f.url) await this.deleteFile(f.url);
+              if (f.url) await APIService.deleteFile(f.url);
             }
             const remainingFiles = tableData.files.filter(
               (f) => f.questId !== questId,
             );
-            await updateDoc(tableRef, {files: remainingFiles});
+            await updateDoc(tableRef, { files: remainingFiles });
           }
         }
       }
 
       await deleteDoc(doc(db, "tables", tableId, "quests", questId));
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Erro ao deletar quest:", error);
       throw error;
@@ -898,7 +899,7 @@ class APIService {
   static async deleteMonster(monsterId) {
     try {
       await deleteDoc(doc(db, "monsters", monsterId));
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Erro ao deletar monstro:", error);
       throw error;
@@ -909,7 +910,7 @@ class APIService {
   static async saveMonster(monsterData) {
     try {
       const bestiaryRef = collection(db, "monsters");
-      const payload = this._cleanData({
+      const payload = APIService._cleanData({
         ...monsterData,
         updatedAt: serverTimestamp(),
       });
@@ -920,11 +921,11 @@ class APIService {
         delete payload.id;
         const docRef = doc(db, "monsters", docId);
         await updateDoc(docRef, payload);
-        return {_id: docId, id: docId, ...payload};
+        return { _id: docId, id: docId, ...payload };
       } else {
         payload.createdAt = serverTimestamp();
         const docRef = await addDoc(bestiaryRef, payload);
-        return {_id: docRef.id, id: docRef.id, ...payload};
+        return { _id: docRef.id, id: docRef.id, ...payload };
       }
     } catch (error) {
       console.error("Erro ao salvar monstro:", error);

@@ -184,7 +184,7 @@ export const useUIStore = create(
         })),
     }),
     {
-      name: "slsw-ui-store",
+      name: "rpg-manager-ui-store",
       partialize: (state) => ({ selectedTable: state.selectedTable }),
       version: 1,
       migrate: (persistedState, version) => {

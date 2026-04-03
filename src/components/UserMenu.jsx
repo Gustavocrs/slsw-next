@@ -34,7 +34,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import ScenarioAdminList from "@/components/ScenarioAdmin/ScenarioAdminList";
+import ScenarioAdminModal from "@/components/ScenarioAdmin/ScenarioAdminModal";
 import SheetManager from "@/components/SheetView/SheetManager";
 // CORREÇÃO: Importando do lugar certo (hooks)
 import { useAuth } from "@/hooks";
@@ -321,20 +321,12 @@ export default function UserMenu() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Admin de Cenários */}
-      <Dialog
+      {/* Admin de Cenários - Abre direto na tela de edição */}
+      <ScenarioAdminModal
         open={scenarioAdminOpen}
         onClose={() => setScenarioAdminOpen(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogContent>
-          <ScenarioAdminList
-            onClose={() => setScenarioAdminOpen(false)}
-            onLoadScenario={handleLoadScenario}
-          />
-        </DialogContent>
-      </Dialog>
+        initialScenarioId={selectedTable?.scenarioId}
+      />
     </Box>
   );
 }

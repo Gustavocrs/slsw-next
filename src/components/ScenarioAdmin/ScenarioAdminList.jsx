@@ -10,7 +10,6 @@ import {
   AutoAwesome,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  PlayArrow as LoadIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -30,7 +29,7 @@ import { useEffect, useState } from "react";
 import * as ScenarioService from "@/lib/scenarioService.js";
 import ScenarioAdminModal from "./ScenarioAdminModal";
 
-export default function ScenarioAdminList({ onClose, onLoadScenario }) {
+export default function ScenarioAdminList({ onClose }) {
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
@@ -229,19 +228,6 @@ export default function ScenarioAdminList({ onClose, onLoadScenario }) {
                       {scenario.metadata?.name || scenario.id}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                      {onLoadScenario && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={<LoadIcon />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLoadScenario(scenario.id);
-                          }}
-                        >
-                          Carregar
-                        </Button>
-                      )}
                       <IconButton
                         size="small"
                         onClick={(e) => {

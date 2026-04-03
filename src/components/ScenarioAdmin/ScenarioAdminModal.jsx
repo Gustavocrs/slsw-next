@@ -582,9 +582,10 @@ export default function ScenarioAdminModal({
   open,
   onClose,
   initialScenarioId,
+  onScenarioCreated,
 }) {
   const [selectedScenarioId, setSelectedScenarioId] = useState(
-    initialScenarioId || "solo-leveling",
+    initialScenarioId || "",
   );
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -597,30 +598,36 @@ export default function ScenarioAdminModal({
   });
   const [hasChanges, setHasChanges] = useState(false);
 
+  useEffect(() => {
+    if (initialScenarioId !== undefined) {
+      setSelectedScenarioId(initialScenarioId);
+    }
+  }, [initialScenarioId]);
+
   const loadScenario = useCallback(async () => {
     setLoading(true);
     try {
       const data = await ScenarioService.getScenarioById(selectedScenarioId);
       if (data) {
-        if (!data.loreSections || data.loreSections.length === 0) {
-          data.loreSections = manualSections;
-        }
         setScenarioData(data);
       } else {
-        const fallback = (await import("@/scenarios/solo-leveling/index.js"))
-          .default;
+        // Iniciar vazio quando não há dados salvos
         setScenarioData({
           id: selectedScenarioId,
-          metadata: fallback.metadata,
-          edges: fallback.edges,
-          hindrances: fallback.hindrances,
-          powers: fallback.powers,
-          adventureGenerator: fallback.adventureGenerator,
-          promptStyles: fallback.promptStyles,
-          extraFields: fallback.extraFields,
-          skills: fallback.skills,
-          calculateMaxMana: fallback.calculateMaxMana,
-          loreSections: manualSections,
+          metadata: {
+            id: selectedScenarioId,
+            name: "",
+            description: "",
+          },
+          edges: [],
+          hindrances: [],
+          powers: {},
+          awakeningRules: [],
+          extraFields: {},
+          promptStyles: {},
+          skills: {},
+          loreSections: [],
+          adventureGenerator: {},
         });
       }
     } catch (error) {
@@ -644,8 +651,27 @@ export default function ScenarioAdminModal({
   useEffect(() => {
     if (open && selectedScenarioId) {
       loadScenario();
+    } else if (open && !selectedScenarioId) {
+      // Sem cenário definido - iniciar vazio
+      setScenarioData({
+        id: initialScenarioId || "",
+        metadata: {
+          id: initialScenarioId || "",
+          name: "",
+          description: "",
+        },
+        edges: [],
+        hindrances: [],
+        powers: {},
+        awakeningRules: [],
+        extraFields: {},
+        promptStyles: {},
+        skills: {},
+        loreSections: [],
+        adventureGenerator: {},
+      });
     }
-  }, [open, selectedScenarioId, loadScenario]);
+  }, [open, selectedScenarioId, loadScenario, initialScenarioId]);
 
   const handleUpdate = (field, value) => {
     const updated = { ...scenarioData, [field]: value };
@@ -658,10 +684,10 @@ export default function ScenarioAdminModal({
     setSaving(true);
     try {
       const scenarioId = scenarioData?.id || scenarioData?.metadata?.id;
-      if (!scenarioId) {
+      if (!scenarioId || scenarioId === "__new__" || scenarioId.trim() === "") {
         setSnackbar({
           open: true,
-          message: "ID do cenário não disponível",
+          message: "ID do cenário inválido. Crie um cenário primeiro.",
           severity: "error",
         });
         setSaving(false);
@@ -676,6 +702,9 @@ export default function ScenarioAdminModal({
         message: "Salvo com sucesso!",
         severity: "success",
       });
+      if (onScenarioCreated) {
+        onScenarioCreated(scenarioId);
+      }
     } catch (error) {
       console.error("Erro ao salvar:", error);
       setSnackbar({ open: true, message: "Erro ao salvar", severity: "error" });

@@ -5,56 +5,56 @@
 
 "use client";
 
-import React, {useState, useEffect} from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  IconButton,
-  Box,
-  Typography,
-  Chip,
-  Stack,
-  Switch,
-  FormControlLabel,
-  InputAdornment,
+  Add as AddIcon,
+  CalendarMonth as CalendarIcon,
+  Close as CloseIcon,
+  Delete as DeleteIcon,
+  Email as EmailIcon,
+  Link as LinkIcon,
+  Person as PersonIcon,
+  Save as SaveIcon,
+  Send as SendIcon,
+} from "@mui/icons-material";
+import {
   Alert,
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  InputLabel,
   List,
   ListItem,
-  ListItemText,
   ListItemSecondaryAction,
-  Select,
+  ListItemText,
   MenuItem,
-  FormControl,
-  InputLabel,
+  Paper,
+  Select,
+  Stack,
+  Switch,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
   useMediaQuery,
   useTheme,
-  Avatar,
-  Paper,
-  Divider,
-  CircularProgress,
-  Tabs,
-  Tab,
 } from "@mui/material";
-import {
-  Close as CloseIcon,
-  CalendarMonth as CalendarIcon,
-  Link as LinkIcon,
-  Email as EmailIcon,
-  Delete as DeleteIcon,
-  Save as SaveIcon,
-  Add as AddIcon,
-  Send as SendIcon,
-  Person as PersonIcon,
-} from "@mui/icons-material";
-import {useUIStore, useCharacterStore} from "@/stores/characterStore";
-import {useAuth} from "@/hooks";
-import APIService from "@/lib/api";
-import {ConfirmDialog} from "@/components/ConfirmDialog";
+import React, { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import ScenarioSelector from "@/components/ScenarioSelector";
+import { useAuth } from "@/hooks";
+import APIService from "@/lib/api";
+import { useCharacterStore, useUIStore } from "@/stores/characterStore";
 
 function TableDetailsModal() {
   const {
@@ -67,8 +67,8 @@ function TableDetailsModal() {
     toggleInspectModal,
     inspectModalOpen,
   } = useUIStore();
-  const {loadCharacter, setInspectedCharacter} = useCharacterStore();
-  const {user} = useAuth();
+  const { loadCharacter, setInspectedCharacter } = useCharacterStore();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -87,6 +87,7 @@ function TableDetailsModal() {
   const [friendData, setFriendData] = useState(null);
   const [loadingFriend, setLoadingFriend] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
+  const [externalLink, setExternalLink] = useState("");
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -104,6 +105,7 @@ function TableDetailsModal() {
       setScenarioId(selectedTable.scenarioId || "solo-leveling");
       setIsPrivate(selectedTable.isPrivate ?? true);
       setInvites(selectedTable.invites || []);
+      setExternalLink(selectedTable.externalLink || "");
       setIsEditing(false);
     }
   }, [selectedTable]);
@@ -150,6 +152,10 @@ function TableDetailsModal() {
       console.error(error);
       showNotification("Erro ao reenviar convite.", "error");
     }
+  };
+
+  const handleScenarioChange = (newScenarioId) => {
+    setScenarioId(newScenarioId);
   };
 
   const handleUpdate = async () => {
@@ -218,6 +224,7 @@ function TableDetailsModal() {
         description,
         nextSession,
         externalLink,
+        scenarioId,
         isPrivate,
         invites,
         gmPhotoURL: user.photoURL,
@@ -261,12 +268,12 @@ function TableDetailsModal() {
       const updatedPlayers = (selectedTable.players || []).map((p) => {
         if (p.uid === user.uid) {
           isUserInPlayers = true;
-          return {...p, characterId};
+          return { ...p, characterId };
         }
         return p;
       });
 
-      const updateData = {players: updatedPlayers};
+      const updateData = { players: updatedPlayers };
 
       // Se for GM e não estiver na lista de jogadores, salva em um campo específico
       if (isGM && !isUserInPlayers) {
@@ -275,7 +282,7 @@ function TableDetailsModal() {
 
       await APIService.updateTable(selectedTable._id, updateData);
 
-      setSelectedTable({...selectedTable, ...updateData});
+      setSelectedTable({ ...selectedTable, ...updateData });
       notifyTablesUpdated();
       showNotification("Personagem vinculado com sucesso!", "success");
     } catch (error) {
@@ -373,7 +380,7 @@ function TableDetailsModal() {
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: {borderRadius: 0},
+        sx: { borderRadius: 0 },
       }}
     >
       <DialogTitle
@@ -399,8 +406,8 @@ function TableDetailsModal() {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{p: 0}}>
-        <Box sx={{borderBottom: 1, borderColor: "divider", px: 2}}>
+      <DialogContent dividers sx={{ p: 0 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
           <Tabs
             value={currentTab}
             onChange={(e, newValue) => setCurrentTab(newValue)}
@@ -412,7 +419,7 @@ function TableDetailsModal() {
           </Tabs>
         </Box>
 
-        <Box sx={{p: {xs: 2, sm: 3}}}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
           {currentTab === 0 && (
             <Stack spacing={3}>
               {/* Modo Leitura vs Edição */}
@@ -424,7 +431,7 @@ function TableDetailsModal() {
                   onChange={(e) => setTableName(e.target.value)}
                   disabled={!isGM}
                   variant={isGM ? "outlined" : "filled"}
-                  sx={{mb: 2}}
+                  sx={{ mb: 2 }}
                 />
                 <TextField
                   label="Descrição"
@@ -435,25 +442,37 @@ function TableDetailsModal() {
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={!isGM}
                   variant={isGM ? "outlined" : "filled"}
-                  sx={{mb: 2}}
+                  sx={{ mb: 2 }}
                 />
                 <ScenarioSelector
                   value={scenarioId}
-                  onChange={setScenarioId}
+                  onChange={handleScenarioChange}
                   disabled={!isGM}
                 />
+                {isGM && scenarioId && scenarioId !== "__new__" && (
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setScenarioAdminInitialId(scenarioId);
+                      setScenarioAdminOpen(true);
+                    }}
+                    sx={{ mt: 1 }}
+                  >
+                    Editar Cenário
+                  </Button>
+                )}
               </Box>
 
               <Box>
                 <Typography variant="subtitle2" color="primary" gutterBottom>
                   Sessão & Links
                 </Typography>
-                <Stack direction={{xs: "column", sm: "row"}} spacing={2}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                   <TextField
                     label="Próxima Sessão"
                     type="datetime-local"
                     fullWidth
-                    InputLabelProps={{shrink: true}}
+                    InputLabelProps={{ shrink: true }}
                     value={nextSession}
                     onChange={(e) => setNextSession(e.target.value)}
                     disabled={!isGM}
@@ -493,7 +512,7 @@ function TableDetailsModal() {
                     Escolha qual ficha você usará nesta mesa. Isso permite que o
                     GM veja seu status.
                   </Typography>
-                  <FormControl fullWidth size="small" sx={{bgcolor: "white"}}>
+                  <FormControl fullWidth size="small" sx={{ bgcolor: "white" }}>
                     <InputLabel>Selecione seu Personagem</InputLabel>
                     <Select
                       value={currentCharacterId}
@@ -520,15 +539,15 @@ function TableDetailsModal() {
 
                 {/* Jogadores Confirmados */}
                 {selectedTable?.players?.length > 0 && (
-                  <Box sx={{mb: 2}}>
+                  <Box sx={{ mb: 2 }}>
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{mb: 1, display: "block"}}
+                      sx={{ mb: 1, display: "block" }}
                     >
                       Jogadores na Mesa:
                     </Typography>
-                    <Box sx={{display: "flex", flexWrap: "wrap", gap: 1}}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                       {selectedTable.players.map((player) => (
                         <Chip
                           key={player.uid}
@@ -553,7 +572,7 @@ function TableDetailsModal() {
                 )}
 
                 {isGM && (
-                  <Box sx={{display: "flex", gap: 1, mb: 2}}>
+                  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
                     <TextField
                       label="Convidar E-mail"
                       size="small"
@@ -568,7 +587,7 @@ function TableDetailsModal() {
                 )}
 
                 {/* Lista de Convites com Ações */}
-                <List dense sx={{bgcolor: "#f9f9f9", borderRadius: 2, mb: 2}}>
+                <List dense sx={{ bgcolor: "#f9f9f9", borderRadius: 2, mb: 2 }}>
                   {invites.map((email) => (
                     <ListItem key={email} divider>
                       <Box
@@ -584,7 +603,7 @@ function TableDetailsModal() {
                       <ListItemText
                         primary={email}
                         secondary="Pendente"
-                        primaryTypographyProps={{fontWeight: 500}}
+                        primaryTypographyProps={{ fontWeight: 500 }}
                       />
                       {isGM && (
                         <ListItemSecondaryAction>
@@ -592,7 +611,7 @@ function TableDetailsModal() {
                             edge="end"
                             aria-label="resend"
                             onClick={() => handleResendInvite(email)}
-                            sx={{mr: 1, color: "#667eea"}}
+                            sx={{ mr: 1, color: "#667eea" }}
                             title="Reenviar E-mail"
                           >
                             <SendIcon fontSize="small" />
@@ -635,7 +654,7 @@ function TableDetailsModal() {
       </DialogContent>
 
       {isGM && (
-        <DialogActions sx={{p: 2, justifyContent: "space-between"}}>
+        <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
           <Button
             onClick={handleDeleteClick}
             color="error"
@@ -664,7 +683,7 @@ function TableDetailsModal() {
         </DialogActions>
       )}
       {!isGM && (
-        <DialogActions sx={{p: 2}}>
+        <DialogActions sx={{ p: 2 }}>
           <Button onClick={toggleTableDetailsModal}>Fechar</Button>
         </DialogActions>
       )}
@@ -702,9 +721,12 @@ function TableDetailsModal() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{bgcolor: "#f8fafc", p: {xs: 2, md: 4}}}>
+        <DialogContent
+          dividers
+          sx={{ bgcolor: "#f8fafc", p: { xs: 2, md: 4 } }}
+        >
           {loadingFriend ? (
-            <Box sx={{display: "flex", justifyContent: "center", p: 4}}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
           ) : friendData ? (
@@ -756,7 +778,7 @@ function TableDetailsModal() {
                       }}
                       variant="rounded"
                     >
-                      <PersonIcon sx={{fontSize: 80}} />
+                      <PersonIcon sx={{ fontSize: 80 }} />
                     </Avatar>
                   )}
                   <Box
@@ -773,7 +795,7 @@ function TableDetailsModal() {
                     <Typography
                       variant="h6"
                       fontWeight="bold"
-                      sx={{letterSpacing: 2, textTransform: "uppercase"}}
+                      sx={{ letterSpacing: 2, textTransform: "uppercase" }}
                     >
                       RANK {friendData.rank || "Novato"}
                     </Typography>
@@ -791,12 +813,12 @@ function TableDetailsModal() {
                     gap: 3,
                   }}
                 >
-                  <Box sx={{borderBottom: "2px solid #cbd5e1", pb: 2}}>
+                  <Box sx={{ borderBottom: "2px solid #cbd5e1", pb: 2 }}>
                     <Typography
                       variant="h4"
                       fontWeight="900"
                       color="#0f172a"
-                      sx={{textTransform: "uppercase", lineHeight: 1.1}}
+                      sx={{ textTransform: "uppercase", lineHeight: 1.1 }}
                     >
                       {friendData.nome || "Caçador Sem Nome"}
                     </Typography>
@@ -804,7 +826,7 @@ function TableDetailsModal() {
                       variant="subtitle1"
                       color="primary"
                       fontWeight="bold"
-                      sx={{mt: 0.5}}
+                      sx={{ mt: 0.5 }}
                     >
                       {friendData.arquetipo || "Arquétipo Desconhecido"}{" "}
                       {friendData.conceito ? `• ${friendData.conceito}` : ""}
@@ -879,7 +901,7 @@ function TableDetailsModal() {
                   </Grid>
 
                   <Box
-                    sx={{mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1"}}
+                    sx={{ mt: "auto", pt: 2, borderTop: "1px dashed #cbd5e1" }}
                   >
                     <Typography
                       variant="subtitle2"
@@ -890,7 +912,7 @@ function TableDetailsModal() {
                       EQUIPAMENTO REGISTRADO
                     </Typography>
                     <Box
-                      sx={{display: "flex", flexDirection: "column", gap: 1}}
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
                       {friendData.armas?.length > 0
                         ? friendData.armas.slice(0, 3).map((w, i) => (

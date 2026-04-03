@@ -21,7 +21,6 @@ import {
 } from "@mui/material";
 import React from "react";
 import styled from "styled-components";
-import manualSections from "@/data/manualSections";
 import { getEdges, RANKS } from "@/lib/rpgEngine";
 
 const BookContainer = styled(Paper)`
@@ -197,8 +196,7 @@ const safeHighlightHtml = (html, term) => {
 function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const scrollContainerRef = React.useRef(null);
-
-  const sections = loreSections.length > 0 ? loreSections : manualSections;
+  const sections = loreSections;
 
   const handleScroll = (e) => {
     const _scrollTop = e.target?.scrollTop ?? window.scrollY;
@@ -217,6 +215,133 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  // Mostrar mensagem quando não há conteúdo do livro configurado
+  if (sections.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          height: twoPageMode ? "100%" : "auto",
+          position: "relative",
+          width: "100%",
+        }}
+      >
+        {!twoPageMode && (
+          <MenuButton onClick={onOpenSidebar}>
+            <MenuIcon />
+          </MenuButton>
+        )}
+        {twoPageMode && (
+          <Box
+            sx={{
+              width: 260,
+              flexShrink: 0,
+              borderRight: "1px solid #e0e0e0",
+              bgcolor: "#fafafa",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              "&::-webkit-scrollbar": { width: "6px" },
+              "&::-webkit-scrollbar-track": { background: "transparent" },
+              "&::-webkit-scrollbar-thumb": {
+                background: "#bdbdbd",
+                borderRadius: "3px",
+              },
+            }}
+          >
+            <List component="nav" dense disablePadding>
+              <ListItem
+                id="sumario-header"
+                sx={{
+                  py: 2,
+                  bgcolor: "#fff",
+                  borderBottom: "1px solid #e0e0e0",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 2,
+                  height: 60,
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  color="primary"
+                >
+                  Sumário
+                </Typography>
+              </ListItem>
+            </List>
+          </Box>
+        )}
+        <BookContainer
+          id="livro-container"
+          $twoPage={twoPageMode}
+          ref={twoPageMode ? scrollContainerRef : null}
+          onScroll={twoPageMode ? handleScroll : undefined}
+          sx={{
+            flex: 1,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            id="livro-header"
+            sx={{
+              flexShrink: 0,
+              py: 1,
+              px: 2,
+              bgcolor: "#fff",
+              borderBottom: "1px solid #e0e0e0",
+              height: 60,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Pesquisar no manual..."
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              disabled
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "6px",
+                  bgcolor: "#f9f9f9",
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ textAlign: "center", mt: 4 }}
+            >
+              Este cenário não tem um Livro configurado.
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ textAlign: "center", mt: 2 }}
+            >
+              Configure as seções na aba Lore do Admin de Cenários.
+            </Typography>
+          </Box>
+        </BookContainer>
+      </Box>
+    );
+  }
 
   return (
     <Box

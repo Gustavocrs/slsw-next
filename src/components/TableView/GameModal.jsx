@@ -636,8 +636,8 @@ function GameModal() {
         const scenarioData = await ScenarioService.getScenarioById(scenarioId);
         console.log(
           "Scenario data carregado:",
-          scenarioData?.id,
-          scenarioData?.loreSections?.length,
+          scenarioData ? scenarioData.id : "não encontrado",
+          scenarioData?.loreSections?.length || 0,
         );
         if (scenarioData?.loreSections) {
           setScenarioLoreSections(scenarioData.loreSections);
