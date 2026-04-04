@@ -5,10 +5,12 @@
  */
 
 import * as ScenarioService from "@/lib/scenarioService.js";
+import projectSymbiosisScenario from "./project-symbiosis/index.js";
 import soloLevelingScenario from "./solo-leveling/index.js";
 
 const scenarios = {
   "solo-leveling": soloLevelingScenario,
+  "project-symbiosis": projectSymbiosisScenario,
 };
 
 const DEFAULT_SCENARIO = "solo-leveling";
@@ -29,6 +31,11 @@ export function getScenario(id = null) {
   return scenarios[scenarioId];
 }
 
+export function getScenarioIfExists(id) {
+  // Retorna o cenário exato do registry, sem fallback
+  return scenarios[id] || null;
+}
+
 export async function loadScenarioFromFirestore(id) {
   try {
     const scenarioData = await ScenarioService.getScenarioById(id);
@@ -42,6 +49,11 @@ export async function loadScenarioFromFirestore(id) {
     console.error("Erro ao carregar cenário do Firestore:", error);
     return null;
   }
+}
+
+export function clearScenarioCache() {
+  currentScenario = null;
+  currentScenarioId = DEFAULT_SCENARIO;
 }
 
 export function getActiveScenario(scenarioIdFromTable = null) {
@@ -74,6 +86,16 @@ export function getAvailableScenarios() {
     id,
     name: scenario.metadata?.name || id,
     description: scenario.metadata?.description || "",
+    metadata: scenario.metadata,
+    edges: scenario.edges || [],
+    hindrances: scenario.hindrances || [],
+    powers: scenario.powers || {},
+    awakeningRules: scenario.awakeningRules || [],
+    extraFields: scenario.extraFields || {},
+    promptStyles: scenario.promptStyles || {},
+    skills: scenario.skills || {},
+    loreSections: scenario.loreSections || [],
+    adventureGenerator: scenario.adventureGenerator || {},
   }));
 }
 
@@ -107,5 +129,6 @@ export default {
   getScenarioExtraFields,
   getScenarioCalculateMaxMana,
   loadScenarioFromFirestore,
+  clearScenarioCache,
   DEFAULT_SCENARIO,
 };

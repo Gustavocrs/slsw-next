@@ -24,30 +24,19 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   Add as AddIcon,
-  FormatBold as BoldIcon,
   Delete as DeleteIcon,
   DragIndicator as DragIcon,
   Edit as EditIcon,
   Info as InfoIcon,
-  FormatItalic as ItalicIcon,
-  FormatListBulleted as ListIcon,
-  FormatListNumbered as ListNumberedIcon,
-  Visibility as PreviewIcon,
   Restore as RestoreIcon,
   Save as SaveIcon,
   CheckCircle as TipIcon,
   Title as TitleIcon,
-  Warning as WarningIcon,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   IconButton,
   List,
   ListItem,
@@ -158,6 +147,7 @@ function SortableItem({ section, isSelected, onClick, onDelete }) {
       sx={{
         pl: isSelected ? 2 : 1,
         bgcolor: isSelected ? "action.selected" : "transparent",
+        position: "relative", // Garante posicionamento correto do botão absoluto
       }}
     >
       <Box
@@ -174,7 +164,14 @@ function SortableItem({ section, isSelected, onClick, onDelete }) {
         />
       </ListItemButton>
       <Box sx={{ position: "absolute", right: 8 }}>
-        <IconButton size="small" color="error" onClick={onDelete}>
+        <IconButton
+          size="small"
+          color="error"
+          onClick={(e) => {
+            e.stopPropagation(); // Evita disparar seleção ao deletar
+            onDelete();
+          }}
+        >
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -189,8 +186,8 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
   const [isDirty, setIsDirty] = useState(false);
   const [viewMode, setViewMode] = useState("preview");
   const [orderModified, setOrderModified] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState(null);
+  // [deleteDialogOpen, setDeleteDialogOpen] removidos - exclusão direta
+  // [sectionToDelete, setSectionToDelete] removidos
   const textareaRef = useRef(null);
 
   // Flag para controlar visibilidade do botão de restauração
@@ -319,11 +316,19 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
   };
 
   const handleDeleteSection = (sectionId) => {
-    setSectionToDelete(sectionId);
-    setDeleteDialogOpen(true);
+    // Exclusão direta sem confirmação
+    const updated = loreSections.filter((s) => s.id !== sectionId);
+    setLoreSections(updated);
+    onUpdate("loreSections", updated);
+    if (selectedSection?.id === sectionId) {
+      setSelectedSection(null);
+      setEditedContent("");
+    }
   };
 
   const handleConfirmDelete = () => {
+    // Executa a exclusão efetiva da seção
+    // Esta função é chamada após confirmação no dialog
     if (!sectionToDelete) return;
 
     const updated = loreSections.filter((s) => s.id !== sectionToDelete);
@@ -338,6 +343,7 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
   };
 
   const handleCancelDelete = () => {
+    // Fecha o dialog de confirmação sem deletar
     setDeleteDialogOpen(false);
     setSectionToDelete(null);
   };
@@ -468,7 +474,6 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
           </Box>
         </Box>
       )}
-
       {/* Lista de Seções com Drag-and-Drop */}
       <Paper variant="outlined" sx={{ width: 280, overflow: "auto" }}>
         <Box
@@ -531,7 +536,6 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
           </SortableContext>
         </DndContext>
       </Paper>
-
       {/* Área de Edição */}
       <Paper
         variant="outlined"
@@ -717,37 +721,6 @@ export default function LoreTab({ scenarioData, onUpdate, loading }) {
           </Box>
         )}
       </Paper>
-
-      {/* Dialog de Confirmação de Exclusão */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ color: "error.main" }}>
-          <WarningIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-          Confirmar Exclusão
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Tem certeza que deseja excluir esta seção? Esta ação não pode ser
-            desfeita.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="inherit">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-          >
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

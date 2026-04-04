@@ -1,0 +1,76 @@
+{
+  "$schema": "https://rpg-manager.vercel.app/schema/scenario",
+  "$version": "1.0.0",
+  "id": "project-symbiosis",
+  "metadata": {
+    "id": "project-symbiosis",
+    "name": "Project Symbiosis",
+    "description": "Neo-Kanto Cyberpunk - S.Y.N.C. substitui Pokébolas. Captura por contrato neural. Escritório sombrio e Alta tecnologia.",
+    "imageUrl": ""
+  },
+  "edges": [
+    {
+      "id": "sent-avancada",
+      "name": "Sent. Avançada",
+      "description": "Deteta Bio-Ativos a 1km.",
+      "rank": "Novato",
+      "source": "PS",
+      "cost": 1,
+      "requirements": []
+    }
+  ],
+  "hindrances": [
+    {
+      "id": "desconfiado",
+      "name": "Desconfiado",
+      "description": "-2 em Persuasão com estranhos.",
+      "severity": "Menor",
+      "cost": 1
+    }
+  ],
+  "powers": {
+    "tm-protect": {
+      "id": "tm-protect",
+      "name": "Protect",
+      "type": "status",
+      "cost": 1,
+      "description": "Defesa Total com +4 em Aparar. Dura 1 rodada.",
+      "ppCost": 0,
+      "rank": "Novato",
+      "source": "Project Symbiosis"
+    }
+  },
+  "awakeningRules": [
+    {
+      "name": "Origem do Despertar",
+      "dice": 6,
+      "values": [
+        { "d": 1, "value": "Explosão de Mana ao abrir um Portal" },
+        { "d": 2, "value": "Toque de uma criatura rúnica morrendo" }
+      ]
+    }
+  ],
+  "extraFields": {},
+  "promptStyles": {
+    "system": "Você é um especialista em RPG, estilo cyberpunk com elementos Pokémon...",
+    "tone": "Cyberpunk escuro, neon, tenso",
+    "genre": "Ficção científica / Cyberpunk"
+  },
+  "skills": {
+    "astucia": "Astúcia (Smarts) - Conhecimento tático e operação do SymbioDex",
+    "espirito": "Espírito (Spirit) - Força de vontade para manter Link Neural estável"
+  },
+  "loreSections": [
+    {
+      "id": "introducao",
+      "title": "Introdução",
+      "content": "<p>Conteúdo HTML...</p>",
+      "contentHtml": "<p>Conteúdo HTML...</p>"
+    }
+  ],
+  "adventureGenerator": {},
+  "createdAt": "2026-04-03T00:00:00.000Z",
+  "updatedAt": "2026-04-03T00:00:00.000Z",
+  "importedAt": "2026-04-03T00:00:00.000Z",
+  "source": "code-import"
+}

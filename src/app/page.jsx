@@ -1,16 +1,16 @@
 "use client";
 
-import {useState, useMemo, useEffect} from "react";
-import {useRouter} from "next/navigation";
-import {useAuth} from "@/hooks";
+import { Box, CircularProgress } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import PageLayout from "@/components/PageLayout";
-import {manualSections} from "@/data/manualSections";
-import {Box, CircularProgress} from "@mui/material";
+import { manualSections } from "@/data/manualSections";
+import { useAuth } from "@/hooks";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
-  const {user, loading} = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     // Se já terminou de carregar e não há usuário, redireciona para login
@@ -35,6 +35,7 @@ export default function Home() {
   if (loading || !user) {
     return (
       <Box
+        suppressHydrationWarning
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -43,7 +44,7 @@ export default function Home() {
           bgcolor: "#050505",
         }}
       >
-        <CircularProgress sx={{color: "#00e5ff"}} />
+        <CircularProgress sx={{ color: "#00e5ff" }} />
       </Box>
     );
   }

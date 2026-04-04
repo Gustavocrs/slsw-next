@@ -253,29 +253,31 @@ export default function UserMenu() {
           </ListItemIcon>
           <ListItemText>Minhas Mesas</ListItemText>
         </MenuItem>
-        <MenuItem
-          onClick={async () => {
-            handleClose();
-            try {
-              showNotification(
-                "Verificando e limpando arquivos órfãos...",
-                "info",
-              );
-              const deletedCount = await APIService.cleanupUnusedFiles();
-              showNotification(
-                `Limpeza concluída! ${deletedCount} arquivos foram apagados do disco.`,
-                "success",
-              );
-            } catch (e) {
-              showNotification("Erro ao limpar disco.", "error");
-            }
-          }}
-        >
-          <ListItemIcon>
-            <CleanIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Limpar Servidor</ListItemText>
-        </MenuItem>
+        {/* Botão Limpar Servidor ocultado para evitar perda de dados
+         <MenuItem
+           onClick={async () => {
+             handleClose();
+             try {
+               showNotification(
+                 "Verificando e limpando arquivos órfãos...",
+                 "info",
+               );
+               const deletedCount = await APIService.cleanupUnusedFiles();
+               showNotification(
+                 `Limpeza concluída! ${deletedCount} arquivos foram apagados do disco.`,
+                 "success",
+               );
+             } catch (e) {
+               showNotification("Erro ao limpar disco.", "error");
+             }
+           }}
+         >
+           <ListItemIcon>
+             <CleanIcon fontSize="small" />
+           </ListItemIcon>
+           <ListItemText>Limpar Servidor</ListItemText>
+         </MenuItem>
+         */}
         <MenuItem
           onClick={() => {
             handleClose();

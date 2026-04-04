@@ -10,6 +10,10 @@ import {
   AutoAwesome,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  ArrowDownward as ExportIcon,
+  ArrowUpward as ImportIcon,
+  Save as SaveIcon,
+  Upload as UploadIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -25,9 +29,41 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as ScenarioService from "@/lib/scenarioService.js";
+import { clearScenarioCache, getAvailableScenarios } from "@/scenarios";
 import ScenarioAdminModal from "./ScenarioAdminModal";
+
+function combineScenarios(firestoreScenarios, registryScenarios) {
+  const firestoreIds = new Set(firestoreScenarios.map((s) => s.id));
+  const missingFromFirestore = registryScenarios.filter(
+    (s) => !firestoreIds.has(s.id),
+  );
+
+  return [
+    ...firestoreScenarios,
+    ...missingFromFirestore.map((reg) => {
+      const fullScenario = registryScenarios.find((s) => s.id === reg.id);
+      if (fullScenario) {
+        return { ...fullScenario, _source: "registry" };
+      }
+      return {
+        ...reg,
+        metadata: { id: reg.id, name: reg.name, description: reg.description },
+        edges: [],
+        hindrances: [],
+        powers: {},
+        awakeningRules: [],
+        extraFields: {},
+        promptStyles: {},
+        skills: {},
+        loreSections: [],
+        adventureGenerator: {},
+        _source: "registry",
+      };
+    }),
+  ];
+}
 
 export default function ScenarioAdminList({ onClose }) {
   const [scenarios, setScenarios] = useState([]);
@@ -39,45 +75,33 @@ export default function ScenarioAdminList({ onClose }) {
   const [newScenarioName, setNewScenarioName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchScenarios = async () => {
-      setLoading(true);
-      try {
-        const data = await ScenarioService.getAllScenarios();
-        setScenarios(data);
-      } catch (error) {
-        console.error("Erro ao carregar cenários:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchScenarios();
+  const refreshScenarios = useCallback(async () => {
+    setLoading(true);
+    try {
+      const firestoreScenarios = await ScenarioService.getAllScenarios();
+      const registryScenarios = getAvailableScenarios();
+      setScenarios(combineScenarios(firestoreScenarios, registryScenarios));
+    } catch (error) {
+      console.error("Erro ao carregar cenários:", error);
+      setScenarios(getAvailableScenarios());
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshScenarios();
+  }, [refreshScenarios]);
 
   const handleSelectScenario = (id) => {
     setSelectedScenarioId(id);
     setModalOpen(true);
   };
 
-  const handleLoadScenario = async (id) => {
-    if (onLoadScenario) {
-      await onLoadScenario(id);
-      if (onClose) onClose();
-    }
-  };
-
   const handleCloseModal = async () => {
     setModalOpen(false);
     setSelectedScenarioId(null);
-    setLoading(true);
-    try {
-      const data = await ScenarioService.getAllScenarios();
-      setScenarios(data);
-    } catch (error) {
-      console.error("Erro ao carregar cenários:", error);
-    } finally {
-      setLoading(false);
-    }
+    await refreshScenarios();
   };
 
   const handleCreateScenario = async () => {
@@ -106,8 +130,7 @@ export default function ScenarioAdminList({ onClose }) {
       setNewScenarioName("");
       setSelectedScenarioId(newScenarioId.trim());
       setModalOpen(true);
-      const data = await ScenarioService.getAllScenarios();
-      setScenarios(data);
+      await refreshScenarios();
     } catch (error) {
       console.error("Erro ao criar cenário:", error);
     } finally {
@@ -120,8 +143,8 @@ export default function ScenarioAdminList({ onClose }) {
 
     try {
       await ScenarioService.deleteScenario(id);
-      const data = await ScenarioService.getAllScenarios();
-      setScenarios(data);
+      clearScenarioCache();
+      await refreshScenarios();
     } catch (error) {
       console.error("Erro ao excluir:", error);
     }
@@ -226,6 +249,16 @@ export default function ScenarioAdminList({ onClose }) {
                   >
                     <Typography variant="h6" fontWeight="bold">
                       {scenario.metadata?.name || scenario.id}
+                      {scenario._source && (
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          sx={{ ml: 1, fontSize: "0.7rem" }}
+                          color="text.secondary"
+                        >
+                          (padrão)
+                        </Typography>
+                      )}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                       <IconButton

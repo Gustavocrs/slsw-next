@@ -1,0 +1,100 @@
+{
+  "edges": [
+    {
+      "id": "sent-avancada",
+      "name": "Sent. Avançada",
+      "description": "Deteta Bio-Ativos a 1km.",
+      "rank": "Novato",
+      "source": "PS",
+      "cost": 1
+    },
+    {
+      "id": "vinculo-neural",
+      "name": "Vínculo Neural",
+      "description": "+2 em testes de Sincronização.",
+      "rank": "Novato",
+      "source": "PS",
+      "cost": 1
+    },
+    {
+      "id": "jammer-pessoal",
+      "name": "Jammer Pessoal",
+      "description": "Resiste a rastreamento por 1 hora.",
+      "rank": "Novato",
+      "source": "PS",
+      "cost": 1
+    },
+    {
+      "id": "cyber-visao",
+      "name": "Cyber-Visão",
+      "description": "Visão térmica e digital.",
+      "rank": "Experiente",
+      "source": "PS",
+      "cost": 2
+    },
+    {
+      "id": "contrato-sombrio",
+      "name": "Contrato Sombrio",
+      "description": "Pokémon escravizado: +2 dano, -1 controle.",
+      "rank": "Experiente",
+      "source": "PS",
+      "cost": 2
+    },
+    {
+      "id": "analise-tatica",
+      "name": "Análise Tática",
+      "description": "Identifica fraquezas de Bio-Ativos. +2 dano contra alvo analisado.",
+      "rank": "Experiente",
+      "source": "PS",
+      "cost": 2
+    },
+    {
+      "id": "resistencia-ciborgue",
+      "name": "Resistência Ciborgue",
+      "description": "Imune a doenças eletricas e vírus digitais.",
+      "rank": "Veterano",
+      "source": "PS",
+      "cost": 3
+    },
+    {
+      "id": "sincronizacao-perfeita",
+      "name": "Sincronização Perfeita",
+      "description": "Compartilha pensamentos com parceiro Sync. Telepatia limitada.",
+      "rank": "Veterano",
+      "source": "PS",
+      "cost": 3
+    },
+    {
+      "id": "overclock-neural",
+      "name": "Overclock Neural",
+      "description": "Acelera processamento por 1 minuto. +2 em todos os testes mentais.",
+      "rank": "Veterano",
+      "source": "PS",
+      "cost": 3
+    },
+    {
+      "id": "rede-hackers",
+      "name": "Rede de Hackers",
+      "description": "Conecta-se a redes locais sem fio.+Acesso a informação.",
+      "rank": "Heroico",
+      "source": "PS",
+      "cost": 4
+    },
+    {
+      "id": "implante-guerra",
+      "name": "Implante de Guerra",
+      "description": "Arma integrada no braço. Dano 2d6 + Força. Recarga automática.",
+      "rank": "Heroico",
+      "source": "PS",
+      "cost": 4
+    },
+    {
+      "id": "controle-mental",
+      "name": "Controle Mental",
+      "description": "Domínio temporário de Bio-Ativo capturado. Teste de Vontade resistido.",
+      "rank": "Lendário",
+      "source": "PS",
+      "cost": 5
+    }
+  ]
+}

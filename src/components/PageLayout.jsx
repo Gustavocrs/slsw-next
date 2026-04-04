@@ -1,34 +1,33 @@
 "use client";
 
-import React, {useState, useEffect} from "react";
+import { Google as GoogleIcon } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
-  Typography,
   CircularProgress,
   Snackbar,
-  Alert,
+  Typography,
 } from "@mui/material";
-import {Google as GoogleIcon} from "@mui/icons-material";
-import Sidebar from "@/components/Sidebar";
-import {useAuth} from "@/hooks";
-import {useUIStore, useCharacterStore} from "@/stores/characterStore";
-import {useCharacterAPI} from "@/hooks";
-import GameModal from "@/components/TableView/GameModal";
-import APIService from "@/lib/api";
-import {collection, query, onSnapshot} from "firebase/firestore";
-import {db} from "@/lib/firebase";
-import CreateTableModal from "@/components/TableView/CreateTableModal";
-import TableListModal from "@/components/TableView/TableListModal";
-import TableDetailsModal from "@/components/TableView/TableDetailsModal";
-import InspectSheetModal from "@/components/TableView/InspectSheetModal";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import MessagesDashboard from "@/components/Messages";
+import Sidebar from "@/components/Sidebar";
+import CreateTableModal from "@/components/TableView/CreateTableModal";
+import GameModal from "@/components/TableView/GameModal";
+import InspectSheetModal from "@/components/TableView/InspectSheetModal";
+import TableDetailsModal from "@/components/TableView/TableDetailsModal";
+import TableListModal from "@/components/TableView/TableListModal";
+import { useAuth, useCharacterAPI } from "@/hooks";
+import APIService from "@/lib/api";
+import { db } from "@/lib/firebase";
+import { useCharacterStore, useUIStore } from "@/stores/characterStore";
 
 export default function PageLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const {user, loading, loginWithGoogle} = useAuth();
-  const {list} = useCharacterAPI();
+  const { user, loading, loginWithGoogle } = useAuth();
+  const { list } = useCharacterAPI();
   const {
     selectedTable,
     setSelectedTable,
@@ -77,7 +76,10 @@ export default function PageLayout() {
     }
     const q = query(collection(db, "users", user.uid, "notifications"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+      const notifs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setNotifications(notifs);
     });
     return () => unsubscribe();
@@ -90,6 +92,7 @@ export default function PageLayout() {
   if (loading) {
     return (
       <Box
+        suppressHydrationWarning
         sx={{
           display: "flex",
           height: "100vh",
@@ -105,6 +108,7 @@ export default function PageLayout() {
   if (!user) {
     return (
       <Box
+        suppressHydrationWarning
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -126,7 +130,7 @@ export default function PageLayout() {
           size="large"
           startIcon={<GoogleIcon />}
           onClick={loginWithGoogle}
-          sx={{mt: 2}}
+          sx={{ mt: 2 }}
         >
           Entrar com Google
         </Button>
@@ -149,7 +153,7 @@ export default function PageLayout() {
     >
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <Box sx={{flex: 1, overflow: "hidden"}}>
+      <Box sx={{ flex: 1, overflow: "hidden" }}>
         <GameModal />
       </Box>
 
@@ -164,12 +168,12 @@ export default function PageLayout() {
         open={notification?.open || false}
         autoHideDuration={6000}
         onClose={hideNotification}
-        anchorOrigin={{vertical: "bottom", horizontal: "center"}}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={hideNotification}
           severity={notification?.severity || "info"}
-          sx={{width: "100%"}}
+          sx={{ width: "100%" }}
           variant="filled"
         >
           {notification?.message}

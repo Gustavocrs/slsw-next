@@ -3,10 +3,11 @@
  * Exporta todo o conteúdo específico do cenário para uso pelo núcleo do sistema.
  */
 
+import { manualSections } from "@/data/manualSections";
+import adventureData from "./data/adventureGenerator.js";
 import EDGES from "./data/edges.js";
 import HINDRANCES from "./data/hindrances.js";
 import POWERS from "./data/powers.js";
-import adventureData from "./data/adventureGenerator.js";
 import * as SLEngine from "./lib/slEngine.js";
 
 export const metadata = {
@@ -19,6 +20,12 @@ export const edges = EDGES;
 export const hindrances = HINDRANCES;
 export const powers = POWERS;
 export const adventureGenerator = adventureData;
+export const loreSections = manualSections.map((section) => ({
+  id: section.id,
+  title: section.title,
+  content: section.content,
+  contentHtml: section.content,
+}));
 
 export const promptStyles = {
   solo_leveling:
@@ -27,8 +34,7 @@ export const promptStyles = {
     "High Fantasy, Heroic Realism, vibrant colors, magical atmosphere, golden hour lighting, epic scale, detailed digital painting, clean lines, D&D art style, cinematic composition.",
   dark_fantasy:
     "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, dramatic shadows.",
-  cyberpunk:
-    "Cyberpunk anime style, neon lighting, futuristic, high quality,",
+  cyberpunk: "Cyberpunk anime style, neon lighting, futuristic, high quality,",
   ghibli:
     "Studio Ghibli style, vibrant colors, magical, detailed anime background, soft lighting",
   comic_book:
@@ -60,4 +66,5 @@ export default {
   skills,
   calculateMaxMana,
   extraFields,
+  loreSections,
 };

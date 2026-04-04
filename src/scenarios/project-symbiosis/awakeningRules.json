@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Origem do Despertar",
+    "dice": 6,
+    "values": [
+      {
+        "d": 1,
+        "value": "Contato com um Bio-Ativo raro durante um surto de energia"
+      },
+      { "d": 2, "value": "Colapso do S.Y.N.C. durante uma missão de captura" },
+      { "d": 3, "value": "Exposição a dados corrompidos no SymbioDex" },
+      { "d": 4, "value": "Experiência de quase-morte em uma operação cyber" },
+      { "d": 5, "value": "Interferência de IA durante neural link" },
+      { "d": 6, "value": "Manipulação de energia de Portal instável" }
+    ]
+  },
+  {
+    "name": "Tipo de Despertar",
+    "dice": 8,
+    "values": [
+      { "d": 1, "value": "Neural - fortalece conexões cibernéticas" },
+      { "d": 2, "value": "Biológico - mutação Rowan-based" },
+      { "d": 3, "value": "Digital - consciência enhanced" },
+      { "d": 4, "value": "Sombrio - operações stealth melhoradas" },
+      { "d": 5, "value": "Luminoso - defesas térmicas ativadas" },
+      { "d": 6, "value": "Elemental - manipula energia de arma" },
+      { "d": 7, "value": "Mecânico - integração com gear" },
+      { "d": 8, "value": "Psíquico - interferência mental" }
+    ]
+  },
+  {
+    "name": "Sintoma Inicial",
+    "dice": 10,
+    "values": [
+      { "d": 1, "value": "Visão noturna ativada" },
+      { "d": 2, "value": "Conexão direta com dispositivos" },
+      { "d": 3, "value": "Audição amplificada" },
+      { "d": 4, "value": "Reflexos sobre-humanos" },
+      { "d": 5, "value": "Resistência a dano elétrico" },
+      { "d": 6, "value": "Percepção de redes sem fio" },
+      { "d": 7, "value": "Regeneração acelerada" },
+      { "d": 8, "value": "Força de vontade intensified" },
+      { "d": 9, "value": "Intuição de perigo" },
+      { "d": 10, "value": "Hack natural em sistemas simples" }
+    ]
+  },
+  {
+    "name": "Marcação do Desperto",
+    "dice": 12,
+    "values": [
+      { "d": 1, "value": "Chip implant glowing - detecta energia ativa" },
+      { "d": 2, "value": "Olhos com HUD overlay - +1 em Awareness" },
+      { "d": 3, "value": "Circuito neural nas costas - armazém扩容" },
+      { "d": 4, "value": "Respiração assistida - resistência a gases" },
+      { "d": 5, "value": "Sinal wireless enhancements - alcance +50%" },
+      { "d": 6, "value": "Armadura de pele - defesa leve permanente" },
+      { "d": 7, "value": "Modo de espera - recupera 1d6 Mana/hora" },
+      { "d": 8, "value": "Firewall mental - resistência a hacking mental" },
+      { "d": 9, "value": "Overclock - +2 em uma Skill 1x/dia" },
+      { "d": 10, "value": "Download em combate - ganha skill temporária" },
+      {
+        "d": 11,
+        "value": "Link com Bio-Ativo - comunicação telepática limitada"
+      },
+      { "d": 12, "value": "Modo Synapse - duplica uma ability 1x/sessão" }
+    ]
+  }
+]

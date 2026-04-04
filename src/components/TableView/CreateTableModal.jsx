@@ -34,7 +34,7 @@ import {
 import {useUIStore} from "@/stores/characterStore";
 import {useAuth} from "@/hooks";
 import APIService from "@/lib/api";
-import ScenarioSelector from "@/components/ScenarioSelector";
+import ScenarioSelector from "@/components/ScenarioAdmin/ScenarioSelector";
 
 function CreateTableModal() {
   const {
@@ -178,10 +178,7 @@ function CreateTableModal() {
               onChange={(e) => setDescription(e.target.value)}
               sx={{mb: 2}}
             />
-            <ScenarioSelector
-              value={scenarioId}
-              onChange={setScenarioId}
-            />
+            <ScenarioSelector value={scenarioId} onChange={setScenarioId} />
           </Box>
 
           {/* Logística */}

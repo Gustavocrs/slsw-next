@@ -1,0 +1,52 @@
+{
+  "hindrances": [
+    {
+      "id": "cyber-dependencia",
+      "name": "Dependência Cyber",
+      "description": "Sente ansiedade quando desconectado por mais de 1 hora. -2 em testes de Spirit.",
+      "severity": "Maior",
+      "cost": 2,
+      "source": "PS"
+    },
+    {
+      "id": "paranoia-corporativa",
+      "name": "Paranoia Corporativa",
+      "description": "Desconfia de todas as corporações. -2 em Persuasão com representantes corporativos.",
+      "severity": "Menor",
+      "cost": 1,
+      "source": "PS"
+    },
+    {
+      "id": "fragilidade-biologica",
+      "name": "Fragilidade Biológica",
+      "description": "Seu corpo não modificado é vulnerável. -2 para resistir a doenças e venenos.",
+      "severity": "Maior",
+      "cost": 2,
+      "source": "PS"
+    },
+    {
+      "id": "vulnerabilidade-hack",
+      "name": "Vulnerabilidade a Hack",
+      "description": "Suas implementações cyber têm ponto fraco. Inimigos ganham +2 em testes de hacking contra você.",
+      "severity": "Menor",
+      "cost": 1,
+      "source": "PS"
+    },
+    {
+      "id": "cicatriz-neural",
+      "name": "Cicatriz Neural",
+      "description": "Dor fantasma nos implantes. Em estresse, -1 em todos os testes por 1 rodada.",
+      "severity": "Menor",
+      "cost": 1,
+      "source": "PS"
+    },
+    {
+      "id": "passado-sombrio",
+      "name": "Passado Sombrio",
+      "description": "Já trabalhou para corporação rival. Encontros com ex-colegas são sempre hostis.",
+      "severity": "Maior",
+      "cost": 2,
+      "source": "PS"
+    }
+  ]
+}

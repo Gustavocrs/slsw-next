@@ -1,0 +1,84 @@
+{
+  "powers": {
+    "sync-boost": {
+      "id": "sync-boost",
+      "name": "S.Y.N.C. Boost",
+      "type": "status",
+      "cost": 2,
+      "description": "O operativo e Bio-Ativo ganham +2 em testes de Sincronização por 1 minuto.",
+      "ppCost": 0,
+      "rank": "Novato",
+      "source": "Project Symbiosis"
+    },
+    "neural-hack": {
+      "id": "neural-hack",
+      "name": "Neural Hack",
+      "type": "tech",
+      "cost": 3,
+      "description": "Tenta assumir controle de Bio-Ativo inimigo. Teste de Tech oposto. Se bem-sucedido, controla por 1d4 rodadas.",
+      "ppCost": 1,
+      "rank": "Experiente",
+      "source": "Project Symbiosis"
+    },
+    "overdrive": {
+      "id": "overdrive",
+      "name": "Overdrive",
+      "type": "combat",
+      "cost": 4,
+      "description": "Bio-Ativo ganha +1d6 dano e velocidade +2 por 3 rodadas. Após, fica fatigado (-2 em todos os testes).",
+      "ppCost": 2,
+      "rank": "Veterano",
+      "source": "Project Symbiosis"
+    },
+    "cyber-shield": {
+      "id": "cyber-shield",
+      "name": "Cyber Shield",
+      "type": "defense",
+      "cost": 3,
+      "description": "Campo de energia protege operativo e Bio-Ativo. Reduz dano de todos os ataques em 4 pontos por 2 rodadas.",
+      "ppCost": 1,
+      "rank": "Experiente",
+      "source": "Project Symbiosis"
+    },
+    "data-surge": {
+      "id": "data-surge",
+      "name": "Data Surge",
+      "type": "spirit",
+      "cost": 2,
+      "description": "Carrega Bio-Ativo com dados táticos. Ganha +2 para detectar fraquezas e armadilhas por 10 minutos.",
+      "ppCost": 0,
+      "rank": "Novato",
+      "source": "Project Symbiosis"
+    },
+    "ghost-protocol": {
+      "id": "ghost-protocol",
+      "name": "Ghost Protocol",
+      "type": "stealth",
+      "cost": 3,
+      "description": "Operativo e Bio-Ativo ficam quase invisíveis a sensores eletrônicos por 1d6 minutos. Testes de detecção têm -4 difficulty.",
+      "ppCost": 1,
+      "rank": "Veterano",
+      "source": "Project Symbiosis"
+    },
+    "jamming-field": {
+      "id": "jamming-field",
+      "name": "Jamming Field",
+      "type": "tech",
+      "cost": 4,
+      "description": "Cria área de interferência que desativa dispositivos eletrônicos e hacks em 10m. Inimigos perdem acciones Tech por 1d4 rodadas.",
+      "ppCost": 2,
+      "rank": "Heroico",
+      "source": "Project Symbiosis"
+    },
+    "symbiosis-awakening": {
+      "id": "symbiosis-awakening",
+      "name": "Despertar da Symbiose",
+      "type": "ultimate",
+      "cost": 6,
+      "description": "O vínculo atinge máximo. Operativo e Bio-Ativo fundem-se por 1 rodada: ganham ações duplas, +4 em tudo, e podem usar uma ability lendária. Uso único por cena.",
+      "ppCost": 3,
+      "rank": "Lendário",
+      "source": "Project Symbiosis"
+    }
+  }
+}
