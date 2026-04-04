@@ -687,7 +687,6 @@ function ConfigTab({
               color="warning"
               startIcon={<RefreshIcon />}
               onClick={onRestoreDefault}
-              disabled={saving}
               sx={{ mt: 1 }}
             >
               Restaurar Padrão
