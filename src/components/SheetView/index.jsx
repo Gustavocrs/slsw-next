@@ -1340,29 +1340,6 @@ Negative Prompt: ${promptData.negativePrompt}.
       : character.conceito || "Arquétipo indefinido",
     character.guilda || null,
   ].filter(Boolean);
-  const autoSaveMeta =
-    autoSaveStatus === "saving"
-      ? {
-          icon: <CloudUpload sx={{ fontSize: 16 }} />,
-          text: "Salvando",
-          color: "#475569",
-          bg: alpha("#cbd5e1", 0.42),
-        }
-      : autoSaveStatus === "saved"
-        ? {
-            icon: <CheckCircle sx={{ fontSize: 16 }} />,
-            text: "Salvo",
-            color: "#166534",
-            bg: alpha("#86efac", 0.25),
-          }
-        : autoSaveStatus === "error"
-          ? {
-              icon: <ErrorIcon sx={{ fontSize: 16 }} />,
-              text: "Erro ao salvar",
-              color: "#b91c1c",
-              bg: alpha("#fca5a5", 0.25),
-            }
-          : null;
 
   return (
     <Box>

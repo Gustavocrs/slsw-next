@@ -616,41 +616,37 @@ function GameModal() {
     return () => unsubscribe();
   }, [selectedTable?._id]);
 
-  // Efeito para carregar loreSections do cenário da mesa
+  // Efeito para carregar e sincronizar loreSections em tempo real
   useEffect(() => {
-    async function loadScenarioLore() {
-      const scenarioId = selectedTable?.scenarioId || activeScenarioId;
-      console.log(
-        "Carregando lore para scenarioId:",
-        scenarioId,
-        "activeScenarioId:",
-        activeScenarioId,
-      );
+    const scenarioId = selectedTable?.scenarioId || activeScenarioId;
 
-      if (!scenarioId) {
-        setScenarioLoreSections([]);
-        return;
-      }
+    if (!scenarioId) {
+      setScenarioLoreSections([]);
+      return;
+    }
 
-      try {
-        const scenarioData = await ScenarioService.getScenarioById(scenarioId);
-        console.log(
-          "Scenario data carregado:",
-          scenarioData ? scenarioData.id : "não encontrado",
-          scenarioData?.loreSections?.length || 0,
-        );
-        if (scenarioData?.loreSections) {
-          setScenarioLoreSections(scenarioData.loreSections);
+    // Referência ao documento do cenário
+    const scenarioRef = doc(db, "scenarios", scenarioId);
+
+    // Listener em tempo real
+    const unsubscribe = onSnapshot(
+      scenarioRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("📚 Lore sections updated:", data.loreSections?.length);
+          setScenarioLoreSections(data.loreSections || []);
         } else {
           setScenarioLoreSections([]);
         }
-      } catch (error) {
-        console.error("Erro ao carregar lore do cenário:", error);
+      },
+      (error) => {
+        console.error("Erro ao sincronizar lore do cenário:", error);
         setScenarioLoreSections([]);
-      }
-    }
+      },
+    );
 
-    loadScenarioLore();
+    return () => unsubscribe();
   }, [selectedTable?.scenarioId, activeScenarioId]);
 
   // --- Lógica de Presença na Próxima Sessão ---
