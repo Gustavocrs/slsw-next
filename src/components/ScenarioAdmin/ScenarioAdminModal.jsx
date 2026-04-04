@@ -803,14 +803,26 @@ export default function ScenarioAdminModal({
 
     if (
       !window.confirm(
-        `Restaurar "${scenarioData.metadata.name || scenarioData.metadata.id}" para os valores padrão do código? Isso apagará todas as alterações salvas no Firestore.`,
+        `Restaurar "${scenarioData.metadata.name || scenarioData.metadata.id}" para os valores padrão do código?`,
       )
     )
       return;
 
     try {
       setSaving(true);
-      await ScenarioService.deleteScenario(scenarioData.metadata.id);
+
+      // Tenta deletar do Firestore, mas ignora se não existir (404)
+      try {
+        await ScenarioService.deleteScenario(scenarioData.metadata.id);
+      } catch (error) {
+        // Se o erro for 404 (não encontrado), está tudo bem - o cenário já está no estado padrão
+        if (
+          !error.message?.toLowerCase().includes("404") &&
+          !error.message?.toLowerCase().includes("não encontrado")
+        ) {
+          throw error; // Repassa outros erros
+        }
+      }
 
       clearScenarioCache();
 
@@ -1058,13 +1070,6 @@ export default function ScenarioAdminModal({
     setTabValue(0);
   };
 
-  const getCurrentScenarioName = () => {
-    const scenario = availableScenarios.find(
-      (s) => s.id === selectedScenarioId,
-    );
-    return scenario?.name || selectedScenarioId;
-  };
-
   const tabs = [
     { label: "Vantagens", icon: <ShieldIcon /> },
     { label: "Complicações", icon: <CategoryIcon /> },
@@ -1113,10 +1118,6 @@ export default function ScenarioAdminModal({
               ))}
             </Select>
           </FormControl>
-
-          <Typography variant="body1" sx={{ ml: 2 }}>
-            <strong>{getCurrentScenarioName()}</strong>
-          </Typography>
 
           {isNewScenario ? (
             <Chip label="Criar Novo Cenário" color="success" size="small" />

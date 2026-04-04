@@ -134,7 +134,10 @@ export async function deleteScenario(id) {
     const response = await fetch(`${API_BASE}?id=${id}`, { method: "DELETE" });
 
     if (!response.ok) {
-      throw new Error("Erro ao excluir cenário");
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Erro ao excluir cenário: ${response.status} - ${errorData.error || response.statusText}`,
+      );
     }
 
     return await response.json();
