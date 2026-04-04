@@ -15,6 +15,7 @@ import {
   or,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -931,6 +932,137 @@ class APIService {
       console.error("Erro ao salvar monstro:", error);
       throw error;
     }
+  }
+
+  // =================================================================
+  // MÉTODOS DE SEED/MIGRAÇÃO DE CENÁRIOS
+  // =================================================================
+
+  // 25. SEED DE CENÁRIO (popula Firestore a partir do registry local)
+  static async seedScenario(scenarioId) {
+    try {
+      const { getScenario } = await import("@/scenarios/index.js");
+      const scenario = getScenario(scenarioId);
+
+      if (!scenario || !scenario.metadata) {
+        throw new Error(`Cenário "${scenarioId}" não encontrado no registry`);
+      }
+
+      // Determinar se o cenário está deprecado (só tem metadata no registry)
+      const scenarioKeys = Object.keys(scenario);
+      const hasData = scenarioKeys.some(
+        (key) =>
+          !["metadata", "_note", "id", "name", "description"].includes(key),
+      );
+
+      let payload;
+
+      if (hasData) {
+        // Cenário novo: usa dados do registry diretamente
+        const { metadata, ...rest } = scenario;
+        payload = APIService._cleanData({
+          ...rest,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        // Cenário deprecado: carregar dados dos arquivos fontes
+        payload = await APIService._loadScenarioSourceData(scenarioId);
+      }
+
+      // Usa setDoc (cria ou sobrescreve)
+      const scenarioRef = doc(db, "scenarios", scenarioId);
+      await setDoc(scenarioRef, payload);
+
+      return { _id: scenarioId, ...payload };
+    } catch (error) {
+      console.error("Erro ao fazer seed do cenário:", error);
+      throw error;
+    }
+  }
+
+  // Helper: Carrega dados fonte para cenários deprecados
+  static async _loadScenarioSourceData(scenarioId) {
+    // Importa dados estáticos conforme o cenário
+    switch (scenarioId) {
+      case "solo-leveling":
+        return APIService._loadSoloLevelingData();
+      case "project-symbiosis":
+        return APIService._loadProjectSymbiosisData();
+      default:
+        throw new Error(
+          `Cenário "${scenarioId}" não tem dados fonte definidos`,
+        );
+    }
+  }
+
+  static _loadSoloLevelingData() {
+    // Dados completos do solo-leveling (copiados do arquivo original)
+    // Tipos: edges, hindrances, powers, adventureGenerator, promptStyles, skills, calculateMaxMana, extraFields, loreSections
+    // Nota: calculateMaxMana precisa ser uma string para armazenar no Firestore
+    const manualSections = require("@/data/manualSections.js").manualSections;
+    const adventureData =
+      require("@/scenarios/solo-leveling/data/adventureGenerator.js").default ||
+      require("@/scenarios/solo-leveling/data/adventureGenerator.js");
+    const EDGES = require("@/scenarios/solo-leveling/data/edges.js").default;
+    const HINDRANCES =
+      require("@/scenarios/solo-leveling/data/hindrances.js").default;
+    const POWERS = require("@/scenarios/solo-leveling/data/powers.js").default;
+    const SLEngine = require("@/scenarios/solo-leveling/lib/slEngine.js");
+
+    // Converte calculateMaxMana para string
+    const calculateMaxManaStr = SLEngine.calculateMaxMana.toString();
+
+    return {
+      edges: EDGES,
+      hindrances: HINDRANCES,
+      powers: POWERS,
+      adventureGenerator: adventureData,
+      promptStyles: {
+        solo_leveling:
+          "Anime Style, Solo Leveling Manhwa Art Style, High Quality, Cinematic Lighting.",
+        high_fantasy:
+          "High Fantasy, Heroic Realism, vibrant colors, magical atmosphere, golden hour lighting, epic scale, detailed digital painting, clean lines, D&D art style, cinematic composition.",
+        dark_fantasy:
+          "Dark Fantasy, Grimdark, highly detailed, realistic digital painting, dramatic shadows.",
+        cyberpunk:
+          "Cyberpunk anime style, neon lighting, futuristic, high quality,",
+        ghibli:
+          "Studio Ghibli style, vibrant colors, magical, detailed anime background, soft lighting",
+        comic_book:
+          "American Comic Book style, heavy ink lines, dynamic shading, vibrant colors",
+      },
+      skills: SLEngine.SKILLS_SL,
+      calculateMaxMana: calculateMaxManaStr,
+      extraFields: {
+        despertar_origem: { type: "string", label: "Origem do Despertar" },
+        despertar_sensacao: { type: "string", label: "Sensação do Despertar" },
+        despertar_afinidade: { type: "string", label: "Afinidade de Mana" },
+        despertar_marca: { type: "string", label: "Marca do Despertar" },
+        poder_unico_fonte: { type: "string", label: "Fonte do Poder Único" },
+        poder_unico_expressao: {
+          type: "string",
+          label: "Expressão do Poder Único",
+        },
+        poder_unico_gatilho: {
+          type: "string",
+          label: "Gatilho do Poder Único",
+        },
+        mana_atual: { type: "number", label: "Mana Atual" },
+        mana_bonus: { type: "number", label: "Bônus de Mana" },
+      },
+      loreSections: manualSections.map((section) => ({
+        id: section.id,
+        title: section.title,
+        content: section.content,
+        contentHtml: section.content,
+      })),
+    };
+  }
+
+  static _loadProjectSymbiosisData() {
+    // Implementação similar para project-symbiosis
+    // Por ora, retorna objeto vazio (precisa ser implementado)
+    return {};
   }
 }
 

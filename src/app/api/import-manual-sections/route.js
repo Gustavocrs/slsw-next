@@ -5,9 +5,13 @@ import { db } from "@/lib/firebase";
 
 export async function GET(request) {
   try {
+    const sectionsWithHtml = manualSections.map((section) => ({
+      ...section,
+      contentHtml: section.content,
+    }));
     return NextResponse.json({
       success: true,
-      data: manualSections,
+      data: sectionsWithHtml,
     });
   } catch (error) {
     console.error("Erro ao ler manualSections:", error);
@@ -30,16 +34,21 @@ export async function POST(request) {
       );
     }
 
+    const sectionsWithHtml = manualSections.map((section) => ({
+      ...section,
+      contentHtml: section.content,
+    }));
+
     const scenarioRef = doc(db, "scenarios", scenarioId);
     await updateDoc(scenarioRef, {
-      loreSections: manualSections,
+      loreSections: sectionsWithHtml,
       updatedAt: new Date().toISOString(),
     });
 
     return NextResponse.json({
       success: true,
       message: `Seções do manual importadas com sucesso para o cenário ${scenarioId}`,
-      data: manualSections,
+      data: sectionsWithHtml,
     });
   } catch (error) {
     console.error("Erro na importação:", error);

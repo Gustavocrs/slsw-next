@@ -1,24 +1,26 @@
 /**
  * Sidebar Component
  * Sumário do livro e navegação
+ * Agora usa dados do Firestore via hook
  */
 
 "use client";
 
-import React from "react";
-import {styled} from "@mui/material/styles";
+import { Close as CloseIcon } from "@mui/icons-material";
 import {
+  Box,
+  CircularProgress,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemText,
-  IconButton,
-  Box,
 } from "@mui/material";
-import {Close as CloseIcon} from "@mui/icons-material";
-import manualSections from "@/data/manualSections";
+import { styled } from "@mui/material/styles";
+import React, { useEffect, useState } from "react";
+import { useScenario } from "@/hooks/useActiveScenario";
 
-const DrawerStyled = styled(Drawer)(({theme}) => ({
+const DrawerStyled = styled(Drawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
     width: "280px",
     background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
@@ -28,7 +30,7 @@ const DrawerStyled = styled(Drawer)(({theme}) => ({
   },
 }));
 
-const SidebarHeader = styled(Box)(({theme}) => ({
+const SidebarHeader = styled(Box)(({ theme }) => ({
   padding: "20px",
   borderBottom: "2px solid rgba(102, 126, 234, 0.1)",
   display: "flex",
@@ -42,7 +44,7 @@ const SidebarHeader = styled(Box)(({theme}) => ({
   },
 }));
 
-const SectionTitle = styled(ListItemText)(({theme}) => ({
+const SectionTitle = styled(ListItemText)(({ theme }) => ({
   "& .MuiListItemText-primary": {
     fontWeight: 700,
     color: theme.palette.primary.main,
@@ -50,7 +52,7 @@ const SectionTitle = styled(ListItemText)(({theme}) => ({
   },
 }));
 
-const NavItem = styled(ListItem)(({theme}) => ({
+const NavItem = styled(ListItem)(({ theme }) => ({
   paddingLeft: "20px",
   color: "#666",
   fontSize: "0.95rem",
@@ -64,11 +66,14 @@ const NavItem = styled(ListItem)(({theme}) => ({
   },
 }));
 
-function Sidebar({open, onClose}) {
+function Sidebar({ open, onClose }) {
+  const { scenario, loading } = useScenario("solo-leveling");
+  const manualSections = scenario?.loreSections || [];
+
   const handleNavigation = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({behavior: "smooth"});
+      element.scrollIntoView({ behavior: "smooth" });
     }
     onClose?.();
   };
@@ -82,17 +87,29 @@ function Sidebar({open, onClose}) {
         </IconButton>
       </SidebarHeader>
 
-      <List disablePadding>
-        {manualSections.map((section) => (
-          <NavItem
-            key={section.id}
-            button
-            onClick={() => handleNavigation(section.id)}
-          >
-            <SectionTitle primary={section.title} />
-          </NavItem>
-        ))}
-      </List>
+      {loading ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            p: 3,
+          }}
+        >
+          <CircularProgress size={24} />
+        </Box>
+      ) : (
+        <List disablePadding>
+          {manualSections.map((section) => (
+            <NavItem
+              key={section.id}
+              button
+              onClick={() => handleNavigation(section.id)}
+            >
+              <SectionTitle primary={section.title} />
+            </NavItem>
+          ))}
+        </List>
+      )}
     </DrawerStyled>
   );
 }

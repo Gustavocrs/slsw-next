@@ -548,8 +548,10 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
               const titleMatch = section.title
                 ?.toLowerCase()
                 .includes(lowerTerm);
-              const contentMatch = section.content
-                ?.toLowerCase()
+              // Usar contentHtml se disponível, senão content
+              const contentText = section.contentHtml || section.content || "";
+              const contentMatch = contentText
+                .toLowerCase()
                 .includes(lowerTerm);
 
               if (!titleMatch && !contentMatch) {
@@ -558,7 +560,9 @@ function BookView({ onOpenSidebar, twoPageMode = false, loreSections = [] }) {
             }
 
             const finalTitle = highlight(section.title, searchTerm);
-            const finalContent = safeHighlightHtml(section.content, searchTerm);
+            // Usar contentHtml se disponível, senão content
+            const contentRaw = section.contentHtml || section.content || "";
+            const finalContent = safeHighlightHtml(contentRaw, searchTerm);
 
             return (
               <section key={section.id} id={section.id}>

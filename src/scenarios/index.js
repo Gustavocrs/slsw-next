@@ -1,7 +1,6 @@
 /**
- * Scenarios Registry - Gerenciador de Cenários
- * Fornece acesso ao cenário ativo configurado no sistema.
- * Suporta cenário por mesa (via scenarioId) ou global (via env var).
+ * Scenario Registry
+ * Gerencia metadados de cenários e busca dados do Firestore quando disponível
  */
 
 import * as ScenarioService from "@/lib/scenarioService.js";
@@ -17,6 +16,11 @@ const DEFAULT_SCENARIO = "solo-leveling";
 
 let currentScenario = null;
 let currentScenarioId = DEFAULT_SCENARIO;
+let firestoreCache = {}; // Cache de dados do Firestore
+
+// ============================================================================
+// FUNÇÕES SÍNCRONAS (retornam dados do registry + cache)
+// ============================================================================
 
 export function getScenario(id = null) {
   const scenarioId = id || currentScenarioId;
@@ -28,32 +32,22 @@ export function getScenario(id = null) {
     return scenarios[DEFAULT_SCENARIO];
   }
 
-  return scenarios[scenarioId];
+  const baseScenario = scenarios[scenarioId];
+
+  // Se temos dados no cache, fazer merge
+  if (firestoreCache[scenarioId]) {
+    return { ...baseScenario, ...firestoreCache[scenarioId] };
+  }
+
+  // Caso contrário, retornar apenas base (metadata)
+  return baseScenario;
 }
 
 export function getScenarioIfExists(id) {
-  // Retorna o cenário exato do registry, sem fallback
-  return scenarios[id] || null;
-}
-
-export async function loadScenarioFromFirestore(id) {
-  try {
-    const scenarioData = await ScenarioService.getScenarioById(id);
-    if (scenarioData) {
-      currentScenarioId = id;
-      currentScenario = { ...scenarios[id], ...scenarioData };
-      return currentScenario;
-    }
-    return null;
-  } catch (error) {
-    console.error("Erro ao carregar cenário do Firestore:", error);
+  if (!scenarios[id]) {
     return null;
   }
-}
-
-export function clearScenarioCache() {
-  currentScenario = null;
-  currentScenarioId = DEFAULT_SCENARIO;
+  return getScenario(id);
 }
 
 export function getActiveScenario(scenarioIdFromTable = null) {
@@ -64,7 +58,7 @@ export function getActiveScenario(scenarioIdFromTable = null) {
   }
 
   if (scenarioIdFromTable && scenarios[scenarioIdFromTable]) {
-    return scenarios[scenarioIdFromTable];
+    return getScenario(scenarioIdFromTable);
   }
 
   return currentScenario;
@@ -77,7 +71,7 @@ export function setActiveScenario(id) {
     );
   }
   currentScenarioId = id;
-  currentScenario = scenarios[id];
+  currentScenario = getScenario(id);
   return currentScenario;
 }
 
@@ -87,40 +81,101 @@ export function getAvailableScenarios() {
     name: scenario.metadata?.name || id,
     description: scenario.metadata?.description || "",
     metadata: scenario.metadata,
-    edges: scenario.edges || [],
-    hindrances: scenario.hindrances || [],
-    powers: scenario.powers || {},
-    awakeningRules: scenario.awakeningRules || [],
-    extraFields: scenario.extraFields || {},
-    promptStyles: scenario.promptStyles || {},
-    skills: scenario.skills || {},
-    loreSections: scenario.loreSections || [],
-    adventureGenerator: scenario.adventureGenerator || {},
+    _note:
+      "Dados completos são carregados do Firestore (edges, hindrances, powers, loreSections, etc)",
   }));
 }
 
-export function getScenarioSkills(scenarioId = null) {
-  const scenario = getScenario(scenarioId);
-  return scenario.skills || {};
+// ============================================================================
+// FUNÇÕES ASSÍNCRONAS (carregam dados do Firestore)
+// ============================================================================
+
+export async function loadScenarioFromFirestore(id) {
+  try {
+    const scenarioData = await ScenarioService.getScenarioById(id);
+    if (scenarioData) {
+      // Atualizar cache
+      firestoreCache[id] = scenarioData;
+      currentScenarioId = id;
+      // Recalcular currentScenario com dados do cache
+      currentScenario = getScenario(id);
+      console.log(
+        `[Registry] Cenário ${id} carregado do Firestore com sucesso`,
+      );
+      return currentScenario;
+    }
+    console.warn(`[Registry] Cenário ${id} não encontrado no Firestore`);
+    return null;
+  } catch (error) {
+    console.error(
+      `[Registry] Erro ao carregar cenário ${id} do Firestore:`,
+      error,
+    );
+    return null;
+  }
 }
 
-export function getScenarioPromptStyles(scenarioId = null) {
-  const scenario = getScenario(scenarioId);
-  return scenario.promptStyles || {};
+export async function refreshScenarioCache(id = null) {
+  const scenarioId = id || currentScenarioId;
+  if (id) {
+    return await loadScenarioFromFirestore(id);
+  }
+  return await loadScenarioFromFirestore(scenarioId);
 }
 
-export function getScenarioExtraFields(scenarioId = null) {
-  const scenario = getScenario(scenarioId);
-  return scenario.extraFields || {};
+export function clearScenarioCache() {
+  firestoreCache = {};
+  currentScenario = null;
+  currentScenarioId = DEFAULT_SCENARIO;
 }
 
-export function getScenarioCalculateMaxMana(scenarioId = null) {
+// ============================================================================
+// FUNÇÕES HELPER (async com auto-load do Firestore se necessário)
+// ============================================================================
+
+export async function getScenarioSkills(scenarioId = null) {
   const scenario = getScenario(scenarioId);
-  return scenario.calculateMaxMana || null;
+  if (!scenario.skills && scenarioId) {
+    await loadScenarioFromFirestore(scenarioId);
+    const refreshedScenario = getScenario(scenarioId);
+    return refreshedScenario?.skills || {};
+  }
+  return scenario?.skills || {};
+}
+
+export async function getScenarioPromptStyles(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
+  if (!scenario.promptStyles && scenarioId) {
+    await loadScenarioFromFirestore(scenarioId);
+    const refreshedScenario = getScenario(scenarioId);
+    return refreshedScenario?.promptStyles || {};
+  }
+  return scenario?.promptStyles || {};
+}
+
+export async function getScenarioExtraFields(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
+  if (!scenario.extraFields && scenarioId) {
+    await loadScenarioFromFirestore(scenarioId);
+    const refreshedScenario = getScenario(scenarioId);
+    return refreshedScenario?.extraFields || {};
+  }
+  return scenario?.extraFields || {};
+}
+
+export async function getScenarioCalculateMaxMana(scenarioId = null) {
+  const scenario = getScenario(scenarioId);
+  if (!scenario.calculateMaxMana && scenarioId) {
+    await loadScenarioFromFirestore(scenarioId);
+    const refreshedScenario = getScenario(scenarioId);
+    return refreshedScenario?.calculateMaxMana || null;
+  }
+  return scenario?.calculateMaxMana || null;
 }
 
 export default {
   getScenario,
+  getScenarioIfExists,
   getActiveScenario,
   setActiveScenario,
   getAvailableScenarios,
@@ -129,6 +184,7 @@ export default {
   getScenarioExtraFields,
   getScenarioCalculateMaxMana,
   loadScenarioFromFirestore,
+  refreshScenarioCache,
   clearScenarioCache,
   DEFAULT_SCENARIO,
 };

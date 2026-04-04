@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { collection, onSnapshot, query } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import MessagesDashboard from "@/components/Messages";
 import Sidebar from "@/components/Sidebar";
@@ -25,6 +26,7 @@ import { useCharacterStore, useUIStore } from "@/stores/characterStore";
 
 export default function PageLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
 
   const { user, loading, loginWithGoogle } = useAuth();
   const { list } = useCharacterAPI();

@@ -1,8 +1,17 @@
 /**
  * Cenário Solo Leveling - Bundle Export
- * Exporta todo o conteúdo específico do cenário para uso pelo núcleo do sistema.
+ * ATENÇÃO: Este arquivo agora contém apenas METADATA.
+ * Todos os dados do cenário (edges, hindrances, powers, loreSections, etc)
+ * devem ser carregados do Firestore.
+ *
+ * Migração: Dados movidos para Firestore via script seed-solo-leveling.js
  */
 
+// ============================================================================
+// DEPRECATED - Mantido apenas para referência e rollback
+// ============================================================================
+
+/*
 import { manualSections } from "@/data/manualSections";
 import adventureData from "./data/adventureGenerator.js";
 import EDGES from "./data/edges.js";
@@ -68,3 +77,16 @@ export default {
   extraFields,
   loreSections,
 };
+*/
+
+// ============================================================================
+// NOVO: Apenas metadata - dados completos vindos do Firestore
+// ============================================================================
+
+export const metadata = {
+  id: "solo-leveling",
+  name: "Solo Leveling",
+  description: "Sistema de Caçadores de Portais com Despertar",
+};
+
+export default metadata;

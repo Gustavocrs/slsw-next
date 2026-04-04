@@ -28,6 +28,7 @@ import {
   DragIndicator as DragIcon,
   Edit as EditIcon,
   Info as InfoIcon,
+  Preview as PreviewIcon,
   Restore as RestoreIcon,
   Save as SaveIcon,
   CheckCircle as TipIcon,

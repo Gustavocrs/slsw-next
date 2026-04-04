@@ -11,10 +11,12 @@ import {
   ArrowDropDown as ArrowDropDownIcon,
   Close as CloseIcon,
   Delete as DeleteIcon,
+  Description as DescriptionIcon,
   Edit as EditIcon,
   Image as ImageIcon,
   Refresh as RefreshIcon,
   Save as SaveIcon,
+  UploadFile as UploadFileIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -47,7 +49,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { manualSections } from "@/data/manualSections";
 import APIService from "@/lib/api";
 import * as ScenarioService from "@/lib/scenarioService.js";
 import {
@@ -484,6 +485,14 @@ function ConfigTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
+  // Estados para o modal de importação
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importTab, setImportTab] = useState("edges");
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importPreview, setImportPreview] = useState(null);
+  const [importError, setImportError] = useState(null);
+
   useEffect(() => {
     if (scenarioData?.metadata) {
       setMetadata(scenarioData.metadata);
@@ -494,9 +503,14 @@ function ConfigTab({
   const handleChange = (field) => (e) => {
     const value = e.target.value;
     const newMetadata = { ...metadata, [field]: value };
+    setMetadata(newMetadata);
+    onUpdate("metadata", newMetadata);
+  };
 
-    if (field === "name" && isNewScenario) {
-      const slug = value
+  const handleNameBlur = () => {
+    // Se for novo cenário e ainda não tem ID, gerar baseado no nome
+    if (isNewScenario && metadata.name && !metadata.id) {
+      const slug = metadata.name
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -504,11 +518,11 @@ function ConfigTab({
         .replace(/\s+/g, "_")
         .substring(0, 50);
       const randomNum = Math.floor(Math.random() * 900) + 100;
-      newMetadata.id = slug ? `${slug}_${randomNum}` : `cenario_${Date.now()}`;
+      const newId = slug ? `${slug}_${randomNum}` : `cenario_${Date.now()}`;
+      const newMetadata = { ...metadata, id: newId };
+      setMetadata(newMetadata);
+      onUpdate("metadata", newMetadata);
     }
-
-    setMetadata(newMetadata);
-    onUpdate("metadata", newMetadata);
   };
 
   const handleImageUpload = async (e) => {
@@ -526,6 +540,172 @@ function ConfigTab({
     } finally {
       setUploading(false);
     }
+  };
+
+  // ----- Funções de Importação -----
+
+  const readFileAsText = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      reader.readAsText(file);
+    });
+
+  const validateImportData = (type, data) => {
+    switch (type) {
+      case "edges":
+        if (!Array.isArray(data))
+          return { valid: false, error: "Deve ser um array" };
+        if (!data.every((e) => e.name && e.rank && e.description))
+          return {
+            valid: false,
+            error: "Cada edge deve ter name, rank, description",
+          };
+        return { valid: true };
+      case "hindrances":
+        if (!Array.isArray(data))
+          return { valid: false, error: "Deve ser um array" };
+        if (!data.every((h) => h.name && h.severity && h.description))
+          return {
+            valid: false,
+            error: "Cada hindrance deve ter name, severity, description",
+          };
+        return { valid: true };
+      case "powers":
+        if (typeof data !== "object" || data === null)
+          return { valid: false, error: "Deve ser um objeto" };
+        if (
+          !Object.values(data).every(
+            (p) => p.pp && p.range && p.duration && p.rank,
+          )
+        )
+          return {
+            valid: false,
+            error: "Cada power deve ter pp, range, duration, rank",
+          };
+        return { valid: true };
+      case "awakeningRules":
+        if (!Array.isArray(data))
+          return { valid: false, error: "Deve ser um array" };
+        if (!data.every((r) => r.title && r.description))
+          return {
+            valid: false,
+            error: "Cada regra deve ter title, description",
+          };
+        return { valid: true };
+      case "loreSections":
+        if (!Array.isArray(data))
+          return { valid: false, error: "Deve ser um array" };
+        if (!data.every((s) => s.id && s.title && (s.content || s.contentHtml)))
+          return {
+            valid: false,
+            error: "Cada seção deve ter id, title, content/contentHtml",
+          };
+        return { valid: true };
+      case "sheetFields": {
+        if (typeof data !== "object" || data === null)
+          return { valid: false, error: "Deve ser um objeto" };
+        const { extraFields, promptStyles, skills } = data;
+        if (!extraFields || typeof extraFields !== "object")
+          return { valid: false, error: "extraFields deve ser objeto" };
+        if (!promptStyles || typeof promptStyles !== "object")
+          return { valid: false, error: "promptStyles deve ser objeto" };
+        if (!skills || typeof skills !== "object")
+          return { valid: false, error: "skills deve ser objeto" };
+        return { valid: true };
+      }
+      default:
+        return { valid: false, error: "Tipo desconhecido" };
+    }
+  };
+
+  const mapTabToField = (tab) => {
+    const map = {
+      edges: "edges",
+      hindrances: "hindrances",
+      powers: "powers",
+      awakeningRules: "awakeningRules",
+      loreSections: "loreSections",
+      sheetFields: "sheetFields",
+    };
+    return map[tab];
+  };
+
+  const getTabLabel = (tab) => {
+    const labels = {
+      edges: "Vantagens",
+      hindrances: "Complicações",
+      powers: "Poderes",
+      awakeningRules: "Regras",
+      loreSections: "Lore",
+      sheetFields: "Ficha",
+    };
+    return labels[tab];
+  };
+
+  const getTabDescription = (tab) => {
+    const descriptions = {
+      edges:
+        "Arquivo .js com export default de array: [{ name, rank, description }].",
+      hindrances:
+        "Arquivo .js com export default de array: [{ name, severity ('Maior'|'Menor'), description }].",
+      powers:
+        "Arquivo .js com export default de objeto: { nome: { pp, range, duration, rank, description } }.",
+      awakeningRules:
+        "Arquivo .js com export default de array: [{ title, description }].",
+      loreSections:
+        "Arquivo .js com export default de array: [{ id, title, content, contentHtml }].",
+      sheetFields:
+        "Arquivo .js com export default de objeto: { extraFields, promptStyles, skills }.",
+    };
+    return descriptions[tab];
+  };
+
+  const openImportDialog = () => setImportDialogOpen(true);
+  const closeImportDialog = () => {
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError(null);
+    setImportTab("edges");
+  };
+
+  const handleProcessImport = async () => {
+    if (!importFile) return;
+    setImportLoading(true);
+    setImportError(null);
+    try {
+      const code = await readFileAsText(importFile);
+      const match = code.match(/export\s+default\s+(.+)/s);
+      if (!match)
+        throw new Error("Formato inválido: não encontrou 'export default'");
+      const dataStr = match[1].replace(/;*\s*$/, "");
+      const data = new Function(`return ${dataStr}`)();
+      const validation = validateImportData(importTab, data);
+      if (!validation.valid) throw new Error(validation.error);
+      setImportPreview(data);
+    } catch (error) {
+      setImportError(error.message);
+      setImportPreview(null);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const applyImport = () => {
+    if (!importPreview || !scenarioData) return;
+    const field = mapTabToField(importTab);
+
+    // Para sheetFields, aplicamos o objeto completo; para outros, substituímos diretamente
+    onUpdate(field, importPreview);
+
+    closeImportDialog();
+    setSnackbar({
+      open: true,
+      message: `✅ ${getTabLabel(importTab)} importado com sucesso! Salve para confirmar.`,
+      severity: "success",
+    });
   };
 
   return (
@@ -610,6 +790,7 @@ function ConfigTab({
               label="Nome"
               value={metadata.name || ""}
               onChange={handleChange("name")}
+              onBlur={handleNameBlur}
               size="small"
               fullWidth
             />
@@ -625,46 +806,12 @@ function ConfigTab({
           </Stack>
         </Paper>
 
-        {/* Botão de Excluir Cenário */}
+        {/* Ferramentas do Admin */}
         {!isNewScenario && (
           <Paper
             sx={{
               p: 2,
-              borderColor: "error.main",
-              borderWidth: 2,
-              borderStyle: "dashed",
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              fontWeight="bold"
-              color="error"
-              gutterBottom
-            >
-              Zona de Perigo
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Excluir este cenário permanentemente. Esta ação não pode ser
-              desfeita.
-            </Typography>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => setConfirmDeleteOpen(true)}
-              sx={{ mt: 1 }}
-            >
-              Excluir Cenário
-            </Button>
-          </Paper>
-        )}
-
-        {/* Botão Restaurar Padrão */}
-        {!isNewScenario && (
-          <Paper
-            sx={{
-              p: 2,
-              borderColor: "warning.main",
+              borderColor: "info.main",
               borderWidth: 2,
               borderStyle: "dashed",
               mt: 2,
@@ -673,93 +820,146 @@ function ConfigTab({
             <Typography
               variant="subtitle1"
               fontWeight="bold"
-              color="warning.main"
+              color="info.main"
               gutterBottom
             >
-              Restauração
+              Ferramentas do Admin
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Restaurar este cenário para os valores padrão do código. Isso
-              apagará todas as alterações salvas no Firestore.
+              Operações de manutenção do cenário. Use com cuidado.
             </Typography>
-            <Button
-              variant="outlined"
-              color="warning"
-              startIcon={<RefreshIcon />}
-              onClick={onRestoreDefault}
-              sx={{ mt: 1 }}
-            >
-              Restaurar Padrão
-            </Button>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setConfirmDeleteOpen(true)}
+                sx={{ flex: "1 1 150px" }}
+              >
+                Excluir Cenário
+              </Button>
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<RefreshIcon />}
+                onClick={onRestoreDefault}
+                sx={{ flex: "1 1 150px" }}
+              >
+                Restaurar Padrão
+              </Button>
+              <Button
+                variant="outlined"
+                color="info"
+                startIcon={<UploadFileIcon />}
+                onClick={openImportDialog}
+                sx={{ flex: "1 1 150px" }}
+              >
+                Importar
+              </Button>
+            </Stack>
           </Paper>
         )}
 
-        {/* Dialog de Confirmação de Exclusão */}
+        {/* Dialog de Importação */}
         <Dialog
-          open={confirmDeleteOpen}
-          onClose={() => {
-            setConfirmDeleteOpen(false);
-            setConfirmDeleteInput("");
-          }}
-          maxWidth="xs"
+          open={importDialogOpen}
+          onClose={closeImportDialog}
+          maxWidth="md"
           fullWidth
         >
-          <DialogTitle sx={{ color: "error.main" }}>
-            <DeleteIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            Excluir Cenário
-          </DialogTitle>
+          <DialogTitle>📥 Importar Dados</DialogTitle>
           <DialogContent>
-            <DialogContentText>
-              Você está prestes a excluir o cenário{" "}
-              <strong>"{metadata.name || metadata.id}"</strong>.
-              <br />
-              <br />
-              Esta ação <strong>NÃO pode ser desfeita</strong>. Todos os dados
-              do cenário (edges, hindrances, powers, regras, lore) serão
-              permanentemente apagados.
-              <br />
-              <br />
-              Para confirmar, digite o ID do cenário abaixo:
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="ID do Cenário"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={confirmDeleteInput}
-              onChange={(e) => setConfirmDeleteInput(e.target.value)}
-              error={
-                confirmDeleteInput !== metadata.id &&
-                confirmDeleteInput.length > 0
-              }
-              helperText={
-                confirmDeleteInput !== metadata.id &&
-                confirmDeleteInput.length > 0
-                  ? "ID incorreto"
-                  : `Digite: ${metadata.id}`
-              }
-              sx={{ mt: 2 }}
-            />
+            <Tabs
+              value={importTab}
+              onChange={(e, v) => setImportTab(v)}
+              variant="fullWidth"
+            >
+              <Tab label="Vantagens" value="edges" />
+              <Tab label="Complicações" value="hindrances" />
+              <Tab label="Poderes" value="powers" />
+              <Tab label="Regras" value="awakeningRules" />
+              <Tab label="Lore" value="loreSections" />
+              <Tab label="Ficha" value="sheetFields" />
+            </Tabs>
+
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {getTabDescription(importTab)}
+              </Typography>
+
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<UploadFileIcon />}
+                disabled={importLoading}
+                sx={{ mr: 2 }}
+              >
+                Selecionar arquivo .js
+                <input
+                  type="file"
+                  accept=".js"
+                  hidden
+                  onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                />
+              </Button>
+
+              {importFile && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  📄 {importFile.name}
+                </Typography>
+              )}
+
+              {importLoading && <CircularProgress size={24} sx={{ mt: 2 }} />}
+
+              {importError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {importError}
+                </Alert>
+              )}
+
+              {importPreview && (
+                <Box sx={{ mt: 2 }}>
+                  <Alert severity="success" icon={<DescriptionIcon />}>
+                    Dados válidos! Estrutura correta.
+                  </Alert>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Quantidade:{" "}
+                    {Array.isArray(importPreview)
+                      ? importPreview.length
+                      : Object.keys(importPreview).length}{" "}
+                    itens
+                  </Typography>
+                  <Paper
+                    variant="outlined"
+                    sx={{ mt: 2, p: 2, maxHeight: 200, overflow: "auto" }}
+                  >
+                    <pre style={{ fontSize: "0.8rem", margin: 0 }}>
+                      {JSON.stringify(importPreview, null, 2).substring(
+                        0,
+                        1000,
+                      )}
+                    </pre>
+                  </Paper>
+                </Box>
+              )}
+            </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setConfirmDeleteOpen(false)} color="inherit">
-              Cancelar
+            <Button onClick={closeImportDialog}>Cancelar</Button>
+            <Button
+              onClick={handleProcessImport}
+              variant="contained"
+              disabled={!importFile || importLoading}
+            >
+              Processar
             </Button>
             <Button
-              onClick={() => {
-                if (confirmDeleteInput === metadata.id && onDeleteScenario) {
-                  onDeleteScenario(metadata.id);
-                  setConfirmDeleteOpen(false);
-                  setConfirmDeleteInput("");
-                }
-              }}
-              color="error"
+              onClick={applyImport}
               variant="contained"
-              disabled={confirmDeleteInput !== metadata.id}
+              color="primary"
+              disabled={!importPreview}
             >
-              EXCLUIR PERMANENTEMENTE
+              Aplicar
             </Button>
           </DialogActions>
         </Dialog>
@@ -789,6 +989,48 @@ export default function ScenarioAdminModal({
   const [hasChanges, setHasChanges] = useState(false);
   const [isNewScenario, setIsNewScenario] = useState(false);
   const [availableScenarios, setAvailableScenarios] = useState([]);
+
+  // Função para seed (popular Firestore com dados do código)
+  const handleSeed = async () => {
+    if (!scenarioData?.metadata?.id) {
+      setSnackbar({
+        open: true,
+        message: "ID do cenário não encontrado",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Popular "${scenarioData.metadata.name || scenarioData.metadata.id}" no Firestore com os dados do código?`,
+      )
+    )
+      return;
+
+    try {
+      setSaving(true);
+      await APIService.seedScenario(scenarioData.metadata.id);
+      clearScenarioCache();
+      setSnackbar({
+        open: true,
+        message: `Cenário "${scenarioData.metadata.name || scenarioData.metadata.id}" populado no Firestore!`,
+        severity: "success",
+      });
+      setTimeout(() => {
+        loadScenario();
+      }, 500);
+    } catch (error) {
+      console.error("Erro ao fazer seed:", error);
+      setSnackbar({
+        open: true,
+        message: `Erro ao popular: ${error.message}`,
+        severity: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Função para restaurar cenário para o padrão do código
   const handleRestoreDefault = async () => {
@@ -822,6 +1064,25 @@ export default function ScenarioAdminModal({
         ) {
           throw error; // Repassa outros erros
         }
+      }
+
+      // Agora fazer seed (migração) para repopular Firestore com dados atuais do código
+      try {
+        console.log(
+          `[Restaurar] Fazendo seed do cenário ${scenarioData.metadata.id}...`,
+        );
+        await APIService.seedScenario(scenarioData.metadata.id);
+        console.log(
+          `[Restaurar] Seed concluído com sucesso para ${scenarioData.metadata.id}`,
+        );
+      } catch (seedError) {
+        console.error(`[Restaurar] Erro ao fazer seed do cenário:`, seedError);
+        // Não falha a restauração se a seed falhar, apenas alerta
+        setSnackbar({
+          open: true,
+          message: `Cenário deletado, mas seed falhou: ${seedError.message}`,
+          severity: "warning",
+        });
       }
 
       clearScenarioCache();

@@ -1,8 +1,8 @@
-import {NextResponse} from "next/server";
-import {db} from "@/lib/firebase";
-import {collection, getDocs} from "firebase/firestore";
-import {GoogleGenerativeAI} from "@google/generative-ai";
-import {getActiveScenario} from "@/scenarios/index.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { collection, getDocs } from "firebase/firestore";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { getScenario, loadScenarioFromFirestore } from "@/scenarios/index.js";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ const shuffleArray = (array) => {
 };
 
 export async function GET(request) {
-  const {searchParams} = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const players = parseInt(searchParams.get("players") || "4", 10);
   const swadeRank = searchParams.get("swadeRank") || "Novato";
   const hunterRank = searchParams.get("hunterRank") || "E";
@@ -32,8 +32,8 @@ export async function GET(request) {
 
   if (!apiKey) {
     return NextResponse.json(
-      {error: "Chave da API do Gemini não configurada no servidor."},
-      {status: 500},
+      { error: "Chave da API do Gemini não configurada no servidor." },
+      { status: 500 },
     );
   }
 
@@ -57,8 +57,8 @@ export async function GET(request) {
     } catch (dbError) {
       console.error("Falha ao acessar Firestore na rota de aventura:", dbError);
       return NextResponse.json(
-        {error: "Erro no banco de dados.", details: dbError.message},
-        {status: 500},
+        { error: "Erro no banco de dados.", details: dbError.message },
+        { status: 500 },
       );
     }
 
@@ -70,7 +70,7 @@ export async function GET(request) {
           error:
             "O bestiário está vazio. Adicione monstros antes de gerar uma aventura.",
         },
-        {status: 500},
+        { status: 500 },
       );
     }
 
@@ -134,8 +134,14 @@ export async function GET(request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: apiModel,
-      generationConfig: {responseMimeType: "application/json"},
+      generationConfig: { responseMimeType: "application/json" },
     });
+
+    // Garantir que o cenário está carregado (para configuracões específicas se necessário)
+    const activeScenarioId =
+      process.env.NEXT_PUBLIC_ACTIVE_SCENARIO || "solo-leveling";
+    await loadScenarioFromFirestore(activeScenarioId);
+    const scenario = getScenario(activeScenarioId);
 
     const prompt = `
       Você é um Mestre de RPG especialista em gerar missões coesas de Medieval High Fantasy para Caçadores de Fendas/Portais.
@@ -204,8 +210,8 @@ export async function GET(request) {
 
     // Garante a quantidade de encontros correta caso a IA falhe na contagem
     for (let i = 0; i < encountersCount; i++) {
-      let mId = selectedMinionIds[i] || selectedMinionIds[0];
-      let mData =
+      const mId = selectedMinionIds[i] || selectedMinionIds[0];
+      const mData =
         allMonsters.find((m) => m.id === mId) ||
         allMonsters[Math.floor(Math.random() * allMonsters.length)];
 
@@ -255,7 +261,7 @@ export async function GET(request) {
         error: "Falha ao processar IA ou banco de dados.",
         details: error.message,
       },
-      {status: 500},
+      { status: 500 },
     );
   }
 }

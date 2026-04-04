@@ -1,8 +1,17 @@
 /**
  * Project Symbiosis - Scenario
- * Neo-Kanto Cyberpunk Pokémon RPG
+ * ATENÇÃO: Este arquivo agora contém apenas METADATA.
+ * Todos os dados do cenário (edges, hindrances, powers, loreSections, etc)
+ * devem ser carregados do Firestore.
+ *
+ * Migração: Dados movidos para Firestore via script seed-project-symbiosis.js
  */
 
+// ============================================================================
+// DEPRECATED - Mantido apenas para referência e rollback
+// ============================================================================
+
+/*
 import { manualSections } from "@/data/manualSections";
 import awakeningRules from "./awakeningRules.json";
 import edges from "./edges.json";
@@ -49,3 +58,17 @@ const scenario = {
 };
 
 export default scenario;
+*/
+
+// ============================================================================
+// NOVO: Apenas metadata - dados completos vindos do Firestore
+// ============================================================================
+
+export const metadata = {
+  id: "project-symbiosis",
+  name: "Project Symbiosis",
+  description:
+    "Neo-Kanto Cyberpunk - S.Y.N.C. substitui Pokébolas. Captura por contrato neural. Escritório sombrio e Alta tecnologia.",
+};
+
+export default metadata;
