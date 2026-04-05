@@ -42,4 +42,5 @@ next-env.d.ts
 firestore.rules
 public/uploads/*
 IA.rules.md
-/pubic/docs
+public/docs/*
+backups/*
