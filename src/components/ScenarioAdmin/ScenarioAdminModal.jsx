@@ -9,6 +9,7 @@
 import {
   Add as AddIcon,
   ArrowDropDown as ArrowDropDownIcon,
+  AutoAwesome as AutoAwesomeIcon,
   Close as CloseIcon,
   Delete as DeleteIcon,
   Description as DescriptionIcon,
@@ -29,7 +30,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
   FormControl,
+  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -49,8 +52,16 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import { adventureData } from "@/data/adventureGenerator";
+import { bestiaryData } from "@/data/bestiary";
+// Dados padrão para importação rápida
+import { EDGES_SL } from "@/data/edgesSL";
+import { HINDRANCES_SWADE } from "@/data/hindrancesSwade";
+import { manualSections } from "@/data/manualSections";
+import { POWERS_SWADE } from "@/data/powersSwade";
 import APIService from "@/lib/api";
 import * as ScenarioService from "@/lib/scenarioService.js";
+import { SKILLS_SWADE } from "@/lib/swadeEngine";
 import {
   clearScenarioCache,
   getAvailableScenarios,
@@ -72,7 +83,7 @@ function TabPanel({ children, value, index }) {
   );
 }
 
-function LoadingOverlay({ loading }) {
+function LoadingOverlay({ loading, isScenarioChange }) {
   if (!loading) return null;
   return (
     <Box
@@ -82,19 +93,42 @@ function LoadingOverlay({ loading }) {
         left: 0,
         right: 0,
         bottom: 0,
-        bgcolor: "rgba(255,255,255,0.8)",
+        bgcolor: "rgba(0,0,0,0.7)",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 10,
       }}
     >
-      <CircularProgress />
+      {isScenarioChange ? (
+        <>
+          <AutoAwesomeIcon
+            sx={{
+              fontSize: 64,
+              color: "primary.main",
+              animation: "spin 2s linear infinite",
+            }}
+          />
+          <Typography variant="h6" color="white" sx={{ mt: 2 }}>
+            Carregando Cenário...
+          </Typography>
+        </>
+      ) : (
+        <CircularProgress />
+      )}
     </Box>
   );
 }
 
-function EdgesTab({ scenarioData, onAdd, onEdit, onDelete, loading }) {
+function EdgesTab({
+  scenarioData,
+  onAdd,
+  onEdit,
+  onDelete,
+  loading,
+  scenarioChanging,
+}) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [type, setType] = useState("edge");
@@ -128,7 +162,10 @@ function EdgesTab({ scenarioData, onAdd, onEdit, onDelete, loading }) {
 
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Vantagens ({edges.length})</Typography>
@@ -199,7 +236,14 @@ function EdgesTab({ scenarioData, onAdd, onEdit, onDelete, loading }) {
   );
 }
 
-function HindrancesTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
+function HindrancesTab({
+  scenarioData,
+  onUpdate,
+  onAdd,
+  onDelete,
+  loading,
+  scenarioChanging,
+}) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
@@ -222,7 +266,10 @@ function HindrancesTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
 
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Complicações ({hindrances.length})</Typography>
@@ -306,7 +353,13 @@ function HindrancesTab({ scenarioData, onUpdate, onAdd, onDelete, loading }) {
   );
 }
 
-function PowersTab({ scenarioData, onUpdate, onDelete, loading }) {
+function PowersTab({
+  scenarioData,
+  onUpdate,
+  onDelete,
+  loading,
+  scenarioChanging,
+}) {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
@@ -326,7 +379,10 @@ function PowersTab({ scenarioData, onUpdate, onDelete, loading }) {
 
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Poderes ({powersList.length})</Typography>
@@ -406,7 +462,7 @@ function PowersTab({ scenarioData, onUpdate, onDelete, loading }) {
   );
 }
 
-function RulesTab({ scenarioData, onUpdate, loading }) {
+function RulesTab({ scenarioData, onUpdate, loading, scenarioChanging }) {
   const [awakeningRules, setAwakeningRules] = useState(
     scenarioData?.awakeningRules || [],
   );
@@ -424,7 +480,10 @@ function RulesTab({ scenarioData, onUpdate, loading }) {
 
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
       <AwakeningTableEditor
         data={awakeningRules}
         onChange={handleChange}
@@ -434,10 +493,13 @@ function RulesTab({ scenarioData, onUpdate, loading }) {
   );
 }
 
-function SheetTab({ scenarioData, onUpdate, loading }) {
+function SheetTab({ scenarioData, onUpdate, loading, scenarioChanging }) {
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
 
       <Stack spacing={3}>
         <ExtraFieldsEditor
@@ -454,16 +516,35 @@ function SheetTab({ scenarioData, onUpdate, loading }) {
           keyPlaceholder="Nome do estilo"
           valuePlaceholder="Prompt completo..."
         />
-
-        <KeyValueEditor
-          title="Habilidades Extras do Cenário"
-          data={scenarioData?.skills || {}}
-          onChange={(data) => onUpdate("skills", data)}
-          valueType="string"
-          keyPlaceholder="Nome da habilidade"
-          valuePlaceholder="Atributo (agilidade, forca, etc)"
-        />
       </Stack>
+    </Box>
+  );
+}
+
+function SkillsTab({ scenarioData, onUpdate, loading, scenarioChanging }) {
+  return (
+    <Box sx={{ position: "relative" }}>
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
+
+      <Typography variant="h6" gutterBottom>
+        Habilidades/Perícias Customizadas
+      </Typography>
+      <Typography variant="body2" color="text.secondary" paragraph>
+        Mapeamento de nomes de perícias para atributos (ex: "Conhecimento
+        (Mana)": "intelecto").
+      </Typography>
+
+      <KeyValueEditor
+        title=""
+        data={scenarioData?.skills || {}}
+        onChange={(data) => onUpdate("skills", data)}
+        valueType="string"
+        keyPlaceholder="Nome da perícia"
+        valuePlaceholder="Atributo (agilidade, forca, intelecto, espirito, vigor)"
+      />
     </Box>
   );
 }
@@ -472,8 +553,10 @@ function ConfigTab({
   scenarioData,
   onUpdate,
   loading,
+  scenarioChanging,
   onDeleteScenario,
   onRestoreDefault,
+  onShowSnackbar,
 }) {
   const [metadata, setMetadata] = useState(scenarioData?.metadata || {});
   const [uploading, setUploading] = useState(false);
@@ -552,82 +635,161 @@ function ConfigTab({
       reader.readAsText(file);
     });
 
+  const extractExportedValue = (code) => {
+    // Tentar export default primeiro
+    let match = code.match(/export\s+default\s+(.+)/s);
+    if (match) {
+      return match[1].replace(/;*\s*$/, "");
+    }
+    // Tentar export const NOME = ...
+    match = code.match(/export\s+const\s+\w+\s*=\s*(.+)/s);
+    if (match) {
+      return match[1].replace(/;*\s*$/, "");
+    }
+    throw new Error(
+      "Formato inválido: não encontrou 'export default' ou 'export const NOME = ...'",
+    );
+  };
+
   const validateImportData = (type, data) => {
     switch (type) {
       case "edges":
         if (!Array.isArray(data))
           return { valid: false, error: "Deve ser um array" };
-        if (!data.every((e) => e.name && e.rank && e.description))
+        if (!data.every((e) => e.name && e.rank && e.description)) {
           return {
             valid: false,
             error: "Cada edge deve ter name, rank, description",
           };
+        }
         return { valid: true };
+
       case "hindrances":
         if (!Array.isArray(data))
           return { valid: false, error: "Deve ser um array" };
-        if (!data.every((h) => h.name && h.severity && h.description))
+        if (
+          !data.every((h) => h.name && h.description && (h.severity || h.type))
+        ) {
           return {
             valid: false,
-            error: "Cada hindrance deve ter name, severity, description",
+            error:
+              "Cada hindrance deve ter name, description e (severity OU type)",
           };
+        }
         return { valid: true };
+
       case "powers":
-        if (typeof data !== "object" || data === null)
+        if (typeof data !== "object" || data === null) {
           return { valid: false, error: "Deve ser um objeto" };
+        }
         if (
           !Object.values(data).every(
             (p) => p.pp && p.range && p.duration && p.rank,
           )
-        )
+        ) {
           return {
             valid: false,
             error: "Cada power deve ter pp, range, duration, rank",
           };
+        }
         return { valid: true };
+
       case "awakeningRules":
         if (!Array.isArray(data))
           return { valid: false, error: "Deve ser um array" };
-        if (!data.every((r) => r.title && r.description))
+        if (!data.every((r) => r.title && r.description)) {
           return {
             valid: false,
             error: "Cada regra deve ter title, description",
           };
+        }
         return { valid: true };
+
       case "loreSections":
         if (!Array.isArray(data))
           return { valid: false, error: "Deve ser um array" };
-        if (!data.every((s) => s.id && s.title && (s.content || s.contentHtml)))
+        if (
+          !data.every((s) => s.id && s.title && (s.content || s.contentHtml))
+        ) {
           return {
             valid: false,
             error: "Cada seção deve ter id, title, content/contentHtml",
           };
+        }
         return { valid: true };
-      case "sheetFields": {
-        if (typeof data !== "object" || data === null)
+
+      case "adventureGenerator": {
+        if (typeof data !== "object" || data === null) {
           return { valid: false, error: "Deve ser um objeto" };
-        const { extraFields, promptStyles, skills } = data;
-        if (!extraFields || typeof extraFields !== "object")
-          return { valid: false, error: "extraFields deve ser objeto" };
-        if (!promptStyles || typeof promptStyles !== "object")
-          return { valid: false, error: "promptStyles deve ser objeto" };
-        if (!skills || typeof skills !== "object")
-          return { valid: false, error: "skills deve ser objeto" };
+        }
+        const expectedKeys = [
+          "themes",
+          "locations",
+          "antagonists",
+          "complications",
+          "twists",
+          "rewards",
+          "monsters",
+          "connection_hints",
+        ];
+        if (!expectedKeys.some((key) => Object.hasOwn(data, key))) {
+          return {
+            valid: false,
+            error:
+              "Objeto deve conter pelo menos uma das chaves: themes, locations, antagonists, etc.",
+          };
+        }
         return { valid: true };
       }
+
+      case "bestiary":
+        if (!Array.isArray(data))
+          return { valid: false, error: "Deve ser um array" };
+        if (!data.every((m) => m.name && m.rank && m.type)) {
+          return {
+            valid: false,
+            error: "Cada monstro deve ter name, rank, type",
+          };
+        }
+        return { valid: true };
+
+      case "skills":
+        if (typeof data !== "object" || data === null) {
+          return { valid: false, error: "Deve ser um objeto" };
+        }
+        return { valid: true };
+
+      case "sheetFields": {
+        if (typeof data !== "object" || data === null) {
+          return { valid: false, error: "Deve ser um objeto" };
+        }
+        const { extraFields, promptStyles, skills } = data;
+        if (!extraFields || typeof extraFields !== "object") {
+          return { valid: false, error: "extraFields deve ser objeto" };
+        }
+        if (!promptStyles || typeof promptStyles !== "object") {
+          return { valid: false, error: "promptStyles deve ser objeto" };
+        }
+        if (!skills || typeof skills !== "object") {
+          return { valid: false, error: "skills deve ser objeto" };
+        }
+        return { valid: true };
+      }
+
       default:
         return { valid: false, error: "Tipo desconhecido" };
     }
   };
-
   const mapTabToField = (tab) => {
     const map = {
       edges: "edges",
       hindrances: "hindrances",
+      skills: "skills",
       powers: "powers",
       awakeningRules: "awakeningRules",
       loreSections: "loreSections",
       sheetFields: "sheetFields",
+      bestiary: "bestiary",
     };
     return map[tab];
   };
@@ -636,10 +798,12 @@ function ConfigTab({
     const labels = {
       edges: "Vantagens",
       hindrances: "Complicações",
+      skills: "Perícias",
       powers: "Poderes",
       awakeningRules: "Regras",
       loreSections: "Lore",
       sheetFields: "Ficha",
+      bestiary: "Bestiário",
     };
     return labels[tab];
   };
@@ -647,17 +811,21 @@ function ConfigTab({
   const getTabDescription = (tab) => {
     const descriptions = {
       edges:
-        "Arquivo .js com export default de array: [{ name, rank, description }].",
+        "Arquivo .js com export default ou export const EDGES_XXX = array de objetos com name, rank, description (source opcional).",
       hindrances:
-        "Arquivo .js com export default de array: [{ name, severity ('Maior'|'Menor'), description }].",
+        "Arquivo .js com export default ou export const HINDRANCES_XXX = array de objetos com name, description e severity (SL) ou type (Swade).",
+      skills:
+        'Arquivo .js com export default ou export const SKILLS_XXX = objeto com nomes de perícias mapeados para atributos (ex: { "Conhecimento": "intelecto" }).',
       powers:
-        "Arquivo .js com export default de objeto: { nome: { pp, range, duration, rank, description } }.",
+        "Arquivo .js com export default ou export const POWERS_XXX = objeto onde cada chave é o nome do poder e o valor tem pp, range, duration, rank, description.",
       awakeningRules:
-        "Arquivo .js com export default de array: [{ title, description }].",
+        "Arquivo .js com export default ou export const AWAKENING_RULES = array de objetos com title, description.",
       loreSections:
-        "Arquivo .js com export default de array: [{ id, title, content, contentHtml }].",
+        "Arquivo .js com export default ou export const MANUAL_SECTIONS = array de objetos com id, title, content (HTML), contentHtml.",
       sheetFields:
-        "Arquivo .js com export default de objeto: { extraFields, promptStyles, skills }.",
+        "Arquivo .js com export default ou export const SHEET_FIELDS = objeto com extraFields, promptStyles e skills (todos objetos).",
+      bestiary:
+        "Arquivo .js com export default ou export const BESTIARY = array de objetos com id, name, type, rank, attributes, skills, stats, pace, parry, toughness, loot, specialAbilities.",
     };
     return descriptions[tab];
   };
@@ -671,16 +839,63 @@ function ConfigTab({
     setImportTab("edges");
   };
 
+  const loadDefaultData = () => {
+    try {
+      let data;
+      switch (importTab) {
+        case "edges":
+          data = EDGES_SL;
+          break;
+        case "hindrances":
+          data = HINDRANCES_SWADE;
+          break;
+        case "skills":
+          data = SKILLS_SWADE;
+          break;
+        case "powers":
+          data = POWERS_SWADE;
+          break;
+        case "awakeningRules":
+          data = []; // Não há padrão padrão para regras
+          break;
+        case "loreSections":
+          data = manualSections.map((section) => ({
+            id: section.id,
+            title: section.title,
+            content: section.content,
+            contentHtml: section.content,
+          }));
+          break;
+        case "bestiary":
+          data = bestiaryData;
+          break;
+        case "sheetFields":
+          data = {
+            extraFields: {},
+            promptStyles: {},
+            skills: SKILLS_SWADE,
+          };
+          break;
+        default:
+          throw new Error("Tipo desconhecido para carregar padrão");
+      }
+      const validation = validateImportData(importTab, data);
+      if (!validation.valid) throw new Error(validation.error);
+      setImportPreview(data);
+      setImportError(null);
+    } catch (error) {
+      setImportError(error.message);
+      setImportPreview(null);
+    }
+  };
+
   const handleProcessImport = async () => {
     if (!importFile) return;
     setImportLoading(true);
     setImportError(null);
     try {
       const code = await readFileAsText(importFile);
-      const match = code.match(/export\s+default\s+(.+)/s);
-      if (!match)
-        throw new Error("Formato inválido: não encontrou 'export default'");
-      const dataStr = match[1].replace(/;*\s*$/, "");
+      const dataStr = extractExportedValue(code);
       const data = new Function(`return ${dataStr}`)();
       const validation = validateImportData(importTab, data);
       if (!validation.valid) throw new Error(validation.error);
@@ -697,31 +912,52 @@ function ConfigTab({
     if (!importPreview || !scenarioData) return;
     const field = mapTabToField(importTab);
 
-    // Para sheetFields, aplicamos o objeto completo; para outros, substituímos diretamente
-    onUpdate(field, importPreview);
+    // Para sheetFields, aplicamos os três campos separadamente
+    if (field === "sheetFields") {
+      const { extraFields, promptStyles, skills } = importPreview;
+      if (extraFields) onUpdate("extraFields", extraFields);
+      if (promptStyles) onUpdate("promptStyles", promptStyles);
+      if (skills) onUpdate("skills", skills);
+    } else {
+      onUpdate(field, importPreview);
+    }
 
     closeImportDialog();
-    setSnackbar({
-      open: true,
-      message: `✅ ${getTabLabel(importTab)} importado com sucesso! Salve para confirmar.`,
-      severity: "success",
-    });
+    if (onShowSnackbar) {
+      onShowSnackbar(
+        `✅ ${getTabLabel(importTab)} importado com sucesso! Salve para confirmar.`,
+        "success",
+      );
+    }
   };
 
   return (
     <Box sx={{ position: "relative" }}>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay
+        loading={loading || scenarioChanging}
+        isScenarioChange={scenarioChanging}
+      />
 
       <Stack spacing={3}>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Imagem de Capa
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            ⚙️ Configurações do Cenário
           </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+
+          {/* Seção: Identidade Visual */}
+          <Typography
+            variant="subtitle2"
+            color="primary"
+            gutterBottom
+            sx={{ mt: 2 }}
+          >
+            Identidade Visual
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 3 }}>
             <Box
               sx={{
-                width: 120,
-                height: 80,
+                width: 160,
+                height: 100,
                 borderRadius: 1,
                 overflow: "hidden",
                 bgcolor: "grey.200",
@@ -733,14 +969,21 @@ function ConfigTab({
                   : undefined,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                border: "2px solid",
+                borderColor: "divider",
               }}
             >
               {!metadata.imageUrl && (
-                <ImageIcon sx={{ color: "grey.400", fontSize: 32 }} />
+                <ImageIcon sx={{ color: "grey.400", fontSize: 40 }} />
               )}
             </Box>
             <Box>
-              <Button variant="outlined" component="label" disabled={uploading}>
+              <Button
+                variant="contained"
+                component="label"
+                disabled={uploading}
+                size="small"
+              >
                 {uploading ? "Enviando..." : "Escolher Imagem"}
                 <input
                   type="file"
@@ -751,7 +994,7 @@ function ConfigTab({
               </Button>
               {metadata.imageUrl && (
                 <Button
-                  variant="text"
+                  variant="outlined"
                   color="error"
                   size="small"
                   sx={{ ml: 1 }}
@@ -764,99 +1007,120 @@ function ConfigTab({
                   Remover
                 </Button>
               )}
+              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                Recomendado: 800x400px
+              </Typography>
             </Box>
           </Box>
-        </Paper>
 
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Metadata
+          <Divider sx={{ my: 2 }} />
+
+          {/* Seção: Informações Básicas */}
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Informações Básicas
           </Typography>
-          <Stack spacing={2}>
-            <TextField
-              label="ID"
-              value={metadata.id || ""}
-              onChange={handleChange("id")}
-              size="small"
-              fullWidth
-              disabled={!isNewScenario}
-              helperText={
-                isNewScenario
-                  ? "ID gerado automaticamente, pode editar"
-                  : "ID fixo após criar"
-              }
-            />
-            <TextField
-              label="Nome"
-              value={metadata.name || ""}
-              onChange={handleChange("name")}
-              onBlur={handleNameBlur}
-              size="small"
-              fullWidth
-            />
-            <TextField
-              label="Descrição"
-              value={metadata.description || ""}
-              onChange={handleChange("description")}
-              size="small"
-              multiline
-              rows={2}
-              fullWidth
-            />
-          </Stack>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="ID do Cenário"
+                value={metadata.id || ""}
+                onChange={handleChange("id")}
+                size="small"
+                fullWidth
+                disabled={!isNewScenario}
+                helperText={
+                  isNewScenario
+                    ? "Será gerado automaticamente se vazio"
+                    : "Imutável após criação"
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={8}>
+              <TextField
+                label="Nome"
+                value={metadata.name || ""}
+                onChange={handleChange("name")}
+                onBlur={handleNameBlur}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Descrição"
+                value={metadata.description || ""}
+                onChange={handleChange("description")}
+                size="small"
+                multiline
+                rows={2}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
         </Paper>
 
         {/* Ferramentas do Admin */}
         {!isNewScenario && (
           <Paper
             sx={{
-              p: 2,
-              borderColor: "info.main",
+              p: 3,
+              borderColor: "warning.main",
               borderWidth: 2,
               borderStyle: "dashed",
-              mt: 2,
+              bgcolor: "warning.light",
+              opacity: 0.9,
+              "&:hover": { opacity: 1 },
             }}
           >
             <Typography
               variant="subtitle1"
               fontWeight="bold"
-              color="info.main"
+              color="warning.dark"
               gutterBottom
             >
-              Ferramentas do Admin
+              ⚠️ Ferramentas de Manutenção
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Operações de manutenção do cenário. Use com cuidado.
+              Operações avançadas. Use com responsabilidade.
             </Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setConfirmDeleteOpen(true)}
-                sx={{ flex: "1 1 150px" }}
-              >
-                Excluir Cenário
-              </Button>
-              <Button
-                variant="outlined"
-                color="warning"
-                startIcon={<RefreshIcon />}
-                onClick={onRestoreDefault}
-                sx={{ flex: "1 1 150px" }}
-              >
-                Restaurar Padrão
-              </Button>
-              <Button
-                variant="outlined"
-                color="info"
-                startIcon={<UploadFileIcon />}
-                onClick={openImportDialog}
-                sx={{ flex: "1 1 150px" }}
-              >
-                Importar
-              </Button>
-            </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  fullWidth
+                  size="large"
+                >
+                  Excluir Cenário
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  startIcon={<RefreshIcon />}
+                  onClick={onRestoreDefault}
+                  fullWidth
+                  size="large"
+                >
+                  Restaurar Padrão
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  variant="contained"
+                  color="info"
+                  startIcon={<UploadFileIcon />}
+                  onClick={openImportDialog}
+                  fullWidth
+                  size="large"
+                >
+                  Importar Dados
+                </Button>
+              </Grid>
+            </Grid>
           </Paper>
         )}
 
@@ -876,10 +1140,12 @@ function ConfigTab({
             >
               <Tab label="Vantagens" value="edges" />
               <Tab label="Complicações" value="hindrances" />
+              <Tab label="Perícias" value="skills" />
               <Tab label="Poderes" value="powers" />
               <Tab label="Regras" value="awakeningRules" />
               <Tab label="Lore" value="loreSections" />
               <Tab label="Ficha" value="sheetFields" />
+              <Tab label="Bestiário" value="bestiary" />
             </Tabs>
 
             <Box sx={{ mt: 3 }}>
@@ -901,6 +1167,16 @@ function ConfigTab({
                   hidden
                   onChange={(e) => setImportFile(e.target.files?.[0] || null)}
                 />
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<AutoAwesomeIcon />}
+                disabled={importLoading}
+                onClick={loadDefaultData}
+                sx={{ mr: 2 }}
+              >
+                Carregar Padrão
               </Button>
 
               {importFile && (
@@ -989,6 +1265,27 @@ export default function ScenarioAdminModal({
   const [hasChanges, setHasChanges] = useState(false);
   const [isNewScenario, setIsNewScenario] = useState(false);
   const [availableScenarios, setAvailableScenarios] = useState([]);
+  const [scenarioChanging, setScenarioChanging] = useState(false);
+
+  // Injeta animação CSS no documento
+  useEffect(() => {
+    const styleId = "spin-animation-style";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    return () => {
+      const styleEl = document.getElementById(styleId);
+      if (styleEl) document.head.removeChild(styleEl);
+    };
+  }, []);
 
   // Função para seed (popular Firestore com dados do código)
   const handleSeed = async () => {
@@ -1153,6 +1450,7 @@ export default function ScenarioAdminModal({
             skills: registryScenario.skills || {},
             loreSections: registryScenario.loreSections || [],
             adventureGenerator: registryScenario.adventureGenerator || {},
+            bestiary: registryScenario.bestiary || [],
           });
           setIsNewScenario(false); // Não é novo, está no registry
         } else {
@@ -1173,6 +1471,7 @@ export default function ScenarioAdminModal({
             skills: {},
             loreSections: [],
             adventureGenerator: {},
+            bestiary: [],
           });
           setIsNewScenario(true);
           setTabValue(6);
@@ -1187,6 +1486,7 @@ export default function ScenarioAdminModal({
       });
     } finally {
       setLoading(false);
+      setScenarioChanging(false);
     }
   }, [selectedScenarioId]);
 
@@ -1217,6 +1517,7 @@ export default function ScenarioAdminModal({
         skills: {},
         loreSections: [],
         adventureGenerator: {},
+        bestiary: [],
       });
       setTabValue(6);
     }
@@ -1324,17 +1625,20 @@ export default function ScenarioAdminModal({
     onClose();
   };
 
-  const handleScenarioChange = (event) => {
+  const handleScenarioChange = async (event) => {
     const newScenarioId = event.target.value;
+    setScenarioChanging(true);
     setSelectedScenarioId(newScenarioId);
     setHasChanges(false);
     setTabValue(0);
+    // O scenarioChanging será desativado no finally do loadScenario
   };
 
   const tabs = [
     { label: "Vantagens", icon: <ShieldIcon /> },
     { label: "Complicações", icon: <CategoryIcon /> },
-    { label: "Powers", icon: <MagicIcon /> },
+    { label: "Perícias", icon: <SchoolIcon /> },
+    { label: "Poderes", icon: <MagicIcon /> },
     { label: "Regras", icon: <RuleIcon /> },
     { label: "Lore", icon: <BookIcon /> },
     { label: "Ficha", icon: <PersonIcon /> },
@@ -1470,6 +1774,7 @@ export default function ScenarioAdminModal({
                   onEdit={(item) => handleEdit("edges", item)}
                   onDelete={(item) => handleDelete("edges", item)}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
               <TabPanel value={tabValue} index={1}>
@@ -1479,9 +1784,18 @@ export default function ScenarioAdminModal({
                   onAdd={(item) => handleAdd("hindrances", item)}
                   onDelete={(item) => handleDelete("hindrances", item)}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
               <TabPanel value={tabValue} index={2}>
+                <SkillsTab
+                  scenarioData={scenarioData}
+                  onUpdate={handleUpdate}
+                  loading={loading}
+                  scenarioChanging={scenarioChanging}
+                />
+              </TabPanel>
+              <TabPanel value={tabValue} index={3}>
                 <PowersTab
                   scenarioData={scenarioData}
                   onUpdate={handleUpdate}
@@ -1492,36 +1806,44 @@ export default function ScenarioAdminModal({
                     handleUpdate("powers", powers);
                   }}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
-              <TabPanel value={tabValue} index={3}>
+              <TabPanel value={tabValue} index={4}>
                 <RulesTab
                   scenarioData={scenarioData}
                   onUpdate={handleUpdate}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
-              <TabPanel value={tabValue} index={4}>
+              <TabPanel value={tabValue} index={5}>
                 <LoreTab
                   scenarioData={scenarioData}
                   onUpdate={handleUpdate}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
-              <TabPanel value={tabValue} index={5}>
+              <TabPanel value={tabValue} index={6}>
                 <SheetTab
                   scenarioData={scenarioData}
                   onUpdate={handleUpdate}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                 />
               </TabPanel>
-              <TabPanel value={tabValue} index={6}>
+              <TabPanel value={tabValue} index={7}>
                 <ConfigTab
                   scenarioData={scenarioData}
                   onUpdate={handleUpdate}
                   loading={loading}
+                  scenarioChanging={scenarioChanging}
                   onDeleteScenario={handleDeleteScenario}
                   onRestoreDefault={handleRestoreDefault}
+                  onShowSnackbar={(message, severity) =>
+                    setSnackbar({ open: true, message, severity })
+                  }
                 />
               </TabPanel>
             </Box>
@@ -1551,5 +1873,6 @@ import {
   AutoAwesome as MagicIcon,
   Person as PersonIcon,
   Gavel as RuleIcon,
+  School as SchoolIcon,
   Shield as ShieldIcon,
 } from "@mui/icons-material";
